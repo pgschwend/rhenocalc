@@ -1,0 +1,132 @@
+# This file is used to ignore files which are generated
+# ============================================================================
+
+# === Build Artifacts ===
+*~
+*.autosave
+*.a
+*.core
+*.moc
+*.o
+*.obj
+*.orig
+*.rej
+*.so
+*.so.*
+*_pch.h.cpp
+*_resource.rc
+*.qm
+*.debug
+Makefile*
+*.prl
+*.app
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+Thumbs.db
+*.res
+*.rc
+
+# === CMake Build Directories ===
+/build/
+/build-*/
+/cmake-build-*/
+/cmake-build-debug/
+/cmake-build-release/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# === Qt Creator ===
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+CMakeLists.txt.user
+CMakeLists.txt.user.*
+*.autosave.*
+.qtc_clangd
+
+# === JetBrains IDEs ===
+.idea/
+.idea_modules/
+out/
+.vscode/
+*.iml
+
+# === Visual Studio ===
+.vs/
+*.ib_pdb_index
+*.idb
+*.ilk
+*.pdb
+*.sln
+*.suo
+*.vcproj
+*vcproj.*.*.user
+*.ncb
+*.sdf
+*.opensdf
+*.vcxproj
+*.vcxproj.filters
+*vcxproj.*
+
+# === Visual Studio Code ===
+.vscode/
+*.code-workspace
+
+# === Editor Temporary Files ===
+.#*
+*.*#
+*.flc
+.*.swp
+.*.swo
+*~
+.DS_Store
+.directory
+tags
+TAGS
+
+# === OS-specific ===
+Thumbs.db
+*.swp
+*.swo
+*~
+.DS_Store
+.Spotlight-V100
+.Trashes
+
+# === Binaries ===
+*.dll
+*.exe
+*.so
+*.dylib
+*.bin
+
+# === Qt-specific Directories ===
+.moc/
+.obj/
+.pch/
+.rcc/
+.uic/
+
+# === MinGW ===
+*.Debug
+*.Release
+
+# === Python ===
+*.pyc
+*.pyo
+__pycache__/
+*.egg-info/
+
+# === Generated Qt Files ===
+ui_*.h
+moc_*.cpp
+qrc_*.cpp
+RhenoCalc_autogen/
+
+# === Copilot Session State ===
+.copilot/
+session-state/
