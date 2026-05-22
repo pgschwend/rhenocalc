@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QTabWidget>
 #include <QCloseEvent>
+#include <QShowEvent>
 
 class CalculatorPage;
 class BaseConverterPage;
@@ -18,6 +19,7 @@ public:
 
 protected:
     void closeEvent(QCloseEvent* event) override;
+    void showEvent(QShowEvent* event) override;
 
 private:
     void setupUI();

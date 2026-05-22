@@ -6,6 +6,8 @@
 #include <QComboBox>
 #include <QButtonGroup>
 #include <QKeyEvent>
+#include <cmath>
+#include <limits>
 
 class CalculatorPage : public QWidget {
     Q_OBJECT
@@ -36,6 +38,7 @@ private:
     QString toBaseString(long long val);
     long long fromBaseString(const QString& s);
     long long maskToWidth(long long val);
+    QString formatDouble(double val);
 
     QLineEdit*   m_display;
     QLabel*      m_exprLabel;
@@ -45,14 +48,18 @@ private:
     // Hex digit buttons
     QPushButton* m_hexBtns[6]; // A-F
 
-    long long m_current    = 0;
-    long long m_accumulator= 0;
-    QString   m_pendingOp;
-    bool      m_newInput   = true;
-    bool      m_hasDecimal = false;
+    long long m_current       = 0;
+    long long m_accumulator   = 0;
     double    m_currentDouble = 0.0;
-    bool      m_floatMode  = false;
-    int       m_base       = 10;
-    int       m_wordBits   = 32;
+    double    m_accumulatorDouble = 0.0;
+    QString   m_pendingOp;
+    QString   m_inputString;       // used in float mode to build input character-by-character
+    bool      m_newInput      = true;
+    bool      m_hasDecimal    = false;
+    bool      m_floatMode     = false;
+    int       m_base          = 10;
+    int       m_wordBits      = 32;
 };
+
+
 

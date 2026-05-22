@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QLabel>
 #include <QStatusBar>
+#include <QShortcut>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -22,6 +23,28 @@ MainWindow::MainWindow(QWidget* parent)
     applyTheme();
     setWindowTitle("RhenoCalc");
     restoreWindowGeometry();
+
+    // Tab-Navigation mit Shift+Links / Shift+Rechts
+    auto* prevTab = new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_Left), this);
+    connect(prevTab, &QShortcut::activated, this, [this]() {
+        int idx = m_tabWidget->currentIndex();
+        m_tabWidget->setCurrentIndex((idx - 1 + m_tabWidget->count()) % m_tabWidget->count());
+        m_calcPage->setFocus();
+    });
+    auto* nextTab = new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_Right), this);
+    connect(nextTab, &QShortcut::activated, this, [this]() {
+        int idx = m_tabWidget->currentIndex();
+        m_tabWidget->setCurrentIndex((idx + 1) % m_tabWidget->count());
+        m_calcPage->setFocus();
+    });
+
+    // Fokus-Wiederherstellung: Wenn der Fokus ins Leere fällt (z.B. Klick auf Titelleiste),
+    // wird er automatisch zurück an die CalculatorPage gegeben.
+    connect(qApp, &QApplication::focusChanged, this, [this](QWidget* /*old*/, QWidget* now) {
+        if (!now && isActiveWindow()) {
+            m_calcPage->setFocus();
+        }
+    });
 }
 
 MainWindow::~MainWindow() {}
@@ -29,6 +52,12 @@ MainWindow::~MainWindow() {}
 void MainWindow::closeEvent(QCloseEvent* event) {
     saveWindowGeometry();
     QMainWindow::closeEvent(event);
+}
+
+void MainWindow::showEvent(QShowEvent* event) {
+    QMainWindow::showEvent(event);
+    // Beim ersten Anzeigen des Fensters bekommt die CalculatorPage sofort den Tastaturfokus.
+    m_calcPage->setFocus();
 }
 
 void MainWindow::saveWindowGeometry() {
