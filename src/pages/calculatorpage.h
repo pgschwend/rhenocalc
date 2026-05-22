@@ -6,6 +6,7 @@
 #include <QComboBox>
 #include <QButtonGroup>
 #include <QKeyEvent>
+#include <QList>
 #include <cmath>
 #include <limits>
 
@@ -13,6 +14,7 @@ class CalculatorPage : public QWidget {
     Q_OBJECT
 public:
     explicit CalculatorPage(QWidget* parent = nullptr);
+    void applyTheme(bool dark);
 
 private slots:
     void onDigitClicked();
@@ -42,11 +44,22 @@ private:
 
     QLineEdit*   m_display;
     QLabel*      m_exprLabel;
+    QLabel*      m_hintLabel;
+    QLabel*      m_baseLabel;
+    QLabel*      m_wordLabel;
     QComboBox*   m_baseCombo;
     QComboBox*   m_widthCombo;
 
     // Hex digit buttons
     QPushButton* m_hexBtns[6]; // A-F
+
+    // Button groups for theming
+    QList<QPushButton*> m_numBtns;
+    QList<QPushButton*> m_opBtns;
+    QList<QPushButton*> m_bitOpBtns;
+    QList<QPushButton*> m_funcBtns;
+    QList<QPushButton*> m_clearBtns;
+    QPushButton*        m_eqBtn = nullptr;
 
     long long m_current       = 0;
     long long m_accumulator   = 0;
@@ -60,6 +73,3 @@ private:
     int       m_base          = 10;
     int       m_wordBits      = 32;
 };
-
-
-

@@ -35,31 +35,28 @@ void CalculatorPage::setupUI() {
 
     // Top controls
     auto* topRow = new QHBoxLayout();
-    QLabel* baseLabel = new QLabel("Base:", this);
-    baseLabel->setStyleSheet("color:white;font-size:13px;");
+    m_baseLabel = new QLabel("Base:", this);
+    m_baseLabel->setStyleSheet("font-size:13px;");
     m_baseCombo = new QComboBox(this);
     m_baseCombo->addItems({"Decimal (10)", "Hexadecimal (16)", "Binary (2)", "Octal (8)"});
-    m_baseCombo->setStyleSheet("background:#505050;color:#f0f0f0;padding:4px 8px;border-radius:4px;");
     m_baseCombo->setMinimumWidth(160);
 
-    QLabel* wLabel = new QLabel("Word:", this);
-    wLabel->setStyleSheet("color:white;font-size:13px;");
+    m_wordLabel = new QLabel("Word:", this);
+    m_wordLabel->setStyleSheet("font-size:13px;");
     m_widthCombo = new QComboBox(this);
     m_widthCombo->addItems({"8-bit", "16-bit", "32-bit", "64-bit"});
     m_widthCombo->setCurrentIndex(2);
-    m_widthCombo->setStyleSheet("background:#505050;color:#f0f0f0;padding:4px 8px;border-radius:4px;");
 
-    topRow->addWidget(baseLabel);
+    topRow->addWidget(m_baseLabel);
     topRow->addWidget(m_baseCombo);
     topRow->addSpacing(16);
-    topRow->addWidget(wLabel);
+    topRow->addWidget(m_wordLabel);
     topRow->addWidget(m_widthCombo);
     topRow->addStretch();
     root->addLayout(topRow);
 
     // Expression label
     m_exprLabel = new QLabel("", this);
-    m_exprLabel->setStyleSheet("color:#888;font-size:12px;padding:2px 6px;");
     m_exprLabel->setAlignment(Qt::AlignRight);
     root->addWidget(m_exprLabel);
 
@@ -67,19 +64,17 @@ void CalculatorPage::setupUI() {
     m_display = new QLineEdit("0", this);
     m_display->setAlignment(Qt::AlignRight);
     m_display->setReadOnly(true);
-    m_display->setStyleSheet("background:#444444;color:#f0f0f0;font-size:28px;font-family:'Consolas','Courier New',monospace;"
-                             "border:1px solid #666;border-radius:4px;padding:6px 12px;");
+    m_display->setFont(QFont("Consolas,Courier New,monospace", 20));
     m_display->setMinimumHeight(56);
     root->addWidget(m_display);
 
     // Keyboard shortcut hint bar
-    auto* hintLabel = new QLabel(
+    m_hintLabel = new QLabel(
         "⌨  0–9 / A–F  |  + - * /  |  % MOD  |  & AND  |  | OR  |  ^ XOR  |  ~ NOT  |  < LSL  |  > LSR  |  "
         ". / ,  Dezimal  |  Enter =  |  Esc AC  |  ⌫ BS  |  Ctrl+D/H/B/O: Base  |  Ctrl+1–4: Word width  |  Shift+◀▶: Reiter",
         this);
-    hintLabel->setStyleSheet("color:#556;font-size:10px;padding:2px 4px;");
-    hintLabel->setWordWrap(true);
-    root->addWidget(hintLabel);
+    m_hintLabel->setWordWrap(true);
+    root->addWidget(m_hintLabel);
 
     // Button grid
     auto* grid = new QGridLayout();
@@ -93,6 +88,7 @@ void CalculatorPage::setupUI() {
         grid->addWidget(m_hexBtns[i], 0, i);
     }
     auto* bsBtn = makeBtn("⌫", BTN_FUNC);
+    m_funcBtns << bsBtn;
     connect(bsBtn, &QPushButton::clicked, this, &CalculatorPage::onBackspaceClicked);
     grid->addWidget(bsBtn, 0, 6);
 
@@ -102,40 +98,48 @@ void CalculatorPage::setupUI() {
     for (int i = 0; i < 4; ++i) {
         auto* b = makeBtn(bitOps[i], BTN_BIT);
         b->setObjectName(bitOps[i]);
+        m_bitOpBtns << b;
         connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
         grid->addWidget(b, 1, i);
     }
     for (int i = 4; i < 8; ++i) {
         auto* b = makeBtn(bitOps[i], BTN_BIT);
         b->setObjectName(bitOps[i]);
+        m_bitOpBtns << b;
         connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
         grid->addWidget(b, 2, i-4);
     }
     // Row 2 right side: MOD, NEG, CLR, DEL
     auto* modBtn = makeBtn("MOD", BTN_FUNC);
     modBtn->setObjectName("MOD");
+    m_funcBtns << modBtn;
     connect(modBtn, &QPushButton::clicked, this, &CalculatorPage::onOperatorClicked);
     grid->addWidget(modBtn, 1, 4);
 
     auto* negBtn = makeBtn("+/-", BTN_FUNC);
+    m_funcBtns << negBtn;
     connect(negBtn, &QPushButton::clicked, this, &CalculatorPage::onNegateClicked);
     grid->addWidget(negBtn, 1, 5);
 
     auto* clrBtn = makeBtn("CE", BTN_CLEAR);
+    m_clearBtns << clrBtn;
     connect(clrBtn, &QPushButton::clicked, this, [this]{ m_current=0; m_newInput=true; updateDisplay(); });
     grid->addWidget(clrBtn, 1, 6);
 
     auto* clearAllBtn = makeBtn("AC", BTN_CLEAR);
+    m_clearBtns << clearAllBtn;
     connect(clearAllBtn, &QPushButton::clicked, this, &CalculatorPage::onClearClicked);
     grid->addWidget(clearAllBtn, 2, 4);
 
     auto* powBtn = makeBtn("x²", BTN_FUNC);
     powBtn->setObjectName("SQ");
+    m_funcBtns << powBtn;
     connect(powBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
     grid->addWidget(powBtn, 2, 5);
 
     auto* sqrtBtn = makeBtn("√x", BTN_FUNC);
     sqrtBtn->setObjectName("SQRT");
+    m_funcBtns << sqrtBtn;
     connect(sqrtBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
     grid->addWidget(sqrtBtn, 2, 6);
 
@@ -153,21 +157,30 @@ void CalculatorPage::setupUI() {
         auto* b = makeBtn(d.label, d.style);
         if (d.label == "=") {
             b->setObjectName("=");
+            m_eqBtn = b;
             grid->addWidget(b, d.row, d.col, 1, 3);
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onEqualsClicked);
         } else if (d.style == BTN_OP || d.label == "MOD") {
             b->setObjectName(d.label);
+            m_opBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onOperatorClicked);
             grid->addWidget(b, d.row, d.col);
         } else if (d.label == "1/x" || d.label == "abs" || d.label == ">>" || d.label == "<<") {
             b->setObjectName(d.label);
+            m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
             grid->addWidget(b, d.row, d.col);
         } else if (d.label == "MS" || d.label == "MR" || d.label == "MC") {
             b->setObjectName(d.label);
+            m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
             grid->addWidget(b, d.row, d.col);
+        } else if (d.label == "(" || d.label == ")") {
+            m_funcBtns << b;
+            connect(b, &QPushButton::clicked, this, &CalculatorPage::onDigitClicked);
+            grid->addWidget(b, d.row, d.col);
         } else {
+            m_numBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onDigitClicked);
             grid->addWidget(b, d.row, d.col);
         }
@@ -480,8 +493,51 @@ void CalculatorPage::onBitwiseClicked() {
 QString CalculatorPage::formatDouble(double val) {
     if (std::isinf(val)) return val > 0 ? "∞" : "-∞";
     if (std::isnan(val)) return "NaN";
-    // 'g' removes trailing zeros and switches to scientific notation automatically
     return QString::number(val, 'g', 12);
+}
+
+// ─── Theme ────────────────────────────────────────────────────────────────────
+void CalculatorPage::applyTheme(bool dark) {
+    // ── Button style strings ──────────────────────────────────────────────────
+    const QString numS   = dark
+        ? "QPushButton{background:#505050;color:#f0f0f0;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#686868;}"
+        : "QPushButton{background:#e4e8f5;color:#1a1a2e;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#d0d4e8;}";
+    const QString opS    = dark
+        ? "QPushButton{background:#707070;color:#ffffff;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#888888;}"
+        : "QPushButton{background:#3d5aaa;color:#ffffff;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#4d6abf;}";
+    const QString bitS   = dark
+        ? "QPushButton{background:#5a5a5a;color:#e0e0e0;font-size:13px;border-radius:4px;padding:8px;}QPushButton:hover{background:#727272;}"
+        : "QPushButton{background:#c8cde0;color:#1a1a2e;font-size:13px;border-radius:4px;padding:8px;}QPushButton:hover{background:#b8bdd8;}";
+    const QString funcS  = dark
+        ? "QPushButton{background:#484848;color:#cccccc;font-size:13px;border-radius:4px;padding:8px;}QPushButton:hover{background:#606060;}"
+        : "QPushButton{background:#d8dcee;color:#1a1a2e;font-size:13px;border-radius:4px;padding:8px;}QPushButton:hover{background:#c8cce0;}";
+    const QString hexS   = dark
+        ? "QPushButton{background:#606060;color:#f0f0f0;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#787878;}QPushButton:disabled{background:#3a3a3a;color:#666666;}"
+        : "QPushButton{background:#dce0f0;color:#1a1a2e;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#ccd0e8;}QPushButton:disabled{background:#eaecf5;color:#9099bb;}";
+    const QString eqS    = dark
+        ? "QPushButton{background:#787878;color:#ffffff;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#909090;}"
+        : "QPushButton{background:#2d4a88;color:#ffffff;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#3d5aaa;}";
+    const QString clrS   = dark
+        ? "QPushButton{background:#383838;color:#cccccc;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#505050;}"
+        : "QPushButton{background:#f5e8e8;color:#c0392b;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#ead8d8;}";
+    const QString dispS  = dark
+        ? "background:#444444;color:#f0f0f0;font-size:28px;font-family:'Consolas','Courier New',monospace;border:1px solid #666;border-radius:4px;padding:6px 12px;"
+        : "background:#ffffff;color:#1a1a2e;font-size:28px;font-family:'Consolas','Courier New',monospace;border:1px solid #c5cbdd;border-radius:4px;padding:6px 12px;";
+    const QString exprS  = dark ? "color:#888;font-size:12px;padding:2px 6px;"   : "color:#5566aa;font-size:12px;padding:2px 6px;";
+    const QString hintS  = dark ? "color:#556;font-size:10px;padding:2px 4px;"   : "color:#9099bb;font-size:10px;padding:2px 4px;";
+
+    // ── Apply ─────────────────────────────────────────────────────────────────
+    m_display->setStyleSheet(dispS);
+    m_exprLabel->setStyleSheet(exprS);
+    m_hintLabel->setStyleSheet(hintS);
+
+    for (auto* b : m_numBtns)    b->setStyleSheet(numS);
+    for (auto* b : m_opBtns)     b->setStyleSheet(opS);
+    for (auto* b : m_bitOpBtns)  b->setStyleSheet(bitS);
+    for (auto* b : m_funcBtns)   b->setStyleSheet(funcS);
+    for (auto* b : m_clearBtns)  b->setStyleSheet(clrS);
+    for (auto* b : m_hexBtns)    b->setStyleSheet(hexS);
+    if (m_eqBtn) m_eqBtn->setStyleSheet(eqS);
 }
 
 // ─── Keyboard support ────────────────────────────────────────────────────────

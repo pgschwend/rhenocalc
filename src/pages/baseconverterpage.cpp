@@ -26,18 +26,25 @@ void BitButton::setState(bool on) {
     refresh();
 }
 
+void BitButton::setDark(bool dark) {
+    m_dark = dark;
+    refresh();
+}
+
 void BitButton::refresh() {
     setText(m_state ? "1" : "0");
-    setStyleSheet(m_state
-        ? "QPushButton{background:#707070;color:white;font-size:11px;font-weight:bold;border-radius:3px;border:1px solid #999;}QPushButton:hover{background:#888888;}"
-        : "QPushButton{background:#484848;color:#cccccc;font-size:11px;border-radius:3px;border:1px solid #666;}QPushButton:hover{background:#606060;}");
+    if (m_dark) {
+        setStyleSheet(m_state
+            ? "QPushButton{background:#707070;color:white;font-size:11px;font-weight:bold;border-radius:3px;border:1px solid #999;}QPushButton:hover{background:#888888;}"
+            : "QPushButton{background:#484848;color:#cccccc;font-size:11px;border-radius:3px;border:1px solid #666;}QPushButton:hover{background:#606060;}");
+    } else {
+        setStyleSheet(m_state
+            ? "QPushButton{background:#3d5aaa;color:white;font-size:11px;font-weight:bold;border-radius:3px;border:1px solid #8899cc;}QPushButton:hover{background:#4d6abf;}"
+            : "QPushButton{background:#eaecf5;color:#4455aa;font-size:11px;border-radius:3px;border:1px solid #c5cbdd;}QPushButton:hover{background:#d8dcee;}");
+    }
 }
 
 // ─── BaseConverterPage ────────────────────────────────────────────────────────
-
-static const QString EDIT_STYLE =
-    "background:#444444;color:#f0f0f0;font-family:'Consolas','Courier New',monospace;"
-    "font-size:16px;border:1px solid #666;border-radius:4px;padding:4px 8px;";
 
 BaseConverterPage::BaseConverterPage(QWidget* parent) : QWidget(parent) {
     setupUI();
@@ -50,15 +57,14 @@ void BaseConverterPage::setupUI() {
 
     // ── Controls bar ─────────────────────────────────────────────────────────
     auto* ctrlRow = new QHBoxLayout();
-    auto* wLabel = new QLabel("Word width:", this);
-    wLabel->setStyleSheet("color:white;font-size:13px;");
+    m_wLabel = new QLabel("Word width:", this);
+    m_wLabel->setStyleSheet("font-size:13px;");
     m_widthCombo = new QComboBox(this);
     m_widthCombo->addItems({"8-bit", "16-bit", "32-bit", "64-bit"});
     m_widthCombo->setCurrentIndex(2);
-    m_widthCombo->setStyleSheet("background:#505050;color:#f0f0f0;padding:4px 8px;border-radius:4px;");
     m_signedCheck = new QCheckBox("Signed", this);
-    m_signedCheck->setStyleSheet("color:white;font-size:13px;");
-    ctrlRow->addWidget(wLabel);
+    m_signedCheck->setStyleSheet("font-size:13px;");
+    ctrlRow->addWidget(m_wLabel);
     ctrlRow->addWidget(m_widthCombo);
     ctrlRow->addSpacing(20);
     ctrlRow->addWidget(m_signedCheck);
@@ -76,23 +82,22 @@ void BaseConverterPage::setupUI() {
         {"OCT",      &m_octEdit, "e.g. 33653337357"},
     };
     for (int i = 0; i < 4; ++i) {
-        auto* lbl = new QLabel(fields[i].label, this);
-        lbl->setStyleSheet("color:#aaa;font-size:13px;font-weight:bold;");
-        lbl->setFixedWidth(90);
+        m_fieldLabels[i] = new QLabel(fields[i].label, this);
+        m_fieldLabels[i]->setStyleSheet("font-size:13px;font-weight:bold;");
+        m_fieldLabels[i]->setFixedWidth(90);
         *fields[i].edit = new QLineEdit(this);
-        (*fields[i].edit)->setStyleSheet(EDIT_STYLE);
         (*fields[i].edit)->setPlaceholderText(fields[i].placeholder);
         (*fields[i].edit)->setFont(QFont("Consolas", 14));
-        inputGrid->addWidget(lbl, i, 0);
+        inputGrid->addWidget(m_fieldLabels[i], i, 0);
         inputGrid->addWidget(*fields[i].edit, i, 1);
     }
     root->addLayout(inputGrid);
 
     // ── Register / Bit Viewer ─────────────────────────────────────────────────
-    auto* regGroup = new QGroupBox("Register View", this);
-    regGroup->setStyleSheet("QGroupBox{color:#00e5ff;font-size:13px;font-weight:bold;border:1px solid #444;border-radius:6px;margin-top:8px;padding-top:8px;}"
-                            "QGroupBox::title{subcontrol-origin:margin;left:10px;}");
-    auto* regLayout = new QVBoxLayout(regGroup);
+    m_regGroup = new QGroupBox("Register View", this);
+    m_regGroup->setStyleSheet("QGroupBox{color:#00e5ff;font-size:13px;font-weight:bold;border:1px solid #444;border-radius:6px;margin-top:8px;padding-top:8px;}"
+                             "QGroupBox::title{subcontrol-origin:margin;left:10px;}");
+    auto* regLayout = new QVBoxLayout(m_regGroup);
     regLayout->setSpacing(4);
 
     // Bit buttons will be created on first updateAll / width change
@@ -131,8 +136,6 @@ void BaseConverterPage::setupUI() {
     byteRow->addWidget(new QLabel("Bytes:", this));
     for (int i = 7; i >= 0; --i) {
         auto* bl = new QLabel("00", this);
-        bl->setStyleSheet("background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:13px;"
-                          "border:1px solid #666;border-radius:3px;padding:2px 6px;");
         bl->setAlignment(Qt::AlignCenter);
         bl->setFixedWidth(44);
         bl->setToolTip(QString("Byte %1").arg(i));
@@ -142,23 +145,22 @@ void BaseConverterPage::setupUI() {
     }
     byteRow->addStretch();
     regLayout->addLayout(byteRow);
-    root->addWidget(regGroup);
+    root->addWidget(m_regGroup);
 
     // ── Info section ─────────────────────────────────────────────────────────
-    auto* infoGroup = new QGroupBox("Interpretation", this);
-    infoGroup->setStyleSheet(regGroup->styleSheet());
-    auto* infoGrid = new QGridLayout(infoGroup);
+    m_infoGroup = new QGroupBox("Interpretation", this);
+    m_infoGroup->setStyleSheet(m_regGroup->styleSheet());
+    auto* infoGrid = new QGridLayout(m_infoGroup);
     infoGrid->setSpacing(4);
 
     auto makeLbl = [&](const QString& t) {
         auto* l = new QLabel(t, this);
-        l->setStyleSheet("color:#aaa;font-size:12px;");
+        l->setStyleSheet("font-size:12px;");
         return l;
     };
     auto makeVal = [&]() {
         auto* l = new QLabel("—", this);
-        l->setStyleSheet("background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:13px;"
-                         "border:1px solid #666;border-radius:3px;padding:2px 8px;");
+        l->setFont(QFont("Consolas", 11));
         return l;
     };
 
@@ -171,7 +173,7 @@ void BaseConverterPage::setupUI() {
     infoGrid->addWidget(makeLbl("Unsigned:"), 0, 2); infoGrid->addWidget(m_unsignedLabel, 0, 3);
     infoGrid->addWidget(makeLbl("Hex:"),      1, 0); infoGrid->addWidget(m_hexInfoLabel,  1, 1);
     infoGrid->addWidget(makeLbl("Float32:"),  1, 2); infoGrid->addWidget(m_floatLabel,    1, 3);
-    root->addWidget(infoGroup);
+    root->addWidget(m_infoGroup);
     root->addStretch();
 
     // Connect signals
@@ -322,3 +324,37 @@ void BaseConverterPage::onOctChanged() {
     if (ok) updateAll(v, m_octEdit);
 }
 
+void BaseConverterPage::applyTheme(bool dark) {
+    const QString editS = dark
+        ? "background:#444444;color:#f0f0f0;font-family:'Consolas','Courier New',monospace;font-size:16px;border:1px solid #666;border-radius:4px;padding:4px 8px;"
+        : "background:#ffffff;color:#1a1a2e;font-family:'Consolas','Courier New',monospace;font-size:16px;border:1px solid #c5cbdd;border-radius:4px;padding:4px 8px;";
+    const QString valS = dark
+        ? "background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:13px;border:1px solid #666;border-radius:3px;padding:2px 8px;"
+        : "background:#f0f2fa;color:#1a1a2e;font-family:'Consolas';font-size:13px;border:1px solid #c5cbdd;border-radius:3px;padding:2px 8px;";
+    const QString grpS = dark
+        ? "QGroupBox{color:#00e5ff;font-size:13px;font-weight:bold;border:1px solid #444;border-radius:6px;margin-top:8px;padding-top:8px;}QGroupBox::title{subcontrol-origin:margin;left:10px;}"
+        : "QGroupBox{color:#3d5aaa;font-size:13px;font-weight:bold;border:1px solid #c5cbdd;border-radius:6px;margin-top:8px;padding-top:8px;}QGroupBox::title{subcontrol-origin:margin;left:10px;}";
+    const QString fldS = dark ? "color:#aaa;font-size:13px;font-weight:bold;" : "color:#3d5aaa;font-size:13px;font-weight:bold;";
+
+    m_hexEdit->setStyleSheet(editS);
+    m_decEdit->setStyleSheet(editS);
+    m_binEdit->setStyleSheet(editS);
+    m_octEdit->setStyleSheet(editS);
+
+    m_signedLabel->setStyleSheet(valS);
+    m_unsignedLabel->setStyleSheet(valS);
+    m_hexInfoLabel->setStyleSheet(valS);
+    m_floatLabel->setStyleSheet(valS);
+
+    for (int i = 0; i < 8; ++i)
+        m_byteLabels[i]->setStyleSheet(valS);
+
+    for (int i = 0; i < 4; ++i)
+        m_fieldLabels[i]->setStyleSheet(fldS);
+
+    m_regGroup->setStyleSheet(grpS);
+    m_infoGroup->setStyleSheet(grpS);
+
+    for (auto* bb : m_bitBtns)
+        bb->setDark(dark);
+}

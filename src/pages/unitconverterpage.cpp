@@ -136,54 +136,52 @@ void UnitConverterPage::setupUI() {
     root->setContentsMargins(20, 20, 20, 20);
 
     auto* title = new QLabel("Unit Converter for Embedded Engineers", this);
-    title->setStyleSheet("color:#00e5ff;font-size:16px;font-weight:bold;");
+    m_titleLabel = title;
+    title->setStyleSheet("font-size:16px;font-weight:bold;");
     root->addWidget(title);
 
     // Category
     auto* catRow = new QHBoxLayout();
-    auto* catLabel = new QLabel("Category:", this);
-    catLabel->setStyleSheet("color:white;font-size:13px;");
-    catLabel->setFixedWidth(80);
+    m_catLabel = new QLabel("Category:", this);
+    m_catLabel->setStyleSheet("font-size:13px;");
+    m_catLabel->setFixedWidth(80);
     m_categoryCombo = new QComboBox(this);
     m_categoryCombo->addItems(m_categoryNames);
-    m_categoryCombo->setStyleSheet("background:#505050;color:#f0f0f0;padding:6px 10px;border-radius:4px;font-size:13px;");
     m_categoryCombo->setMinimumWidth(240);
-    catRow->addWidget(catLabel);
+    catRow->addWidget(m_catLabel);
     catRow->addWidget(m_categoryCombo);
     catRow->addStretch();
     root->addLayout(catRow);
 
     // Converter box
-    auto* convGroup = new QGroupBox("Convert", this);
-    convGroup->setStyleSheet("QGroupBox{color:#00e5ff;font-size:13px;font-weight:bold;border:1px solid #444;"
+    m_convGroup = new QGroupBox("Convert", this);
+    m_convGroup->setStyleSheet("QGroupBox{color:#00e5ff;font-size:13px;font-weight:bold;border:1px solid #444;"
                              "border-radius:6px;margin-top:8px;padding-top:10px;}"
                              "QGroupBox::title{subcontrol-origin:margin;left:10px;}");
-    auto* convLayout = new QGridLayout(convGroup);
+    auto* convLayout = new QGridLayout(m_convGroup);
     convLayout->setSpacing(10);
 
     auto lbl = [&](const QString& t) {
         auto* l = new QLabel(t, this);
-        l->setStyleSheet("color:#aaa;font-size:13px;");
+        l->setStyleSheet("font-size:13px;");
         return l;
     };
 
     convLayout->addWidget(lbl("From:"), 0, 0);
     m_fromEdit = new QLineEdit(this);
-    m_fromEdit->setStyleSheet("background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:18px;"
-                              "border:1px solid #444;border-radius:4px;padding:6px 10px;");
+    m_fromEdit->setStyleSheet("font-family:'Consolas';font-size:18px;border-radius:4px;padding:6px 10px;");
     m_fromEdit->setPlaceholderText("Enter value...");
     convLayout->addWidget(m_fromEdit, 0, 1);
 
     m_fromUnit = new QComboBox(this);
-    m_fromUnit->setStyleSheet("background:#505050;color:#f0f0f0;padding:6px 10px;border-radius:4px;font-size:13px;min-width:80px;");
+    m_fromUnit->setStyleSheet("padding:6px 10px;border-radius:4px;font-size:13px;min-width:80px;");
     convLayout->addWidget(m_fromUnit, 0, 2);
 
     convLayout->addWidget(lbl("To:"), 1, 0);
     auto* toRow = new QHBoxLayout();
 
     m_resultLabel = new QLabel("—", this);
-    m_resultLabel->setStyleSheet("background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:18px;"
-                                 "border:1px solid #444;border-radius:4px;padding:6px 10px;min-width:200px;");
+    m_resultLabel->setStyleSheet("font-family:'Consolas';font-size:18px;border-radius:4px;padding:6px 10px;min-width:200px;");
     m_resultLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
     convLayout->addWidget(m_resultLabel, 1, 1);
 
@@ -191,22 +189,22 @@ void UnitConverterPage::setupUI() {
     m_toUnit->setStyleSheet(m_fromUnit->styleSheet());
     convLayout->addWidget(m_toUnit, 1, 2);
 
-    root->addWidget(convGroup);
+    root->addWidget(m_convGroup);
 
     // Formula hint
     m_formulaLabel = new QLabel("", this);
-    m_formulaLabel->setStyleSheet("color:#888;font-size:12px;padding:4px;");
+    m_formulaLabel->setStyleSheet("font-size:12px;padding:4px;");
     m_formulaLabel->setWordWrap(true);
     root->addWidget(m_formulaLabel);
 
     // Quick reference table for the category
-    auto* refGroup = new QGroupBox("Quick Reference", this);
-    refGroup->setStyleSheet(convGroup->styleSheet());
-    auto* refLayout = new QGridLayout(refGroup);
+    m_refGroup = new QGroupBox("Quick Reference", this);
+    m_refGroup->setStyleSheet(m_convGroup->styleSheet());
+    auto* refLayout = new QGridLayout(m_refGroup);
     refLayout->setSpacing(6);
     // This will be populated on category change - we skip dynamic generation here
     // and just show useful embedded-specific hints via formulaLabel
-    root->addWidget(refGroup);
+    root->addWidget(m_refGroup);
     root->addStretch();
 
     // Connect
@@ -300,3 +298,23 @@ void UnitConverterPage::convert() {
     );
 }
 
+void UnitConverterPage::applyTheme(bool dark) {
+    const QString grpS  = dark
+        ? "QGroupBox{color:#00e5ff;font-size:13px;font-weight:bold;border:1px solid #444;border-radius:6px;margin-top:8px;padding-top:10px;}QGroupBox::title{subcontrol-origin:margin;left:10px;}"
+        : "QGroupBox{color:#3d5aaa;font-size:13px;font-weight:bold;border:1px solid #c5cbdd;border-radius:6px;margin-top:8px;padding-top:10px;}QGroupBox::title{subcontrol-origin:margin;left:10px;}";
+    const QString fldS  = dark
+        ? "background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:18px;border:1px solid #666;border-radius:4px;padding:6px 10px;"
+        : "background:#ffffff;color:#1a1a2e;font-family:'Consolas';font-size:18px;border:1px solid #c5cbdd;border-radius:4px;padding:6px 10px;";
+    const QString resS  = dark
+        ? "background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:18px;border:1px solid #666;border-radius:4px;padding:6px 10px;min-width:200px;"
+        : "background:#f0f2fa;color:#1a1a2e;font-family:'Consolas';font-size:18px;border:1px solid #c5cbdd;border-radius:4px;padding:6px 10px;min-width:200px;";
+    const QString ttlS  = dark ? "color:#00e5ff;font-size:16px;font-weight:bold;" : "color:#3d5aaa;font-size:16px;font-weight:bold;";
+    const QString frmS  = dark ? "color:#888;font-size:12px;padding:4px;"         : "color:#6670a0;font-size:12px;padding:4px;";
+
+    m_titleLabel->setStyleSheet(ttlS);
+    m_formulaLabel->setStyleSheet(frmS);
+    m_fromEdit->setStyleSheet(fldS);
+    m_resultLabel->setStyleSheet(resS);
+    m_convGroup->setStyleSheet(grpS);
+    m_refGroup->setStyleSheet(grpS);
+}

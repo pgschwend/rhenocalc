@@ -5,6 +5,7 @@
 #include <QTabWidget>
 #include <QCloseEvent>
 #include <QShowEvent>
+#include <QPushButton>
 
 class CalculatorPage;
 class BaseConverterPage;
@@ -23,15 +24,16 @@ protected:
 
 private:
     void setupUI();
-    void applyTheme();
+    void applyTheme(bool dark);
     void saveWindowGeometry();
     void restoreWindowGeometry();
 
-    QTabWidget*       m_tabWidget;
-    CalculatorPage*   m_calcPage;
+    QTabWidget*        m_tabWidget;
+    CalculatorPage*    m_calcPage;
     BaseConverterPage* m_basePage;
     UnitConverterPage* m_unitPage;
+    QPushButton*       m_themeBtn = nullptr;
+    bool               m_isDark   = true;
 };
 
 #endif // MAINWINDOW_H
-

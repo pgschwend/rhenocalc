@@ -5,6 +5,7 @@
 #include <QComboBox>
 #include <QPushButton>
 #include <QCheckBox>
+#include <QGroupBox>
 #include <vector>
 
 class BitButton : public QPushButton {
@@ -12,6 +13,7 @@ class BitButton : public QPushButton {
 public:
     explicit BitButton(int bitIndex, QWidget* parent = nullptr);
     void setState(bool on);
+    void setDark(bool dark);
     bool state() const { return m_state; }
     int  bitIndex() const { return m_bitIndex; }
 signals:
@@ -20,12 +22,14 @@ private:
     void refresh();
     int  m_bitIndex;
     bool m_state = false;
+    bool m_dark  = true;
 };
 
 class BaseConverterPage : public QWidget {
     Q_OBJECT
 public:
     explicit BaseConverterPage(QWidget* parent = nullptr);
+    void applyTheme(bool dark);
 
 private slots:
     void onHexChanged();
@@ -49,9 +53,14 @@ private:
     QComboBox* m_widthCombo;
     QCheckBox* m_signedCheck;
 
-    QLabel*    m_byteLabels[8];   // byte values
-    QLabel*    m_bitIndexLabels[32]; // bit index labels (top)
-    std::vector<BitButton*> m_bitBtns; // 64 max
+    QGroupBox* m_regGroup;
+    QGroupBox* m_infoGroup;
+    QLabel*    m_wLabel;
+    QLabel*    m_fieldLabels[4];
+
+    QLabel*    m_byteLabels[8];
+    QLabel*    m_bitIndexLabels[32];
+    std::vector<BitButton*> m_bitBtns;
 
     QLabel*    m_signedLabel;
     QLabel*    m_unsignedLabel;
@@ -63,4 +72,3 @@ private:
     bool m_signed   = false;
     unsigned long long m_value = 0;
 };
-
