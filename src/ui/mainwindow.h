@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QTabWidget>
+#include <QCloseEvent>
 
 class CalculatorPage;
 class BaseConverterPage;
@@ -15,9 +16,14 @@ public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
+protected:
+    void closeEvent(QCloseEvent* event) override;
+
 private:
     void setupUI();
     void applyTheme();
+    void saveWindowGeometry();
+    void restoreWindowGeometry();
 
     QTabWidget*       m_tabWidget;
     CalculatorPage*   m_calcPage;

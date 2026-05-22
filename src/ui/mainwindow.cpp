@@ -20,11 +20,33 @@ MainWindow::MainWindow(QWidget* parent)
 {
     setupUI();
     applyTheme();
-    setWindowTitle("RhenoCalc – Embedded Engineer Calculator");
-    resize(900, 700);
+    setWindowTitle("RhenoCalc");
+    restoreWindowGeometry();
 }
 
 MainWindow::~MainWindow() {}
+
+void MainWindow::closeEvent(QCloseEvent* event) {
+    saveWindowGeometry();
+    QMainWindow::closeEvent(event);
+}
+
+void MainWindow::saveWindowGeometry() {
+    QSettings settings("RhenoCalc", "RhenoCalc");
+    settings.setValue("windowGeometry", saveGeometry());
+    settings.setValue("windowState", saveState());
+}
+
+void MainWindow::restoreWindowGeometry() {
+    QSettings settings("RhenoCalc", "RhenoCalc");
+    if (settings.contains("windowGeometry")) {
+        restoreGeometry(settings.value("windowGeometry").toByteArray());
+        restoreState(settings.value("windowState").toByteArray());
+    } else {
+        // Erster Start: kleinstmögliche Größe basierend auf dem Inhalt
+        adjustSize();
+    }
+}
 
 void MainWindow::setupUI() {
     m_tabWidget = new QTabWidget(this);
