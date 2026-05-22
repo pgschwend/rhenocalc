@@ -29,15 +29,15 @@ void BitButton::setState(bool on) {
 void BitButton::refresh() {
     setText(m_state ? "1" : "0");
     setStyleSheet(m_state
-        ? "background:#e67e22;color:white;font-size:11px;font-weight:bold;border-radius:3px;border:1px solid #f39c12;"
-        : "background:#2c3040;color:#aaa;font-size:11px;border-radius:3px;border:1px solid #444;");
+        ? "QPushButton{background:#707070;color:white;font-size:11px;font-weight:bold;border-radius:3px;border:1px solid #999;}QPushButton:hover{background:#888888;}"
+        : "QPushButton{background:#484848;color:#cccccc;font-size:11px;border-radius:3px;border:1px solid #666;}QPushButton:hover{background:#606060;}");
 }
 
 // ─── BaseConverterPage ────────────────────────────────────────────────────────
 
 static const QString EDIT_STYLE =
-    "background:#1e222c;color:#00e5ff;font-family:'Consolas','Courier New',monospace;"
-    "font-size:16px;border:1px solid #444;border-radius:4px;padding:4px 8px;";
+    "background:#444444;color:#f0f0f0;font-family:'Consolas','Courier New',monospace;"
+    "font-size:16px;border:1px solid #666;border-radius:4px;padding:4px 8px;";
 
 BaseConverterPage::BaseConverterPage(QWidget* parent) : QWidget(parent) {
     setupUI();
@@ -55,7 +55,7 @@ void BaseConverterPage::setupUI() {
     m_widthCombo = new QComboBox(this);
     m_widthCombo->addItems({"8-bit", "16-bit", "32-bit", "64-bit"});
     m_widthCombo->setCurrentIndex(2);
-    m_widthCombo->setStyleSheet("background:#2d3240;color:white;padding:4px 8px;border-radius:4px;");
+    m_widthCombo->setStyleSheet("background:#505050;color:#f0f0f0;padding:4px 8px;border-radius:4px;");
     m_signedCheck = new QCheckBox("Signed", this);
     m_signedCheck->setStyleSheet("color:white;font-size:13px;");
     ctrlRow->addWidget(wLabel);
@@ -131,8 +131,8 @@ void BaseConverterPage::setupUI() {
     byteRow->addWidget(new QLabel("Bytes:", this));
     for (int i = 7; i >= 0; --i) {
         auto* bl = new QLabel("00", this);
-        bl->setStyleSheet("background:#1e222c;color:#f39c12;font-family:'Consolas';font-size:13px;"
-                          "border:1px solid #444;border-radius:3px;padding:2px 6px;");
+        bl->setStyleSheet("background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:13px;"
+                          "border:1px solid #666;border-radius:3px;padding:2px 6px;");
         bl->setAlignment(Qt::AlignCenter);
         bl->setFixedWidth(44);
         bl->setToolTip(QString("Byte %1").arg(i));
@@ -157,8 +157,8 @@ void BaseConverterPage::setupUI() {
     };
     auto makeVal = [&]() {
         auto* l = new QLabel("—", this);
-        l->setStyleSheet("background:#1e222c;color:#00ff99;font-family:'Consolas';font-size:13px;"
-                         "border:1px solid #333;border-radius:3px;padding:2px 8px;");
+        l->setStyleSheet("background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:13px;"
+                         "border:1px solid #666;border-radius:3px;padding:2px 8px;");
         return l;
     };
 

@@ -146,7 +146,7 @@ void UnitConverterPage::setupUI() {
     catLabel->setFixedWidth(80);
     m_categoryCombo = new QComboBox(this);
     m_categoryCombo->addItems(m_categoryNames);
-    m_categoryCombo->setStyleSheet("background:#2d3240;color:white;padding:6px 10px;border-radius:4px;font-size:13px;");
+    m_categoryCombo->setStyleSheet("background:#505050;color:#f0f0f0;padding:6px 10px;border-radius:4px;font-size:13px;");
     m_categoryCombo->setMinimumWidth(240);
     catRow->addWidget(catLabel);
     catRow->addWidget(m_categoryCombo);
@@ -169,20 +169,20 @@ void UnitConverterPage::setupUI() {
 
     convLayout->addWidget(lbl("From:"), 0, 0);
     m_fromEdit = new QLineEdit(this);
-    m_fromEdit->setStyleSheet("background:#1e222c;color:#00ff99;font-family:'Consolas';font-size:18px;"
+    m_fromEdit->setStyleSheet("background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:18px;"
                               "border:1px solid #444;border-radius:4px;padding:6px 10px;");
     m_fromEdit->setPlaceholderText("Enter value...");
     convLayout->addWidget(m_fromEdit, 0, 1);
 
     m_fromUnit = new QComboBox(this);
-    m_fromUnit->setStyleSheet("background:#2d3240;color:white;padding:6px 10px;border-radius:4px;font-size:13px;min-width:80px;");
+    m_fromUnit->setStyleSheet("background:#505050;color:#f0f0f0;padding:6px 10px;border-radius:4px;font-size:13px;min-width:80px;");
     convLayout->addWidget(m_fromUnit, 0, 2);
 
     convLayout->addWidget(lbl("To:"), 1, 0);
     auto* toRow = new QHBoxLayout();
 
     m_resultLabel = new QLabel("—", this);
-    m_resultLabel->setStyleSheet("background:#1e222c;color:#f39c12;font-family:'Consolas';font-size:18px;"
+    m_resultLabel->setStyleSheet("background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:18px;"
                                  "border:1px solid #444;border-radius:4px;padding:6px 10px;min-width:200px;");
     m_resultLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
     convLayout->addWidget(m_resultLabel, 1, 1);

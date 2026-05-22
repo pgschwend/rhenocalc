@@ -8,13 +8,13 @@
 #include <cmath>
 #include <climits>
 
-static const QString BTN_NUM   = "background:#3a3f4b;color:white;font-size:15px;border-radius:4px;padding:8px;";
-static const QString BTN_OP    = "background:#e67e22;color:white;font-size:15px;border-radius:4px;padding:8px;";
-static const QString BTN_BIT   = "background:#2980b9;color:white;font-size:13px;border-radius:4px;padding:8px;";
-static const QString BTN_FUNC  = "background:#555e6e;color:white;font-size:13px;border-radius:4px;padding:8px;";
-static const QString BTN_HEX   = "background:#4a3f6b;color:white;font-size:15px;border-radius:4px;padding:8px;";
-static const QString BTN_EQ    = "background:#27ae60;color:white;font-size:15px;border-radius:4px;padding:8px;";
-static const QString BTN_CLEAR = "background:#c0392b;color:white;font-size:15px;border-radius:4px;padding:8px;";
+static const QString BTN_NUM   = "QPushButton{background:#505050;color:#f0f0f0;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#686868;}";
+static const QString BTN_OP    = "QPushButton{background:#707070;color:#ffffff;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#888888;}";
+static const QString BTN_BIT   = "QPushButton{background:#5a5a5a;color:#e0e0e0;font-size:13px;border-radius:4px;padding:8px;}QPushButton:hover{background:#727272;}";
+static const QString BTN_FUNC  = "QPushButton{background:#484848;color:#cccccc;font-size:13px;border-radius:4px;padding:8px;}QPushButton:hover{background:#606060;}";
+static const QString BTN_HEX   = "QPushButton{background:#606060;color:#f0f0f0;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#787878;}QPushButton:enabled:hover{background:#787878;}QPushButton:disabled{background:#3a3a3a;color:#666666;}";
+static const QString BTN_EQ    = "QPushButton{background:#787878;color:#ffffff;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#909090;}";
+static const QString BTN_CLEAR = "QPushButton{background:#383838;color:#cccccc;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#505050;}";
 
 CalculatorPage::CalculatorPage(QWidget* parent) : QWidget(parent) {
     setupUI();
@@ -38,7 +38,7 @@ void CalculatorPage::setupUI() {
     baseLabel->setStyleSheet("color:white;font-size:13px;");
     m_baseCombo = new QComboBox(this);
     m_baseCombo->addItems({"Decimal (10)", "Hexadecimal (16)", "Binary (2)", "Octal (8)"});
-    m_baseCombo->setStyleSheet("background:#2d3240;color:white;padding:4px 8px;border-radius:4px;");
+    m_baseCombo->setStyleSheet("background:#505050;color:#f0f0f0;padding:4px 8px;border-radius:4px;");
     m_baseCombo->setMinimumWidth(160);
 
     QLabel* wLabel = new QLabel("Word:", this);
@@ -46,7 +46,7 @@ void CalculatorPage::setupUI() {
     m_widthCombo = new QComboBox(this);
     m_widthCombo->addItems({"8-bit", "16-bit", "32-bit", "64-bit"});
     m_widthCombo->setCurrentIndex(2);
-    m_widthCombo->setStyleSheet("background:#2d3240;color:white;padding:4px 8px;border-radius:4px;");
+    m_widthCombo->setStyleSheet("background:#505050;color:#f0f0f0;padding:4px 8px;border-radius:4px;");
 
     topRow->addWidget(baseLabel);
     topRow->addWidget(m_baseCombo);
@@ -66,8 +66,8 @@ void CalculatorPage::setupUI() {
     m_display = new QLineEdit("0", this);
     m_display->setAlignment(Qt::AlignRight);
     m_display->setReadOnly(true);
-    m_display->setStyleSheet("background:#1e222c;color:#00ff99;font-size:28px;font-family:'Consolas','Courier New',monospace;"
-                             "border:1px solid #444;border-radius:4px;padding:6px 12px;");
+    m_display->setStyleSheet("background:#444444;color:#f0f0f0;font-size:28px;font-family:'Consolas','Courier New',monospace;"
+                             "border:1px solid #666;border-radius:4px;padding:6px 12px;");
     m_display->setMinimumHeight(56);
     root->addWidget(m_display);
 

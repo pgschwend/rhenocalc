@@ -29,10 +29,10 @@ MainWindow::~MainWindow() {}
 void MainWindow::setupUI() {
     m_tabWidget = new QTabWidget(this);
     m_tabWidget->setStyleSheet(
-        "QTabWidget::pane { border: none; background: #1a1d27; }"
-        "QTabBar::tab { background: #2d3240; color: #aaa; padding: 10px 22px; font-size: 13px; border-radius: 0; }"
-        "QTabBar::tab:selected { background: #1a1d27; color: #00e5ff; border-bottom: 2px solid #00e5ff; }"
-        "QTabBar::tab:hover { background: #3a3f52; color: white; }"
+        "QTabWidget::pane { border: none; background: #3c3c3c; }"
+        "QTabBar::tab { background: #4a4a4a; color: #cccccc; padding: 10px 22px; font-size: 13px; border-radius: 0; }"
+        "QTabBar::tab:selected { background: #3c3c3c; color: #ffffff; border-bottom: 2px solid #aaaaaa; }"
+        "QTabBar::tab:hover { background: #575757; color: #ffffff; }"
     );
 
     m_calcPage = new CalculatorPage(this);
@@ -46,20 +46,20 @@ void MainWindow::setupUI() {
     setCentralWidget(m_tabWidget);
 
     statusBar()->showMessage("RhenoCalc  |  Embedded Engineer Toolbox  |  v1.0");
-    statusBar()->setStyleSheet("background:#12141c;color:#666;font-size:11px;");
+    statusBar()->setStyleSheet("background:#4a4a4a;color:#bbbbbb;font-size:11px;");
 }
 
 void MainWindow::applyTheme() {
     qApp->setStyle(QStyleFactory::create("Fusion"));
     QPalette p;
-    p.setColor(QPalette::Window,          QColor("#1a1d27"));
-    p.setColor(QPalette::WindowText,      QColor("#e0e0e0"));
-    p.setColor(QPalette::Base,            QColor("#1e222c"));
-    p.setColor(QPalette::AlternateBase,   QColor("#2a2d3a"));
-    p.setColor(QPalette::Text,            QColor("#e0e0e0"));
-    p.setColor(QPalette::Button,          QColor("#2d3240"));
-    p.setColor(QPalette::ButtonText,      QColor("#e0e0e0"));
-    p.setColor(QPalette::Highlight,       QColor("#00b8d4"));
-    p.setColor(QPalette::HighlightedText, QColor("#000000"));
+    p.setColor(QPalette::Window,          QColor("#3c3c3c"));
+    p.setColor(QPalette::WindowText,      QColor("#f0f0f0"));
+    p.setColor(QPalette::Base,            QColor("#444444"));
+    p.setColor(QPalette::AlternateBase,   QColor("#4e4e4e"));
+    p.setColor(QPalette::Text,            QColor("#f0f0f0"));
+    p.setColor(QPalette::Button,          QColor("#4a4a4a"));
+    p.setColor(QPalette::ButtonText,      QColor("#f0f0f0"));
+    p.setColor(QPalette::Highlight,       QColor("#888888"));
+    p.setColor(QPalette::HighlightedText, QColor("#ffffff"));
     qApp->setPalette(p);
 }
