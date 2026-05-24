@@ -27,9 +27,10 @@ MainWindow::MainWindow(QWidget* parent)
 
     setupUI();
     applyTheme(m_isDark);
-    applyAlwaysOnTop(m_alwaysOnTop, false);
     setWindowTitle("RhenoCalc");
     restoreWindowGeometry();
+    // Apply after restoreState/restoreGeometry so restored state does not override the hint.
+    applyAlwaysOnTop(m_alwaysOnTop, false);
 
     // Tab-Navigation mit Shift+Links / Shift+Rechts
     auto* prevTab = new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_Left), this);
@@ -169,21 +170,13 @@ void MainWindow::applyAlwaysOnTop(bool enabled, bool persist) {
     const bool wasFullScreen = isFullScreen();
     const QRect normalGeo = normalGeometry().isValid() ? normalGeometry() : geometry();
 
-    // Keep all flags in one call; some WMs ignore split calls.
-    Qt::WindowFlags flags = windowFlags();
-    const bool isX11 = QGuiApplication::platformName().contains("xcb", Qt::CaseInsensitive);
+    const QString platform = QGuiApplication::platformName().toLower();
+    const bool isX11 = platform.contains("xcb");
+    const bool isWayland = platform.contains("wayland");
 
-    if (enabled) {
-        flags |= Qt::WindowStaysOnTopHint;
-        // Qt docs: on some X11 WMs this is required for reliable top-most behavior.
-        if (isX11)
-            flags |= Qt::X11BypassWindowManagerHint;
-    } else {
-        flags &= ~Qt::WindowStaysOnTopHint;
-        flags &= ~Qt::X11BypassWindowManagerHint;
-    }
-
-    setWindowFlags(flags);
+    // On Linux/WMs, setting individual flags and re-showing is more reliable than setWindowFlags().
+    setWindowFlag(Qt::WindowStaysOnTopHint, enabled);
+    setWindowFlag(Qt::X11BypassWindowManagerHint, enabled && isX11);
 
     if (wasVisible) {
         if (wasFullScreen) {
@@ -200,6 +193,9 @@ void MainWindow::applyAlwaysOnTop(bool enabled, bool persist) {
         raise();
         activateWindow();
     }
+
+    if (enabled && isWayland)
+        statusBar()->showMessage("Always-on-top auf Wayland kann vom Compositor ignoriert werden.", 5000);
 
     updateOnTopButton();
 }
