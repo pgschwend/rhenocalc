@@ -1,4 +1,5 @@
 #include "unitconverterpage.h"
+#include "ui/themecolors.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -155,9 +156,7 @@ void UnitConverterPage::setupUI() {
 
     // Converter box
     m_convGroup = new QGroupBox("Convert", this);
-    m_convGroup->setStyleSheet("QGroupBox{color:#b5b5b5;font-size:13px;font-weight:bold;border:1px solid #444;"
-                             "border-radius:6px;margin-top:8px;padding-top:10px;}"
-                             "QGroupBox::title{subcontrol-origin:margin;left:10px;}");
+    m_convGroup->setStyleSheet(ThemeColors::unitGroupStyle(true));
     auto* convLayout = new QGridLayout(m_convGroup);
     convLayout->setSpacing(10);
 
@@ -299,17 +298,11 @@ void UnitConverterPage::convert() {
 }
 
 void UnitConverterPage::applyTheme(bool dark) {
-    const QString grpS  = dark
-        ? "QGroupBox{color:#b5b5b5;font-size:13px;font-weight:bold;border:1px solid #444;border-radius:6px;margin-top:8px;padding-top:10px;}QGroupBox::title{subcontrol-origin:margin;left:10px;}"
-        : "QGroupBox{color:#3d5aaa;font-size:13px;font-weight:bold;border:1px solid #c5cbdd;border-radius:6px;margin-top:8px;padding-top:10px;}QGroupBox::title{subcontrol-origin:margin;left:10px;}";
-    const QString fldS  = dark
-        ? "background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:18px;border:1px solid #666;border-radius:4px;padding:6px 10px;"
-        : "background:#ffffff;color:#1a1a2e;font-family:'Consolas';font-size:18px;border:1px solid #c5cbdd;border-radius:4px;padding:6px 10px;";
-    const QString resS  = dark
-        ? "background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:18px;border:1px solid #666;border-radius:4px;padding:6px 10px;min-width:200px;"
-        : "background:#f0f2fa;color:#1a1a2e;font-family:'Consolas';font-size:18px;border:1px solid #c5cbdd;border-radius:4px;padding:6px 10px;min-width:200px;";
-    const QString ttlS  = dark ? "color:#b5b5b5;font-size:16px;font-weight:bold;" : "color:#3d5aaa;font-size:16px;font-weight:bold;";
-    const QString frmS  = dark ? "color:#888;font-size:12px;padding:4px;"         : "color:#6670a0;font-size:12px;padding:4px;";
+    const QString grpS = ThemeColors::unitGroupStyle(dark);
+    const QString fldS = ThemeColors::unitFieldStyle(dark);
+    const QString resS = ThemeColors::unitResultStyle(dark);
+    const QString ttlS = ThemeColors::unitTitleStyle(dark);
+    const QString frmS = ThemeColors::unitFormulaStyle(dark);
 
     m_titleLabel->setStyleSheet(ttlS);
     m_formulaLabel->setStyleSheet(frmS);

@@ -2,6 +2,7 @@
 #include "pages/calculatorpage.h"
 #include "pages/baseconverterpage.h"
 #include "pages/unitconverterpage.h"
+#include "themecolors.h"
 #include <QApplication>
 #include <QStyleFactory>
 #include <QFile>
@@ -108,39 +109,13 @@ void MainWindow::applyTheme(bool dark) {
     // ── Globales Stylesheet aus QSS-Datei laden ───────────────────────────────
     QFile qss(dark ? ":/styles/dark.qss" : ":/styles/light.qss");
     if (qss.open(QFile::ReadOnly)) {
-        qApp->setStyleSheet(QString::fromUtf8(qss.readAll()));
+        qApp->setStyleSheet(ThemeColors::applyQssColors(QString::fromUtf8(qss.readAll()), dark));
         qss.close();
     }
 
     // ── Fusion-Palette (Fallback für native Elemente) ─────────────────────────
     qApp->setStyle(QStyleFactory::create("Fusion"));
-    QPalette p;
-    if (dark) {
-        p.setColor(QPalette::Window,          QColor("#1f1f1f"));
-        p.setColor(QPalette::WindowText,      QColor("#e6e6e6"));
-        p.setColor(QPalette::Base,            QColor("#2a2a2a"));
-        p.setColor(QPalette::AlternateBase,   QColor("#292929"));
-        p.setColor(QPalette::Text,            QColor("#e6e6e6"));
-        p.setColor(QPalette::Button,          QColor("#5f5f5f"));
-        p.setColor(QPalette::ButtonText,      QColor("#ffffff"));
-        p.setColor(QPalette::Highlight,       QColor("#5f5f5f"));
-        p.setColor(QPalette::HighlightedText, QColor("#ffffff"));
-        p.setColor(QPalette::ToolTipBase,     QColor("#2a2a2a"));
-        p.setColor(QPalette::ToolTipText,     QColor("#e6e6e6"));
-    } else {
-        p.setColor(QPalette::Window,          QColor("#f4f6fb"));
-        p.setColor(QPalette::WindowText,      QColor("#1a1a2e"));
-        p.setColor(QPalette::Base,            QColor("#ffffff"));
-        p.setColor(QPalette::AlternateBase,   QColor("#f7f8fd"));
-        p.setColor(QPalette::Text,            QColor("#1a1a2e"));
-        p.setColor(QPalette::Button,          QColor("#3d5aaa"));
-        p.setColor(QPalette::ButtonText,      QColor("#ffffff"));
-        p.setColor(QPalette::Highlight,       QColor("#3d5aaa"));
-        p.setColor(QPalette::HighlightedText, QColor("#ffffff"));
-        p.setColor(QPalette::ToolTipBase,     QColor("#ffffff"));
-        p.setColor(QPalette::ToolTipText,     QColor("#1a1a2e"));
-    }
-    qApp->setPalette(p);
+    qApp->setPalette(ThemeColors::applicationPalette(dark));
 
     // ── Seiten-spezifische Stile aktualisieren ────────────────────────────────
     m_calcPage->applyTheme(dark);
@@ -148,15 +123,11 @@ void MainWindow::applyTheme(bool dark) {
     m_unitPage->applyTheme(dark);
 
     // ── Status Bar ────────────────────────────────────────────────────────────
-    statusBar()->setStyleSheet(dark
-        ? "background:#2a2a2a;color:#b5b5b5;font-size:11px;"
-        : "background:#eaecf5;color:#3d5aaa;font-size:11px;");
+    statusBar()->setStyleSheet(ThemeColors::statusBarStyle(dark));
 
     // ── Theme-Button beschriften ──────────────────────────────────────────────
     if (m_themeBtn) {
         m_themeBtn->setText(dark ? "☀ Light" : "🌙 Dark");
-        m_themeBtn->setStyleSheet(dark
-            ? "QPushButton{background:#5f5f5f;color:#ffffff;border:none;border-radius:4px;padding:4px 10px;font-size:12px;}QPushButton:hover{background:#717171;}"
-            : "QPushButton{background:#3d5aaa;color:#ffffff;border:none;border-radius:4px;padding:4px 10px;font-size:12px;}QPushButton:hover{background:#4d6abf;}");
+        m_themeBtn->setStyleSheet(ThemeColors::themeToggleButtonStyle(dark));
     }
 }

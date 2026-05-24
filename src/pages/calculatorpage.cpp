@@ -1,4 +1,5 @@
 #include "calculatorpage.h"
+#include "ui/themecolors.h"
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -9,14 +10,6 @@
 #include <climits>
 #include <limits>
 
-static const QString BTN_NUM   = "QPushButton{background:#505050;color:#f0f0f0;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#686868;}";
-static const QString BTN_OP    = "QPushButton{background:#707070;color:#ffffff;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#888888;}";
-static const QString BTN_BIT   = "QPushButton{background:#5a5a5a;color:#e0e0e0;font-size:13px;border-radius:4px;padding:8px;}QPushButton:hover{background:#727272;}";
-static const QString BTN_FUNC  = "QPushButton{background:#484848;color:#cccccc;font-size:13px;border-radius:4px;padding:8px;}QPushButton:hover{background:#606060;}";
-static const QString BTN_HEX   = "QPushButton{background:#606060;color:#f0f0f0;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#787878;}QPushButton:enabled:hover{background:#787878;}QPushButton:disabled{background:#3a3a3a;color:#666666;}";
-static const QString BTN_EQ    = "QPushButton{background:#787878;color:#ffffff;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#909090;}";
-static const QString BTN_CLEAR = "QPushButton{background:#383838;color:#cccccc;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#505050;}";
-
 CalculatorPage::CalculatorPage(QWidget* parent) : QWidget(parent) {
     setupUI();
 }
@@ -24,7 +17,7 @@ CalculatorPage::CalculatorPage(QWidget* parent) : QWidget(parent) {
 QPushButton* CalculatorPage::makeBtn(const QString& text, const QString& style) {
     auto* btn = new QPushButton(text, this);
     btn->setMinimumSize(58, 44);
-    btn->setStyleSheet(style.isEmpty() ? BTN_NUM : style);
+    btn->setStyleSheet(style.isEmpty() ? ThemeColors::calcNumButton(true) : style);
     return btn;
 }
 
@@ -83,11 +76,11 @@ void CalculatorPage::setupUI() {
     // Row 0: Hex letters A-F + Backspace
     const char* hexLetters[] = {"A","B","C","D","E","F"};
     for (int i = 0; i < 6; ++i) {
-        m_hexBtns[i] = makeBtn(hexLetters[i], BTN_HEX);
+        m_hexBtns[i] = makeBtn(hexLetters[i], ThemeColors::calcHexButton(true));
         connect(m_hexBtns[i], &QPushButton::clicked, this, &CalculatorPage::onDigitClicked);
         grid->addWidget(m_hexBtns[i], 0, i);
     }
-    auto* bsBtn = makeBtn("⌫", BTN_FUNC);
+    auto* bsBtn = makeBtn("⌫", ThemeColors::calcFuncButton(true));
     m_funcBtns << bsBtn;
     connect(bsBtn, &QPushButton::clicked, this, &CalculatorPage::onBackspaceClicked);
     grid->addWidget(bsBtn, 0, 6);
@@ -96,48 +89,48 @@ void CalculatorPage::setupUI() {
     const char* bitOps[] = {"AND","OR","XOR","NOT","LSL","LSR","ROR","ROL"};
     // Split to 2 rows of 4
     for (int i = 0; i < 4; ++i) {
-        auto* b = makeBtn(bitOps[i], BTN_BIT);
+        auto* b = makeBtn(bitOps[i], ThemeColors::calcBitButton(true));
         b->setObjectName(bitOps[i]);
         m_bitOpBtns << b;
         connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
         grid->addWidget(b, 1, i);
     }
     for (int i = 4; i < 8; ++i) {
-        auto* b = makeBtn(bitOps[i], BTN_BIT);
+        auto* b = makeBtn(bitOps[i], ThemeColors::calcBitButton(true));
         b->setObjectName(bitOps[i]);
         m_bitOpBtns << b;
         connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
         grid->addWidget(b, 2, i-4);
     }
     // Row 2 right side: MOD, NEG, CLR, DEL
-    auto* modBtn = makeBtn("MOD", BTN_FUNC);
+    auto* modBtn = makeBtn("MOD", ThemeColors::calcFuncButton(true));
     modBtn->setObjectName("MOD");
     m_funcBtns << modBtn;
     connect(modBtn, &QPushButton::clicked, this, &CalculatorPage::onOperatorClicked);
     grid->addWidget(modBtn, 1, 4);
 
-    auto* negBtn = makeBtn("+/-", BTN_FUNC);
+    auto* negBtn = makeBtn("+/-", ThemeColors::calcFuncButton(true));
     m_funcBtns << negBtn;
     connect(negBtn, &QPushButton::clicked, this, &CalculatorPage::onNegateClicked);
     grid->addWidget(negBtn, 1, 5);
 
-    auto* clrBtn = makeBtn("CE", BTN_CLEAR);
+    auto* clrBtn = makeBtn("CE", ThemeColors::calcClearButton(true));
     m_clearBtns << clrBtn;
     connect(clrBtn, &QPushButton::clicked, this, [this]{ m_current=0; m_newInput=true; updateDisplay(); });
     grid->addWidget(clrBtn, 1, 6);
 
-    auto* clearAllBtn = makeBtn("AC", BTN_CLEAR);
+    auto* clearAllBtn = makeBtn("AC", ThemeColors::calcClearButton(true));
     m_clearBtns << clearAllBtn;
     connect(clearAllBtn, &QPushButton::clicked, this, &CalculatorPage::onClearClicked);
     grid->addWidget(clearAllBtn, 2, 4);
 
-    auto* powBtn = makeBtn("x²", BTN_FUNC);
+    auto* powBtn = makeBtn("x²", ThemeColors::calcFuncButton(true));
     powBtn->setObjectName("SQ");
     m_funcBtns << powBtn;
     connect(powBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
     grid->addWidget(powBtn, 2, 5);
 
-    auto* sqrtBtn = makeBtn("√x", BTN_FUNC);
+    auto* sqrtBtn = makeBtn("√x", ThemeColors::calcFuncButton(true));
     sqrtBtn->setObjectName("SQRT");
     m_funcBtns << sqrtBtn;
     connect(sqrtBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
@@ -146,10 +139,10 @@ void CalculatorPage::setupUI() {
     // Digits + operators (rows 3-6)
     struct BtnDef { QString label; int row, col; QString style; };
     QList<BtnDef> defs = {
-        {"7",3,0,BTN_NUM},{"8",3,1,BTN_NUM},{"9",3,2,BTN_NUM},{"÷",3,3,BTN_OP},{"(",3,4,BTN_FUNC},{")",3,5,BTN_FUNC},{"<<",3,6,BTN_BIT},
-        {"4",4,0,BTN_NUM},{"5",4,1,BTN_NUM},{"6",4,2,BTN_NUM},{"×",4,3,BTN_OP},{"1/x",4,4,BTN_FUNC},{"abs",4,5,BTN_FUNC},{">>",4,6,BTN_BIT},
-        {"1",5,0,BTN_NUM},{"2",5,1,BTN_NUM},{"3",5,2,BTN_NUM},{"-",5,3,BTN_OP},{"MS",5,4,BTN_FUNC},{"MR",5,5,BTN_FUNC},{"MC",5,6,BTN_FUNC},
-        {"0",6,0,BTN_NUM},{"00",6,1,BTN_NUM},{".",6,2,BTN_NUM},{"+",6,3,BTN_OP},{"=",6,4,BTN_EQ},
+        {"7",3,0,ThemeColors::calcNumButton(true)},{"8",3,1,ThemeColors::calcNumButton(true)},{"9",3,2,ThemeColors::calcNumButton(true)},{"÷",3,3,ThemeColors::calcOpButton(true)},{"(",3,4,ThemeColors::calcFuncButton(true)},{")",3,5,ThemeColors::calcFuncButton(true)},{"<<",3,6,ThemeColors::calcBitButton(true)},
+        {"4",4,0,ThemeColors::calcNumButton(true)},{"5",4,1,ThemeColors::calcNumButton(true)},{"6",4,2,ThemeColors::calcNumButton(true)},{"×",4,3,ThemeColors::calcOpButton(true)},{"1/x",4,4,ThemeColors::calcFuncButton(true)},{"abs",4,5,ThemeColors::calcFuncButton(true)},{">>",4,6,ThemeColors::calcBitButton(true)},
+        {"1",5,0,ThemeColors::calcNumButton(true)},{"2",5,1,ThemeColors::calcNumButton(true)},{"3",5,2,ThemeColors::calcNumButton(true)},{"-",5,3,ThemeColors::calcOpButton(true)},{"MS",5,4,ThemeColors::calcFuncButton(true)},{"MR",5,5,ThemeColors::calcFuncButton(true)},{"MC",5,6,ThemeColors::calcFuncButton(true)},
+        {"0",6,0,ThemeColors::calcNumButton(true)},{"00",6,1,ThemeColors::calcNumButton(true)},{".",6,2,ThemeColors::calcNumButton(true)},{"+",6,3,ThemeColors::calcOpButton(true)},{"=",6,4,ThemeColors::calcEqButton(true)},
     };
 
     // Make = button span 3 cols
@@ -160,7 +153,7 @@ void CalculatorPage::setupUI() {
             m_eqBtn = b;
             grid->addWidget(b, d.row, d.col, 1, 3);
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onEqualsClicked);
-        } else if (d.style == BTN_OP || d.label == "MOD") {
+        } else if (d.label == "÷" || d.label == "×" || d.label == "+" || d.label == "-" || d.label == "MOD") {
             b->setObjectName(d.label);
             m_opBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onOperatorClicked);
@@ -498,33 +491,16 @@ QString CalculatorPage::formatDouble(double val) {
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 void CalculatorPage::applyTheme(bool dark) {
-    // ── Button style strings ──────────────────────────────────────────────────
-    const QString numS   = dark
-        ? "QPushButton{background:#505050;color:#f0f0f0;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#686868;}"
-        : "QPushButton{background:#e4e8f5;color:#1a1a2e;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#d0d4e8;}";
-    const QString opS    = dark
-        ? "QPushButton{background:#707070;color:#ffffff;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#888888;}"
-        : "QPushButton{background:#3d5aaa;color:#ffffff;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#4d6abf;}";
-    const QString bitS   = dark
-        ? "QPushButton{background:#5a5a5a;color:#e0e0e0;font-size:13px;border-radius:4px;padding:8px;}QPushButton:hover{background:#727272;}"
-        : "QPushButton{background:#c8cde0;color:#1a1a2e;font-size:13px;border-radius:4px;padding:8px;}QPushButton:hover{background:#b8bdd8;}";
-    const QString funcS  = dark
-        ? "QPushButton{background:#484848;color:#cccccc;font-size:13px;border-radius:4px;padding:8px;}QPushButton:hover{background:#606060;}"
-        : "QPushButton{background:#d8dcee;color:#1a1a2e;font-size:13px;border-radius:4px;padding:8px;}QPushButton:hover{background:#c8cce0;}";
-    const QString hexS   = dark
-        ? "QPushButton{background:#606060;color:#f0f0f0;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#787878;}QPushButton:disabled{background:#3a3a3a;color:#666666;}"
-        : "QPushButton{background:#dce0f0;color:#1a1a2e;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#ccd0e8;}QPushButton:disabled{background:#eaecf5;color:#9099bb;}";
-    const QString eqS    = dark
-        ? "QPushButton{background:#787878;color:#ffffff;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#909090;}"
-        : "QPushButton{background:#2d4a88;color:#ffffff;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#3d5aaa;}";
-    const QString clrS   = dark
-        ? "QPushButton{background:#383838;color:#cccccc;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#505050;}"
-        : "QPushButton{background:#f5e8e8;color:#c0392b;font-size:15px;border-radius:4px;padding:8px;}QPushButton:hover{background:#ead8d8;}";
-    const QString dispS  = dark
-        ? "background:#444444;color:#f0f0f0;font-size:28px;font-family:'Consolas','Courier New',monospace;border:1px solid #666;border-radius:4px;padding:6px 12px;"
-        : "background:#ffffff;color:#1a1a2e;font-size:28px;font-family:'Consolas','Courier New',monospace;border:1px solid #c5cbdd;border-radius:4px;padding:6px 12px;";
-    const QString exprS  = dark ? "color:#9a9a9a;font-size:12px;padding:2px 6px;" : "color:#5566aa;font-size:12px;padding:2px 6px;";
-    const QString hintS  = dark ? "color:#7f7f7f;font-size:10px;padding:2px 4px;" : "color:#9099bb;font-size:10px;padding:2px 4px;";
+    const QString numS  = ThemeColors::calcNumButton(dark);
+    const QString opS   = ThemeColors::calcOpButton(dark);
+    const QString bitS  = ThemeColors::calcBitButton(dark);
+    const QString funcS = ThemeColors::calcFuncButton(dark);
+    const QString hexS  = ThemeColors::calcHexButton(dark);
+    const QString eqS   = ThemeColors::calcEqButton(dark);
+    const QString clrS  = ThemeColors::calcClearButton(dark);
+    const QString dispS = ThemeColors::calcDisplayStyle(dark);
+    const QString exprS = ThemeColors::calcExprStyle(dark);
+    const QString hintS = ThemeColors::calcHintStyle(dark);
 
     // ── Apply ─────────────────────────────────────────────────────────────────
     m_display->setStyleSheet(dispS);
@@ -545,8 +521,6 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
     const int key = event->key();
     const Qt::KeyboardModifiers mod = event->modifiers();
 
-    // Helper: flash display briefly (visual feedback)
-    auto flash = [&]{ m_display->setStyleSheet(m_display->styleSheet().replace("#00ff99","#ffffff")); };
 
     // ── Decimal point (float mode) ────────────────────────────────────────────
     if (key == Qt::Key_Period || key == Qt::Key_Comma) {

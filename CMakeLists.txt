@@ -28,6 +28,7 @@ find_package(Qt6 COMPONENTS
 set(SOURCES
         src/resources/resources.qrc
         src/main.cpp
+        src/ui/themecolors.h src/ui/themecolors.cpp
         src/ui/mainwindow.h src/ui/mainwindow.cpp
         src/pages/calculatorpage.h   src/pages/calculatorpage.cpp
         src/pages/baseconverterpage.h src/pages/baseconverterpage.cpp

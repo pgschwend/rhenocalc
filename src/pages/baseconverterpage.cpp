@@ -1,4 +1,5 @@
 #include "baseconverterpage.h"
+#include "ui/themecolors.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -33,15 +34,7 @@ void BitButton::setDark(bool dark) {
 
 void BitButton::refresh() {
     setText(m_state ? "1" : "0");
-    if (m_dark) {
-        setStyleSheet(m_state
-            ? "QPushButton{background:#707070;color:white;font-size:11px;font-weight:bold;border-radius:3px;border:1px solid #999;}QPushButton:hover{background:#888888;}"
-            : "QPushButton{background:#484848;color:#cccccc;font-size:11px;border-radius:3px;border:1px solid #666;}QPushButton:hover{background:#606060;}");
-    } else {
-        setStyleSheet(m_state
-            ? "QPushButton{background:#3d5aaa;color:white;font-size:11px;font-weight:bold;border-radius:3px;border:1px solid #8899cc;}QPushButton:hover{background:#4d6abf;}"
-            : "QPushButton{background:#eaecf5;color:#4455aa;font-size:11px;border-radius:3px;border:1px solid #c5cbdd;}QPushButton:hover{background:#d8dcee;}");
-    }
+    setStyleSheet(ThemeColors::baseBitButtonStyle(m_dark, m_state));
 }
 
 // ─── BaseConverterPage ────────────────────────────────────────────────────────
@@ -95,8 +88,7 @@ void BaseConverterPage::setupUI() {
 
     // ── Register / Bit Viewer ─────────────────────────────────────────────────
     m_regGroup = new QGroupBox("Register View", this);
-    m_regGroup->setStyleSheet("QGroupBox{color:#b5b5b5;font-size:13px;font-weight:bold;border:1px solid #444;border-radius:6px;margin-top:8px;padding-top:8px;}"
-                             "QGroupBox::title{subcontrol-origin:margin;left:10px;}");
+    m_regGroup->setStyleSheet(ThemeColors::baseGroupStyle(true));
     auto* regLayout = new QVBoxLayout(m_regGroup);
     regLayout->setSpacing(4);
 
@@ -124,7 +116,7 @@ void BaseConverterPage::setupUI() {
         // Bit index label below button
         auto* idxLbl = new QLabel(QString::number(i), bitArea);
         idxLbl->setAlignment(Qt::AlignCenter);
-        idxLbl->setStyleSheet("color:#666;font-size:9px;");
+        idxLbl->setStyleSheet("font-size:9px;");
         idxLbl->setFixedWidth(22);
         bitGrid->addWidget(idxLbl, row * 2 + 1, col);
     }
@@ -325,16 +317,10 @@ void BaseConverterPage::onOctChanged() {
 }
 
 void BaseConverterPage::applyTheme(bool dark) {
-    const QString editS = dark
-        ? "background:#444444;color:#f0f0f0;font-family:'Consolas','Courier New',monospace;font-size:16px;border:1px solid #666;border-radius:4px;padding:4px 8px;"
-        : "background:#ffffff;color:#1a1a2e;font-family:'Consolas','Courier New',monospace;font-size:16px;border:1px solid #c5cbdd;border-radius:4px;padding:4px 8px;";
-    const QString valS = dark
-        ? "background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:13px;border:1px solid #666;border-radius:3px;padding:2px 8px;"
-        : "background:#f0f2fa;color:#1a1a2e;font-family:'Consolas';font-size:13px;border:1px solid #c5cbdd;border-radius:3px;padding:2px 8px;";
-    const QString grpS = dark
-        ? "QGroupBox{color:#b5b5b5;font-size:13px;font-weight:bold;border:1px solid #444;border-radius:6px;margin-top:8px;padding-top:8px;}QGroupBox::title{subcontrol-origin:margin;left:10px;}"
-        : "QGroupBox{color:#3d5aaa;font-size:13px;font-weight:bold;border:1px solid #c5cbdd;border-radius:6px;margin-top:8px;padding-top:8px;}QGroupBox::title{subcontrol-origin:margin;left:10px;}";
-    const QString fldS = dark ? "color:#aaa;font-size:13px;font-weight:bold;" : "color:#3d5aaa;font-size:13px;font-weight:bold;";
+    const QString editS = ThemeColors::baseEditStyle(dark);
+    const QString valS  = ThemeColors::baseValueStyle(dark);
+    const QString grpS  = ThemeColors::baseGroupStyle(dark);
+    const QString fldS  = ThemeColors::baseFieldLabelStyle(dark);
 
     m_hexEdit->setStyleSheet(editS);
     m_decEdit->setStyleSheet(editS);
