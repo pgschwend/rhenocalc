@@ -95,7 +95,7 @@ void BaseConverterPage::setupUI() {
 
     // ── Register / Bit Viewer ─────────────────────────────────────────────────
     m_regGroup = new QGroupBox("Register View", this);
-    m_regGroup->setStyleSheet("QGroupBox{color:#00e5ff;font-size:13px;font-weight:bold;border:1px solid #444;border-radius:6px;margin-top:8px;padding-top:8px;}"
+    m_regGroup->setStyleSheet("QGroupBox{color:#b5b5b5;font-size:13px;font-weight:bold;border:1px solid #444;border-radius:6px;margin-top:8px;padding-top:8px;}"
                              "QGroupBox::title{subcontrol-origin:margin;left:10px;}");
     auto* regLayout = new QVBoxLayout(m_regGroup);
     regLayout->setSpacing(4);
@@ -332,7 +332,7 @@ void BaseConverterPage::applyTheme(bool dark) {
         ? "background:#444444;color:#f0f0f0;font-family:'Consolas';font-size:13px;border:1px solid #666;border-radius:3px;padding:2px 8px;"
         : "background:#f0f2fa;color:#1a1a2e;font-family:'Consolas';font-size:13px;border:1px solid #c5cbdd;border-radius:3px;padding:2px 8px;";
     const QString grpS = dark
-        ? "QGroupBox{color:#00e5ff;font-size:13px;font-weight:bold;border:1px solid #444;border-radius:6px;margin-top:8px;padding-top:8px;}QGroupBox::title{subcontrol-origin:margin;left:10px;}"
+        ? "QGroupBox{color:#b5b5b5;font-size:13px;font-weight:bold;border:1px solid #444;border-radius:6px;margin-top:8px;padding-top:8px;}QGroupBox::title{subcontrol-origin:margin;left:10px;}"
         : "QGroupBox{color:#3d5aaa;font-size:13px;font-weight:bold;border:1px solid #c5cbdd;border-radius:6px;margin-top:8px;padding-top:8px;}QGroupBox::title{subcontrol-origin:margin;left:10px;}";
     const QString fldS = dark ? "color:#aaa;font-size:13px;font-weight:bold;" : "color:#3d5aaa;font-size:13px;font-weight:bold;";
 

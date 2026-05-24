@@ -116,17 +116,17 @@ void MainWindow::applyTheme(bool dark) {
     qApp->setStyle(QStyleFactory::create("Fusion"));
     QPalette p;
     if (dark) {
-        p.setColor(QPalette::Window,          QColor("#1a1a2e"));
-        p.setColor(QPalette::WindowText,      QColor("#dde1f0"));
-        p.setColor(QPalette::Base,            QColor("#22223a"));
-        p.setColor(QPalette::AlternateBase,   QColor("#21213a"));
-        p.setColor(QPalette::Text,            QColor("#dde1f0"));
-        p.setColor(QPalette::Button,          QColor("#344e8a"));
+        p.setColor(QPalette::Window,          QColor("#1f1f1f"));
+        p.setColor(QPalette::WindowText,      QColor("#e6e6e6"));
+        p.setColor(QPalette::Base,            QColor("#2a2a2a"));
+        p.setColor(QPalette::AlternateBase,   QColor("#292929"));
+        p.setColor(QPalette::Text,            QColor("#e6e6e6"));
+        p.setColor(QPalette::Button,          QColor("#5f5f5f"));
         p.setColor(QPalette::ButtonText,      QColor("#ffffff"));
-        p.setColor(QPalette::Highlight,       QColor("#344e8a"));
+        p.setColor(QPalette::Highlight,       QColor("#5f5f5f"));
         p.setColor(QPalette::HighlightedText, QColor("#ffffff"));
-        p.setColor(QPalette::ToolTipBase,     QColor("#22223a"));
-        p.setColor(QPalette::ToolTipText,     QColor("#dde1f0"));
+        p.setColor(QPalette::ToolTipBase,     QColor("#2a2a2a"));
+        p.setColor(QPalette::ToolTipText,     QColor("#e6e6e6"));
     } else {
         p.setColor(QPalette::Window,          QColor("#f4f6fb"));
         p.setColor(QPalette::WindowText,      QColor("#1a1a2e"));
@@ -149,14 +149,14 @@ void MainWindow::applyTheme(bool dark) {
 
     // ── Status Bar ────────────────────────────────────────────────────────────
     statusBar()->setStyleSheet(dark
-        ? "background:#22223a;color:#7a8fcc;font-size:11px;"
+        ? "background:#2a2a2a;color:#b5b5b5;font-size:11px;"
         : "background:#eaecf5;color:#3d5aaa;font-size:11px;");
 
     // ── Theme-Button beschriften ──────────────────────────────────────────────
     if (m_themeBtn) {
         m_themeBtn->setText(dark ? "☀ Light" : "🌙 Dark");
         m_themeBtn->setStyleSheet(dark
-            ? "QPushButton{background:#344e8a;color:#ffffff;border:none;border-radius:4px;padding:4px 10px;font-size:12px;}QPushButton:hover{background:#4060aa;}"
+            ? "QPushButton{background:#5f5f5f;color:#ffffff;border:none;border-radius:4px;padding:4px 10px;font-size:12px;}QPushButton:hover{background:#717171;}"
             : "QPushButton{background:#3d5aaa;color:#ffffff;border:none;border-radius:4px;padding:4px 10px;font-size:12px;}QPushButton:hover{background:#4d6abf;}");
     }
 }

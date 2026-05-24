@@ -523,8 +523,8 @@ void CalculatorPage::applyTheme(bool dark) {
     const QString dispS  = dark
         ? "background:#444444;color:#f0f0f0;font-size:28px;font-family:'Consolas','Courier New',monospace;border:1px solid #666;border-radius:4px;padding:6px 12px;"
         : "background:#ffffff;color:#1a1a2e;font-size:28px;font-family:'Consolas','Courier New',monospace;border:1px solid #c5cbdd;border-radius:4px;padding:6px 12px;";
-    const QString exprS  = dark ? "color:#888;font-size:12px;padding:2px 6px;"   : "color:#5566aa;font-size:12px;padding:2px 6px;";
-    const QString hintS  = dark ? "color:#556;font-size:10px;padding:2px 4px;"   : "color:#9099bb;font-size:10px;padding:2px 4px;";
+    const QString exprS  = dark ? "color:#9a9a9a;font-size:12px;padding:2px 6px;" : "color:#5566aa;font-size:12px;padding:2px 6px;";
+    const QString hintS  = dark ? "color:#7f7f7f;font-size:10px;padding:2px 4px;" : "color:#9099bb;font-size:10px;padding:2px 4px;";
 
     // ── Apply ─────────────────────────────────────────────────────────────────
     m_display->setStyleSheet(dispS);
