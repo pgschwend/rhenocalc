@@ -12,7 +12,7 @@
 
 BitButton::BitButton(int bitIndex, QWidget* parent)
     : QPushButton(parent), m_bitIndex(bitIndex) {
-    setFixedSize(22, 28);
+    setFixedSize(14, 14);
     setCheckable(false);
     refresh();
     connect(this, &QPushButton::clicked, this, [this]{
@@ -45,8 +45,9 @@ BaseConverterPage::BaseConverterPage(QWidget* parent) : QWidget(parent) {
 
 void BaseConverterPage::setupUI() {
     auto* root = new QVBoxLayout(this);
-    root->setSpacing(10);
-    root->setContentsMargins(14, 14, 14, 14);
+    root->setSizeConstraint(QLayout::SetNoConstraint);
+    root->setSpacing(8);
+    root->setContentsMargins(10, 10, 10, 10);
 
     // ── Controls bar ─────────────────────────────────────────────────────────
     auto* ctrlRow = new QHBoxLayout();
@@ -77,7 +78,7 @@ void BaseConverterPage::setupUI() {
     for (int i = 0; i < 4; ++i) {
         m_fieldLabels[i] = new QLabel(fields[i].label, this);
         m_fieldLabels[i]->setStyleSheet("font-size:13px;font-weight:bold;");
-        m_fieldLabels[i]->setFixedWidth(90);
+        m_fieldLabels[i]->setFixedWidth(60);
         *fields[i].edit = new QLineEdit(this);
         (*fields[i].edit)->setPlaceholderText(fields[i].placeholder);
         (*fields[i].edit)->setFont(QFont("Consolas", 14));
@@ -117,7 +118,7 @@ void BaseConverterPage::setupUI() {
         auto* idxLbl = new QLabel(QString::number(i), bitArea);
         idxLbl->setAlignment(Qt::AlignCenter);
         idxLbl->setStyleSheet("font-size:9px;");
-        idxLbl->setFixedWidth(22);
+        idxLbl->setFixedWidth(14);
         bitGrid->addWidget(idxLbl, row * 2 + 1, col);
     }
 
@@ -129,7 +130,7 @@ void BaseConverterPage::setupUI() {
     for (int i = 7; i >= 0; --i) {
         auto* bl = new QLabel("00", this);
         bl->setAlignment(Qt::AlignCenter);
-        bl->setFixedWidth(44);
+        bl->setFixedWidth(32);
         bl->setToolTip(QString("Byte %1").arg(i));
         m_byteLabels[i] = bl;
         byteRow->addWidget(new QLabel(QString("B%1:").arg(i), this));

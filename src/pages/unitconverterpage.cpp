@@ -133,8 +133,9 @@ UnitConverterPage::UnitConverterPage(QWidget* parent) : QWidget(parent) {
 
 void UnitConverterPage::setupUI() {
     auto* root = new QVBoxLayout(this);
-    root->setSpacing(12);
-    root->setContentsMargins(20, 20, 20, 20);
+    root->setSizeConstraint(QLayout::SetNoConstraint);
+    root->setSpacing(8);
+    root->setContentsMargins(12, 12, 12, 12);
 
     auto* title = new QLabel("Unit Converter for Embedded Engineers", this);
     m_titleLabel = title;
@@ -145,10 +146,10 @@ void UnitConverterPage::setupUI() {
     auto* catRow = new QHBoxLayout();
     m_catLabel = new QLabel("Category:", this);
     m_catLabel->setStyleSheet("font-size:13px;");
-    m_catLabel->setFixedWidth(80);
+    m_catLabel->setFixedWidth(52);
     m_categoryCombo = new QComboBox(this);
     m_categoryCombo->addItems(m_categoryNames);
-    m_categoryCombo->setMinimumWidth(240);
+    m_categoryCombo->setMinimumWidth(120);
     catRow->addWidget(m_catLabel);
     catRow->addWidget(m_categoryCombo);
     catRow->addStretch();
@@ -173,14 +174,14 @@ void UnitConverterPage::setupUI() {
     convLayout->addWidget(m_fromEdit, 0, 1);
 
     m_fromUnit = new QComboBox(this);
-    m_fromUnit->setStyleSheet("padding:6px 10px;border-radius:4px;font-size:13px;min-width:80px;");
+    m_fromUnit->setStyleSheet("padding:4px 6px;border-radius:4px;font-size:12px;min-width:48px;");
     convLayout->addWidget(m_fromUnit, 0, 2);
 
     convLayout->addWidget(lbl("To:"), 1, 0);
     auto* toRow = new QHBoxLayout();
 
     m_resultLabel = new QLabel("—", this);
-    m_resultLabel->setStyleSheet("font-family:'Consolas';font-size:18px;border-radius:4px;padding:6px 10px;min-width:200px;");
+    m_resultLabel->setStyleSheet("font-family:'Consolas';font-size:16px;border-radius:4px;padding:4px 6px;min-width:96px;");
     m_resultLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
     convLayout->addWidget(m_resultLabel, 1, 1);
 

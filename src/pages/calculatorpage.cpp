@@ -16,15 +16,16 @@ CalculatorPage::CalculatorPage(QWidget* parent) : QWidget(parent) {
 
 QPushButton* CalculatorPage::makeBtn(const QString& text, const QString& style) {
     auto* btn = new QPushButton(text, this);
-    btn->setMinimumSize(58, 44);
+    btn->setMinimumSize(34, 28);
     btn->setStyleSheet(style.isEmpty() ? ThemeColors::calcNumButton(true) : style);
     return btn;
 }
 
 void CalculatorPage::setupUI() {
     auto* root = new QVBoxLayout(this);
-    root->setSpacing(8);
-    root->setContentsMargins(12, 12, 12, 12);
+    root->setSizeConstraint(QLayout::SetNoConstraint);
+    root->setSpacing(6);
+    root->setContentsMargins(8, 8, 8, 8);
 
     // Top controls
     auto* topRow = new QHBoxLayout();
@@ -32,7 +33,7 @@ void CalculatorPage::setupUI() {
     m_baseLabel->setStyleSheet("font-size:13px;");
     m_baseCombo = new QComboBox(this);
     m_baseCombo->addItems({"Decimal (10)", "Hexadecimal (16)", "Binary (2)", "Octal (8)"});
-    m_baseCombo->setMinimumWidth(160);
+    m_baseCombo->setMinimumWidth(90);
 
     m_wordLabel = new QLabel("Word:", this);
     m_wordLabel->setStyleSheet("font-size:13px;");
@@ -58,7 +59,7 @@ void CalculatorPage::setupUI() {
     m_display->setAlignment(Qt::AlignRight);
     m_display->setReadOnly(true);
     m_display->setFont(QFont("Consolas,Courier New,monospace", 20));
-    m_display->setMinimumHeight(56);
+    m_display->setMinimumHeight(34);
     root->addWidget(m_display);
 
     // Keyboard shortcut hint bar
@@ -71,7 +72,7 @@ void CalculatorPage::setupUI() {
 
     // Button grid
     auto* grid = new QGridLayout();
-    grid->setSpacing(6);
+    grid->setSpacing(4);
 
     // Row 0: Hex letters A-F + Backspace
     const char* hexLetters[] = {"A","B","C","D","E","F"};
