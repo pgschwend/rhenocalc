@@ -38,6 +38,8 @@ if(WIN32)
     get_filename_component(QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
 
+    set_target_properties(RhenoCalc PROPERTIES WIN32_EXECUTABLE ON)
+
     if(WINDEPLOYQT_EXECUTABLE)
         add_custom_command(TARGET RhenoCalc POST_BUILD
                 COMMAND "${WINDEPLOYQT_EXECUTABLE}" --no-translations "$<TARGET_FILE:RhenoCalc>"
