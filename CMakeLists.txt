@@ -30,6 +30,10 @@ set(SOURCES
         src/pages/unitconverterpage.h src/pages/unitconverterpage.cpp
 )
 
+if(WIN32)
+    list(APPEND SOURCES src/resources/rhenocalc.rc)
+endif()
+
 add_executable(RhenoCalc ${SOURCES})
 
 if(WIN32)

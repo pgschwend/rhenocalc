@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6b6b6b"/>
+      <stop offset="100%" stop-color="#4c4c4c"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="16" width="208" height="224" rx="28" fill="url(#bg)"/>
+  <rect x="44" y="36" width="168" height="44" rx="10" fill="#d9d9d9"/>
+  <rect x="56" y="49" width="94" height="18" rx="4" fill="#9a9a9a"/>
+
+  <g fill="#d0d0d0">
+    <rect x="44" y="96" width="36" height="28" rx="6"/>
+    <rect x="88" y="96" width="36" height="28" rx="6"/>
+    <rect x="132" y="96" width="36" height="28" rx="6"/>
+    <rect x="176" y="96" width="36" height="28" rx="6"/>
+
+    <rect x="44" y="132" width="36" height="28" rx="6"/>
+    <rect x="88" y="132" width="36" height="28" rx="6"/>
+    <rect x="132" y="132" width="36" height="28" rx="6"/>
+    <rect x="176" y="132" width="36" height="28" rx="6"/>
+
+    <rect x="44" y="168" width="36" height="28" rx="6"/>
+    <rect x="88" y="168" width="36" height="28" rx="6"/>
+    <rect x="132" y="168" width="36" height="28" rx="6"/>
+    <rect x="176" y="168" width="36" height="64" rx="6" fill="#bbbbbb"/>
+
+    <rect x="44" y="204" width="80" height="28" rx="6"/>
+    <rect x="132" y="204" width="36" height="28" rx="6"/>
+  </g>
+
+  <g fill="#4f4f4f" font-family="Segoe UI, Arial, sans-serif" font-size="18" text-anchor="middle" dominant-baseline="central">
+    <text x="62" y="110">7</text>
+    <text x="106" y="110">8</text>
+    <text x="150" y="110">9</text>
+    <text x="194" y="110">/</text>
+
+    <text x="62" y="146">4</text>
+    <text x="106" y="146">5</text>
+    <text x="150" y="146">6</text>
+    <text x="194" y="146">*</text>
+
+    <text x="62" y="182">1</text>
+    <text x="106" y="182">2</text>
+    <text x="150" y="182">3</text>
+    <text x="194" y="200">=</text>
+
+    <text x="84" y="218">0</text>
+    <text x="150" y="218">.</text>
+  </g>
+</svg>
+

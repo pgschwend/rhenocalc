@@ -4,5 +4,8 @@
         <file alias="dark.qss">styles/dark.qss</file>
         <file alias="light.qss">styles/light.qss</file>
     </qresource>
+    <qresource prefix="/icons">
+        <file alias="calculator.svg">icons/calculator.svg</file>
+    </qresource>
 </RCC>
 
