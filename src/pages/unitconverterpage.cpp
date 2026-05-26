@@ -7,15 +7,15 @@
 #include <QLabel>
 #include <QFont>
 #include <cmath>
+#include <limits>
 
 UnitConverterPage::UnitConverterPage(QWidget* parent) : QWidget(parent) {
     // Define categories: name + units with factor to SI base
     // Frequency: base = Hz
     m_categoryNames = {
-        "Frequency (Hz)", "Time / Period (s)", "Voltage (V)",
-        "Current (A)", "Resistance (Ω)", "Capacitance (F)",
-        "Data Rate (bps)", "Data Size (bytes)", "Temperature",
-        "Power (W)", "Energy (J)", "Angle"
+        "Frequency (Hz)", "Time / Period (s)", "Pressure",
+        "Distance", "Speed", "Data Rate (bps)", "Data Size (bytes)",
+        "Temperature", "Power (W)", "Energy (J)", "Angle"
     };
 
     // Frequency
@@ -26,7 +26,11 @@ UnitConverterPage::UnitConverterPage(QWidget* parent) : QWidget(parent) {
         {"GHz",  1e9},
         {"THz",  1e12},
         {"mHz",  1e-3},
+        {"s",    0.0},
+        {"ms",   0.0},
+        {"us",   0.0},
     });
+
     // Time
     m_categories.append({
         {"s",    1.0},
@@ -38,39 +42,30 @@ UnitConverterPage::UnitConverterPage(QWidget* parent) : QWidget(parent) {
         {"h",    3600.0},
         {"day",  86400.0},
     });
-    // Voltage
+
+    // Pressure (base = Pa)
     m_categories.append({
-        {"V",    1.0},
-        {"mV",   1e-3},
-        {"µV",   1e-6},
-        {"nV",   1e-9},
-        {"kV",   1e3},
-        {"MV",   1e6},
+        {"bar",         100000.0},
+        {"kPa",         1000.0},
+        {"psi",         6894.757293168},
     });
-    // Current
+
+    // Distance (base = m)
     m_categories.append({
-        {"A",    1.0},
-        {"mA",   1e-3},
-        {"µA",   1e-6},
-        {"nA",   1e-9},
-        {"kA",   1e3},
+        {"km",          1000.0},
+        {"mile",        1609.344},
+        {"naut mile",   1852.0},
     });
-    // Resistance
+
+    // Speed (base = m/s)
     m_categories.append({
-        {"Ω",    1.0},
-        {"mΩ",   1e-3},
-        {"kΩ",   1e3},
-        {"MΩ",   1e6},
-        {"GΩ",   1e9},
+        {"m/s",   1.0},
+        {"km/h",  0.2777777777777778},
+        {"knots", 0.5144444444444445},
+        {"mph",   0.44704},
+        {"nmph",  0.5144444444444445},
     });
-    // Capacitance
-    m_categories.append({
-        {"F",    1.0},
-        {"mF",   1e-3},
-        {"µF",   1e-6},
-        {"nF",   1e-9},
-        {"pF",   1e-12},
-    });
+
     // Data Rate
     m_categories.append({
         {"bps",   1.0},
@@ -82,6 +77,7 @@ UnitConverterPage::UnitConverterPage(QWidget* parent) : QWidget(parent) {
         {"MB/s",  8e6},
         {"GB/s",  8e9},
     });
+
     // Data Size
     m_categories.append({
         {"Byte",   1.0},
@@ -93,12 +89,14 @@ UnitConverterPage::UnitConverterPage(QWidget* parent) : QWidget(parent) {
         {"kbit",   125.0},
         {"Mbit",   125000.0},
     });
+
     // Temperature (special case - handled separately)
     m_categories.append({
         {"°C",  1.0},
         {"°F",  1.0},
         {"K",   1.0},
     });
+
     // Power
     m_categories.append({
         {"W",    1.0},
@@ -109,6 +107,7 @@ UnitConverterPage::UnitConverterPage(QWidget* parent) : QWidget(parent) {
         {"dBm",  1.0}, // special
         {"hp",   745.7},
     });
+
     // Energy
     m_categories.append({
         {"J",    1.0},
@@ -120,6 +119,7 @@ UnitConverterPage::UnitConverterPage(QWidget* parent) : QWidget(parent) {
         {"kWh",  3.6e6},
         {"eV",   1.60218e-19},
     });
+
     // Angle
     m_categories.append({
         {"°",    1.0},
@@ -137,7 +137,7 @@ void UnitConverterPage::setupUI() {
     root->setSpacing(8);
     root->setContentsMargins(12, 12, 12, 12);
 
-    auto* title = new QLabel("Unit Converter for Embedded Engineers", this);
+    auto* title = new QLabel("Unit Converter for Embedded Engineering", this);
     m_titleLabel = title;
     title->setStyleSheet("font-size:16px;font-weight:bold;");
     root->addWidget(title);
@@ -250,6 +250,54 @@ void UnitConverterPage::convert() {
     int fromIdx = m_fromUnit->currentIndex();
     int toIdx   = m_toUnit->currentIndex();
     if (fromIdx < 0 || toIdx < 0 || fromIdx >= m_categories[cat].size() || toIdx >= m_categories[cat].size()) return;
+
+    // Frequency: supports reciprocal conversion with period units
+    if (m_categoryNames[cat] == "Frequency (Hz)") {
+        const QString fromU = m_fromUnit->currentText();
+        const QString toU = m_toUnit->currentText();
+
+        const auto isPeriodUnit = [](const QString& unit) {
+            return unit == "s" || unit == "ms" || unit == "us";
+        };
+        const auto periodToSeconds = [](double value, const QString& unit) {
+            if (unit == "ms") return value * 1e-3;
+            if (unit == "us") return value * 1e-6;
+            return value;
+        };
+        const auto secondsToPeriod = [](double seconds, const QString& unit) {
+            if (unit == "ms") return seconds * 1e3;
+            if (unit == "us") return seconds * 1e6;
+            return seconds;
+        };
+
+        double hzValue = 0.0;
+        if (isPeriodUnit(fromU)) {
+            const double seconds = periodToSeconds(fromVal, fromU);
+            hzValue = (seconds == 0.0) ? std::numeric_limits<double>::infinity() : 1.0 / seconds;
+        } else {
+            hzValue = fromVal * m_categories[cat][fromIdx].toBase;
+        }
+
+        double result = 0.0;
+        if (isPeriodUnit(toU)) {
+            const double seconds = (hzValue == 0.0) ? std::numeric_limits<double>::infinity() : 1.0 / hzValue;
+            result = secondsToPeriod(seconds, toU);
+        } else {
+            result = hzValue / m_categories[cat][toIdx].toBase;
+        }
+
+        QString resultStr;
+        if (std::isinf(result))
+            resultStr = "inf";
+        else if (std::abs(result) >= 1e9 || (std::abs(result) < 1e-6 && result != 0.0))
+            resultStr = QString::number(result, 'e', 6);
+        else
+            resultStr = QString::number(result, 'g', 10);
+
+        m_resultLabel->setText(resultStr + " " + toU);
+        m_formulaLabel->setText(QString("%1 %2 = %3 %4").arg(fromVal).arg(fromU).arg(resultStr).arg(toU));
+        return;
+    }
 
     // Temperature: special
     if (m_categoryNames[cat] == "Temperature") {

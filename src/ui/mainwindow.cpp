@@ -90,9 +90,9 @@ void MainWindow::setupUI() {
     m_basePage = new BaseConverterPage(this);
     m_unitPage = new UnitConverterPage(this);
 
-    m_tabWidget->addTab(m_calcPage, "Calculator");
-    m_tabWidget->addTab(m_basePage, "Base Converter");
-    m_tabWidget->addTab(m_unitPage, "Unit Converter");
+    m_tabWidget->addTab(m_calcPage, "Calc");
+    m_tabWidget->addTab(m_basePage, "Base");
+    m_tabWidget->addTab(m_unitPage, "Unit");
 
     // Buttons top right in the tab bar
     m_onTopBtn = new QPushButton("T", this);
@@ -123,7 +123,7 @@ void MainWindow::setupUI() {
     m_tabWidget->setCornerWidget(corner, Qt::TopRightCorner);
 
     setCentralWidget(m_tabWidget);
-    statusBar()->showMessage("RhenoCalc  |  Embedded Engineer Toolbox  |  v1.0");
+    statusBar()->showMessage("RhenoCalc  |  Embedded Engineering Toolbox  |  v1.0");
 }
 
 void MainWindow::applyTheme(bool dark) {
