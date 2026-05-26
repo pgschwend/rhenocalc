@@ -12,6 +12,7 @@
 #include <QHBoxLayout>
 #include <QWidget>
 #include <QGuiApplication>
+#include <QIcon>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -95,11 +96,13 @@ void MainWindow::setupUI() {
     m_tabWidget->addTab(m_unitPage, "Unit");
 
     // Buttons top right in the tab bar
-    m_onTopBtn = new QPushButton("T", this);
+    m_onTopBtn = new QPushButton(this);
     m_onTopBtn->setCheckable(true);
     m_onTopBtn->setFixedSize(32, 26);
     m_onTopBtn->setCursor(Qt::PointingHandCursor);
     m_onTopBtn->setFocusPolicy(Qt::NoFocus);
+    m_onTopBtn->setIcon(QIcon(":/icons/pin_gray.svg"));
+    m_onTopBtn->setIconSize(QSize(14, 14));
     connect(m_onTopBtn, &QPushButton::clicked, this, [this]() {
         applyAlwaysOnTop(!m_alwaysOnTop, true);
         m_calcPage->setFocus();
@@ -208,7 +211,13 @@ void MainWindow::updateOnTopButton() {
     m_onTopBtn->setToolTip(m_alwaysOnTop ? "Always on top: ON" : "Always on top: OFF");
 
     QString style = ThemeColors::themeToggleButtonStyle(m_isDark);
-    if (m_alwaysOnTop)
-        style += "QPushButton{border:1px solid #f1c40f;}";
+    if (m_alwaysOnTop) {
+        if (m_isDark) {
+            style += "QPushButton{border:2px solid #dfdfdf;}";
+        }
+        else {
+            style += "QPushButton{border:2px solid #f1c40f;}";
+        }
+    }
     m_onTopBtn->setStyleSheet(style);
 }
