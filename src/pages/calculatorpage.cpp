@@ -424,17 +424,13 @@ void CalculatorPage::onNegateClicked() {
 void CalculatorPage::onPiClicked() {
     auto* btn = qobject_cast<QPushButton*>(sender());
     QString op = btn->objectName();
-    long long a = m_accumulator, b = m_current;
-    long long res = m_current;
 
     if (op == "π") {
         m_floatMode = true;
-        m_currentDouble = 3.14152;
+        m_currentDouble = 3.14159265359;
         m_inputString.clear(); // will be reformatted by updateDisplay
     }
 
-
-    //m_newInput = true;
     updateDisplay();
 }
 
@@ -453,30 +449,44 @@ void CalculatorPage::onBitwiseClicked() {
         if (m_pendingOp == "OR")  res = a | b;
         if (m_pendingOp == "XOR") res = a ^ b;
         m_pendingOp.clear(); m_newInput = true;
-        m_current = maskToWidth(res); updateDisplay(); return;
+        m_current = maskToWidth(res);
+        updateDisplay(); return;
+
     }
 
     // ── Float-aware unary ops ────────────────────────────────────────────────
     if (op == "SQ") {
-        if (m_floatMode) { m_currentDouble *= m_currentDouble; m_inputString.clear(); updateDisplay(); return; }
+        if (m_floatMode) {
+            m_currentDouble *= m_currentDouble;
+            m_inputString.clear();
+            updateDisplay();
+            return;
+        }
         res = maskToWidth(b * b);
     }
     else if (op == "SQRT") {
         if (m_floatMode) {
             m_currentDouble = (m_currentDouble >= 0.0) ? std::sqrt(m_currentDouble) : std::numeric_limits<double>::quiet_NaN();
-            m_inputString.clear(); updateDisplay(); return;
+            m_inputString.clear(); updateDisplay();
+            return;
         }
         res = (b >= 0) ? (long long)std::sqrt((double)b) : 0;
     }
     else if (op == "abs") {
-        if (m_floatMode) { m_currentDouble = std::fabs(m_currentDouble); m_inputString.clear(); updateDisplay(); return; }
+        if (m_floatMode) {
+            m_currentDouble = std::fabs(m_currentDouble);
+            m_inputString.clear();
+            updateDisplay();
+            return;
+        }
         res = std::abs(b);
     }
     else if (op == "1/x") {
         if (m_floatMode) {
             m_currentDouble = (m_currentDouble != 0.0) ? 1.0 / m_currentDouble : std::numeric_limits<double>::infinity();
             m_exprLabel->setText("1 / " + formatDouble(m_currentDouble) + " =");
-            m_inputString.clear(); updateDisplay(); return;
+            m_inputString.clear();
+            updateDisplay(); return;
         }
         m_exprLabel->setText("1 / " + toBaseString(b) + " = ");
         if (b) {
@@ -500,9 +510,24 @@ void CalculatorPage::onBitwiseClicked() {
         unsigned long long ub = (unsigned long long)maskToWidth(b);
         res = maskToWidth((long long)((ub >> 1) | (ub << (m_wordBits - 1))));
     }
-    else if (op == "MS") { memory = b; m_exprLabel->setText("M← " + toBaseString(b)); return; }
-    else if (op == "MR") { res = memory; m_exprLabel->setText("M→ " + toBaseString(memory)); }
-    else if (op == "MC") { memory = 0; m_exprLabel->setText("M cleared"); return; }
+    else if (op == "MS") {
+        memory = b;
+        m_exprLabel->setText("M← " + toBaseString(b));
+        return;
+    }
+    else if (op == "MR") {
+        res = memory;
+        // Keep integer/float state in sync so MR works as operand after decimal operators.
+        if (m_floatMode) {
+            m_currentDouble = static_cast<double>(memory);
+            m_inputString.clear();
+        }
+        m_exprLabel->setText("M→ " + toBaseString(memory));
+    }
+    else if (op == "MC") {
+        memory = 0;
+        m_exprLabel->setText("M cleared"); return;
+    }
 
     m_current = res;
     m_newInput = true;

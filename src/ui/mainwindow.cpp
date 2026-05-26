@@ -97,7 +97,7 @@ void MainWindow::setupUI() {
     // Buttons top right in the tab bar
     m_onTopBtn = new QPushButton("T", this);
     m_onTopBtn->setCheckable(true);
-    m_onTopBtn->setFixedSize(30, 26);
+    m_onTopBtn->setFixedSize(32, 26);
     m_onTopBtn->setCursor(Qt::PointingHandCursor);
     m_onTopBtn->setFocusPolicy(Qt::NoFocus);
     connect(m_onTopBtn, &QPushButton::clicked, this, [this]() {
@@ -106,7 +106,7 @@ void MainWindow::setupUI() {
     });
 
     m_themeBtn = new QPushButton("☀", this);
-    m_themeBtn->setFixedSize(30, 26);
+    m_themeBtn->setFixedSize(32, 26);
     m_themeBtn->setCursor(Qt::PointingHandCursor);
     m_themeBtn->setFocusPolicy(Qt::NoFocus);
     connect(m_themeBtn, &QPushButton::clicked, this, [this]() {
@@ -116,7 +116,7 @@ void MainWindow::setupUI() {
     });
     auto* corner = new QWidget(this);
     auto* cornerLayout = new QHBoxLayout(corner);
-    cornerLayout->setContentsMargins(0, 0, 0, 0);
+    cornerLayout->setContentsMargins(0, 0, 4, 0);
     cornerLayout->setSpacing(4);
     cornerLayout->addWidget(m_onTopBtn);
     cornerLayout->addWidget(m_themeBtn);
