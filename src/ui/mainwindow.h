@@ -25,6 +25,8 @@ protected:
 private:
     void setupUI();
     void applyTheme(bool dark);
+    void applyAlwaysOnTop(bool enabled, bool persist);
+    void updateOnTopButton();
     void saveWindowGeometry();
     void restoreWindowGeometry();
 
@@ -32,8 +34,10 @@ private:
     CalculatorPage*    m_calcPage;
     BaseConverterPage* m_basePage;
     UnitConverterPage* m_unitPage;
+    QPushButton*       m_onTopBtn = nullptr;
     QPushButton*       m_themeBtn = nullptr;
     bool               m_isDark   = true;
+    bool               m_alwaysOnTop = false;
 };
 
 #endif // MAINWINDOW_H

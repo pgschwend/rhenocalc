@@ -124,7 +124,7 @@ QPushButton {
     padding: 7px 18px;
     font-weight: bold;
     font-size: 13px;
-    min-height: 28px;
+    /* min-height: 22px; */
 }
 QPushButton:hover {
     background-color: @D13@;
@@ -144,7 +144,7 @@ QLineEdit, QSpinBox {
     border-radius: 6px;
     padding: 6px 10px;
     color: @D22@;
-    min-height: 26px;
+    min-height: 22px;
     selection-background-color: @D12@;
 }
 QLineEdit:hover, QSpinBox:hover {
@@ -171,7 +171,7 @@ QComboBox {
     border-radius: 6px;
     padding: 6px 10px;
     color: @D22@;
-    min-height: 26px;
+    min-height: 22px;
     selection-background-color: @D12@;
 }
 QComboBox:hover {

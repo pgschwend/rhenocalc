@@ -129,51 +129,51 @@ QString themeToggleButtonStyle(bool dark) {
 }
 
 QString calcNumButton(bool dark) {
-    return QString("QPushButton{background:%1;color:%2;font-size:15px;border-radius:4px;padding:8px;}"
+    return QString("QPushButton{background:%1;color:%2;font-size:13px;border-radius:4px;padding:5px;}"
                    "QPushButton:hover{background:%3;}")
         .arg(c(dark, "calc_num_bg"), c(dark, "calc_num_fg"), c(dark, "calc_num_hover"));
 }
 
 QString calcOpButton(bool dark) {
-    return QString("QPushButton{background:%1;color:%2;font-size:15px;border-radius:4px;padding:8px;}"
+    return QString("QPushButton{background:%1;color:%2;font-size:13px;border-radius:4px;padding:5px;}"
                    "QPushButton:hover{background:%3;}")
         .arg(c(dark, "calc_op_bg"), c(dark, "white"), c(dark, "calc_op_hover"));
 }
 
 QString calcBitButton(bool dark) {
-    return QString("QPushButton{background:%1;color:%2;font-size:13px;border-radius:4px;padding:8px;}"
+    return QString("QPushButton{background:%1;color:%2;font-size:11px;border-radius:4px;padding:4px;}"
                    "QPushButton:hover{background:%3;}")
         .arg(c(dark, "calc_bit_bg"), c(dark, "calc_bit_fg"), c(dark, "calc_bit_hover"));
 }
 
 QString calcFuncButton(bool dark) {
-    return QString("QPushButton{background:%1;color:%2;font-size:13px;border-radius:4px;padding:8px;}"
+    return QString("QPushButton{background:%1;color:%2;font-size:11px;border-radius:4px;padding:4px;}"
                    "QPushButton:hover{background:%3;}")
         .arg(c(dark, "calc_func_bg"), c(dark, "calc_func_fg"), c(dark, "calc_func_hover"));
 }
 
 QString calcHexButton(bool dark) {
-    return QString("QPushButton{background:%1;color:%2;font-size:15px;border-radius:4px;padding:8px;}"
+    return QString("QPushButton{background:%1;color:%2;font-size:13px;border-radius:4px;padding:5px;}"
                    "QPushButton:hover{background:%3;}QPushButton:disabled{background:%4;color:%5;}")
         .arg(c(dark, "calc_hex_bg"), c(dark, "calc_hex_fg"), c(dark, "calc_hex_hover"),
              c(dark, "calc_hex_disabled_bg"), c(dark, "calc_hex_disabled_fg"));
 }
 
 QString calcEqButton(bool dark) {
-    return QString("QPushButton{background:%1;color:%2;font-size:15px;border-radius:4px;padding:8px;}"
+    return QString("QPushButton{background:%1;color:%2;font-size:13px;border-radius:4px;padding:5px;}"
                    "QPushButton:hover{background:%3;}")
         .arg(c(dark, "calc_eq_bg"), c(dark, "white"), c(dark, "calc_eq_hover"));
 }
 
 QString calcClearButton(bool dark) {
-    return QString("QPushButton{background:%1;color:%2;font-size:15px;border-radius:4px;padding:8px;}"
+    return QString("QPushButton{background:%1;color:%2;font-size:13px;border-radius:4px;padding:5px;}"
                    "QPushButton:hover{background:%3;}")
         .arg(c(dark, "calc_clear_bg"), c(dark, "calc_clear_fg"), c(dark, "calc_clear_hover"));
 }
 
 QString calcDisplayStyle(bool dark) {
-    return QString("background:%1;color:%2;font-size:28px;font-family:'Consolas','Courier New',monospace;"
-                   "border:1px solid %3;border-radius:4px;padding:6px 12px;")
+    return QString("background:%1;color:%2;font-size:22px;font-family:'Consolas','Courier New',monospace;"
+                   "border:1px solid %3;border-radius:4px;padding:4px 8px;")
         .arg(c(dark, "calc_display_bg"), c(dark, "calc_display_fg"), c(dark, "calc_display_border"));
 }
 
@@ -190,7 +190,8 @@ QString baseBitButtonStyle(bool dark, bool on) {
     const QString fg = c(dark, on ? "bit_on_fg" : "bit_off_fg");
     const QString border = c(dark, on ? "bit_on_border" : "bit_off_border");
     const QString hover = c(dark, on ? "bit_on_hover" : "bit_off_hover");
-    return QString("QPushButton{background:%1;color:%2;font-size:11px;%3border-radius:3px;border:1px solid %4;}"
+    return QString("QPushButton{background:%1;color:%2;font-size:8px;%3border-radius:3px;border:1px solid %4;padding:0px;"
+                   "min-width:14px;max-width:14px;min-height:14px;max-height:14px;}"
                    "QPushButton:hover{background:%5;}")
         .arg(bg, fg, on ? "font-weight:bold;" : "", border, hover);
 }
@@ -224,14 +225,14 @@ QString unitGroupStyle(bool dark) {
 }
 
 QString unitFieldStyle(bool dark) {
-    return QString("background:%1;color:%2;font-family:'Consolas';font-size:18px;border:1px solid %3;"
-                   "border-radius:4px;padding:6px 10px;")
+    return QString("background:%1;color:%2;font-family:'Consolas';font-size:16px;border:1px solid %3;"
+                   "border-radius:4px;padding:4px 6px;")
         .arg(c(dark, "input_bg"), c(dark, "input_fg"), c(dark, "input_border"));
 }
 
 QString unitResultStyle(bool dark) {
-    return QString("background:%1;color:%2;font-family:'Consolas';font-size:18px;border:1px solid %3;"
-                   "border-radius:4px;padding:6px 10px;min-width:200px;")
+    return QString("background:%1;color:%2;font-family:'Consolas';font-size:16px;border:1px solid %3;"
+                   "border-radius:4px;padding:4px 6px;min-width:96px;")
         .arg(c(dark, "value_bg"), c(dark, "value_fg"), c(dark, "value_border"));
 }
 

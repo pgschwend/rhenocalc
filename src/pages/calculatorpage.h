@@ -22,6 +22,7 @@ private slots:
     void onEqualsClicked();
     void onClearClicked();
     void onBackspaceClicked();
+    void onPiClicked();
     void onBitwiseClicked();
     void onWordWidthChanged(int index);
     void onBaseChanged(int index);
