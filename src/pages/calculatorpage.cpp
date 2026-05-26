@@ -65,7 +65,7 @@ void CalculatorPage::setupUI() {
     // Keyboard shortcut hint bar
     m_hintLabel = new QLabel(
         "⌨  0–9 / A–F  |  + - * /  |  % MOD  |  & AND  |  | OR  |  ^ XOR  |  ~ NOT  |  < LSL  |  > LSR  |  "
-        ". / ,  Dezimal  |  Enter =  |  Esc AC  |  ⌫ BS  |  Ctrl+D/H/B/O: Base  |  Ctrl+1–4: Word width  |  Shift+◀▶: Reiter",
+        ". / ,  Decimal  |  Enter =  |  Esc AC  |  ⌫ BS  |  Ctrl+D/H/B/O: Base  |  Ctrl+1–4: Word width  |  Shift+◀ ▶: Tab",
         this);
     m_hintLabel->setWordWrap(true);
     root->addWidget(m_hintLabel);
@@ -120,28 +120,28 @@ void CalculatorPage::setupUI() {
     connect(clrBtn, &QPushButton::clicked, this, [this]{ m_current=0; m_newInput=true; updateDisplay(); });
     grid->addWidget(clrBtn, 1, 6);
 
-    auto* clearAllBtn = makeBtn("AC", ThemeColors::calcClearButton(true));
-    m_clearBtns << clearAllBtn;
-    connect(clearAllBtn, &QPushButton::clicked, this, &CalculatorPage::onClearClicked);
-    grid->addWidget(clearAllBtn, 2, 4);
-
     auto* powBtn = makeBtn("x²", ThemeColors::calcFuncButton(true));
     powBtn->setObjectName("SQ");
     m_funcBtns << powBtn;
     connect(powBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
-    grid->addWidget(powBtn, 2, 5);
+    grid->addWidget(powBtn, 2, 4);
 
     auto* sqrtBtn = makeBtn("√x", ThemeColors::calcFuncButton(true));
     sqrtBtn->setObjectName("SQRT");
     m_funcBtns << sqrtBtn;
     connect(sqrtBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
-    grid->addWidget(sqrtBtn, 2, 6);
+    grid->addWidget(sqrtBtn, 2, 5);
+
+    auto* clearAllBtn = makeBtn("AC", ThemeColors::calcClearButton(true));
+    m_clearBtns << clearAllBtn;
+    connect(clearAllBtn, &QPushButton::clicked, this, &CalculatorPage::onClearClicked);
+    grid->addWidget(clearAllBtn, 2, 6);
 
     // Digits + operators (rows 3-6)
     struct BtnDef { QString label; int row, col; QString style; };
     QList<BtnDef> defs = {
-        {"7",3,0,ThemeColors::calcNumButton(true)},{"8",3,1,ThemeColors::calcNumButton(true)},{"9",3,2,ThemeColors::calcNumButton(true)},{"÷",3,3,ThemeColors::calcOpButton(true)},{"(",3,4,ThemeColors::calcFuncButton(true)},{")",3,5,ThemeColors::calcFuncButton(true)},{"<<",3,6,ThemeColors::calcBitButton(true)},
-        {"4",4,0,ThemeColors::calcNumButton(true)},{"5",4,1,ThemeColors::calcNumButton(true)},{"6",4,2,ThemeColors::calcNumButton(true)},{"×",4,3,ThemeColors::calcOpButton(true)},{"1/x",4,4,ThemeColors::calcFuncButton(true)},{"abs",4,5,ThemeColors::calcFuncButton(true)},{">>",4,6,ThemeColors::calcBitButton(true)},
+        {"7",3,0,ThemeColors::calcNumButton(true)},{"8",3,1,ThemeColors::calcNumButton(true)},{"9",3,2,ThemeColors::calcNumButton(true)},{"÷",3,3,ThemeColors::calcOpButton(true)},{"(",3,4,ThemeColors::calcFuncButton(true)},{")",3,5,ThemeColors::calcFuncButton(true)},{"π",3,6,ThemeColors::calcBitButton(true)},
+        {"4",4,0,ThemeColors::calcNumButton(true)},{"5",4,1,ThemeColors::calcNumButton(true)},{"6",4,2,ThemeColors::calcNumButton(true)},{"×",4,3,ThemeColors::calcOpButton(true)},{"1/x",4,4,ThemeColors::calcFuncButton(true)},{"abs",4,5,ThemeColors::calcFuncButton(true)},{"NA",4,6,ThemeColors::calcBitButton(true)},
         {"1",5,0,ThemeColors::calcNumButton(true)},{"2",5,1,ThemeColors::calcNumButton(true)},{"3",5,2,ThemeColors::calcNumButton(true)},{"-",5,3,ThemeColors::calcOpButton(true)},{"MS",5,4,ThemeColors::calcFuncButton(true)},{"MR",5,5,ThemeColors::calcFuncButton(true)},{"MC",5,6,ThemeColors::calcFuncButton(true)},
         {"0",6,0,ThemeColors::calcNumButton(true)},{"00",6,1,ThemeColors::calcNumButton(true)},{".",6,2,ThemeColors::calcNumButton(true)},{"+",6,3,ThemeColors::calcOpButton(true)},{"=",6,4,ThemeColors::calcEqButton(true)},
     };
@@ -159,7 +159,12 @@ void CalculatorPage::setupUI() {
             m_opBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onOperatorClicked);
             grid->addWidget(b, d.row, d.col);
-        } else if (d.label == "1/x" || d.label == "abs" || d.label == ">>" || d.label == "<<") {
+        } else if (d.label == "π") {
+            b->setObjectName(d.label);
+            m_funcBtns << b;
+            connect(b, &QPushButton::clicked, this, &CalculatorPage::onPiClicked);
+            grid->addWidget(b, d.row, d.col);
+        } else if (d.label == "1/x" || d.label == "abs" || d.label == "NA") {
             b->setObjectName(d.label);
             m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
@@ -373,10 +378,15 @@ void CalculatorPage::onEqualsClicked() {
 }
 
 void CalculatorPage::onClearClicked() {
-    m_current = 0; m_accumulator = 0; m_pendingOp.clear();
-    m_currentDouble = 0.0; m_accumulatorDouble = 0.0;
-    m_floatMode = false; m_inputString.clear();
-    m_newInput = true; m_exprLabel->clear();
+    m_current = 0;
+    m_accumulator = 0;
+    m_pendingOp.clear();
+    m_currentDouble = 0.0;
+    m_accumulatorDouble = 0.0;
+    m_floatMode = false;
+    m_inputString.clear();
+    m_newInput = true;
+    m_exprLabel->clear();
     updateDisplay();
 }
 
@@ -408,6 +418,23 @@ void CalculatorPage::onNegateClicked() {
     } else {
         m_current = maskToWidth(-m_current);
     }
+    updateDisplay();
+}
+
+void CalculatorPage::onPiClicked() {
+    auto* btn = qobject_cast<QPushButton*>(sender());
+    QString op = btn->objectName();
+    long long a = m_accumulator, b = m_current;
+    long long res = m_current;
+
+    if (op == "π") {
+        m_floatMode = true;
+        m_currentDouble = 3.14152;
+        m_inputString.clear(); // will be reformatted by updateDisplay
+    }
+
+
+    //m_newInput = true;
     updateDisplay();
 }
 
@@ -465,8 +492,6 @@ void CalculatorPage::onBitwiseClicked() {
     else if (op == "NOT")  res = maskToWidth(~b);
     else if (op == "LSL")  res = maskToWidth(b << 1);
     else if (op == "LSR")  res = maskToWidth((long long)((unsigned long long)b >> 1));
-    else if (op == "<<")   res = maskToWidth(b << 1);
-    else if (op == ">>")   res = maskToWidth((long long)((unsigned long long)b >> 1));
     else if (op == "ROL") {
         unsigned long long ub = (unsigned long long)maskToWidth(b);
         res = maskToWidth((long long)((ub << 1) | (ub >> (m_wordBits - 1))));
@@ -479,7 +504,8 @@ void CalculatorPage::onBitwiseClicked() {
     else if (op == "MR") { res = memory; m_exprLabel->setText("M→ " + toBaseString(memory)); }
     else if (op == "MC") { memory = 0; m_exprLabel->setText("M cleared"); return; }
 
-    m_current = res; m_newInput = true;
+    m_current = res;
+    m_newInput = true;
     updateDisplay();
 }
 

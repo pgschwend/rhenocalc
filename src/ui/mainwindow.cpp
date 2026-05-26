@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget* parent)
     , m_basePage(nullptr)
     , m_unitPage(nullptr)
 {
-    // Theme aus QSettings laden (Standard: dark)
+    // Load theme from QSettings (default: dark)
     QSettings settings("RhenoCalc", "RhenoCalc");
     m_isDark = settings.value("darkTheme", true).toBool();
     m_alwaysOnTop = settings.value("alwaysOnTop", false).toBool();
@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget* parent)
     // Apply after restoreState/restoreGeometry so restored state does not override the hint.
     applyAlwaysOnTop(m_alwaysOnTop, false);
 
-    // Tab-Navigation mit Shift+Links / Shift+Rechts
+    // Tab navigation with Shift+Left / Shift+Right
     auto* prevTab = new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_Left), this);
     connect(prevTab, &QShortcut::activated, this, [this]() {
         int idx = m_tabWidget->currentIndex();
@@ -46,7 +46,7 @@ MainWindow::MainWindow(QWidget* parent)
         m_calcPage->setFocus();
     });
 
-    // Fokus zurück an den Rechner wenn ins Leere geklickt wird
+    // Return focus to the calculator when clicking on empty area
     connect(qApp, &QApplication::focusChanged, this, [this](QWidget* /*old*/, QWidget* now) {
         if (!now && isActiveWindow())
             m_calcPage->setFocus();
@@ -94,10 +94,10 @@ void MainWindow::setupUI() {
     m_tabWidget->addTab(m_basePage, "Base Converter");
     m_tabWidget->addTab(m_unitPage, "Unit Converter");
 
-    // Buttons oben rechts in der Tab-Leiste
-    m_onTopBtn = new QPushButton("📌", this);
+    // Buttons top right in the tab bar
+    m_onTopBtn = new QPushButton("T", this);
     m_onTopBtn->setCheckable(true);
-    m_onTopBtn->setFixedHeight(28);
+    m_onTopBtn->setFixedSize(30, 26);
     m_onTopBtn->setCursor(Qt::PointingHandCursor);
     m_onTopBtn->setFocusPolicy(Qt::NoFocus);
     connect(m_onTopBtn, &QPushButton::clicked, this, [this]() {
@@ -106,7 +106,7 @@ void MainWindow::setupUI() {
     });
 
     m_themeBtn = new QPushButton("☀", this);
-    m_themeBtn->setFixedHeight(28);
+    m_themeBtn->setFixedSize(30, 26);
     m_themeBtn->setCursor(Qt::PointingHandCursor);
     m_themeBtn->setFocusPolicy(Qt::NoFocus);
     connect(m_themeBtn, &QPushButton::clicked, this, [this]() {
@@ -117,7 +117,7 @@ void MainWindow::setupUI() {
     auto* corner = new QWidget(this);
     auto* cornerLayout = new QHBoxLayout(corner);
     cornerLayout->setContentsMargins(0, 0, 0, 0);
-    cornerLayout->setSpacing(6);
+    cornerLayout->setSpacing(4);
     cornerLayout->addWidget(m_onTopBtn);
     cornerLayout->addWidget(m_themeBtn);
     m_tabWidget->setCornerWidget(corner, Qt::TopRightCorner);
@@ -129,18 +129,18 @@ void MainWindow::setupUI() {
 void MainWindow::applyTheme(bool dark) {
     m_isDark = dark;
 
-    // ── Globales Stylesheet aus QSS-Datei laden ───────────────────────────────
+    // ── Load global stylesheet from QSS file ─────────────────────────────────
     QFile qss(dark ? ":/styles/dark.qss" : ":/styles/light.qss");
     if (qss.open(QFile::ReadOnly)) {
         qApp->setStyleSheet(ThemeColors::applyQssColors(QString::fromUtf8(qss.readAll()), dark));
         qss.close();
     }
 
-    // ── Fusion-Palette (Fallback für native Elemente) ─────────────────────────
+    // ── Fusion palette (fallback for native elements) ─────────────────────────
     qApp->setStyle(QStyleFactory::create("Fusion"));
     qApp->setPalette(ThemeColors::applicationPalette(dark));
 
-    // ── Seiten-spezifische Stile aktualisieren ────────────────────────────────
+    // ── Update page-specific styles ────────────────────────────────────────────
     m_calcPage->applyTheme(dark);
     m_basePage->applyTheme(dark);
     m_unitPage->applyTheme(dark);
@@ -148,7 +148,7 @@ void MainWindow::applyTheme(bool dark) {
     // ── Status Bar ────────────────────────────────────────────────────────────
     statusBar()->setStyleSheet(ThemeColors::statusBarStyle(dark));
 
-    // ── Theme-Button beschriften ──────────────────────────────────────────────
+    // ── Update theme button label ─────────────────────────────────────────────
     if (m_themeBtn) {
         m_themeBtn->setText(dark ? "☀" : "🌙");
         m_themeBtn->setStyleSheet(ThemeColors::themeToggleButtonStyle(dark));
@@ -195,7 +195,7 @@ void MainWindow::applyAlwaysOnTop(bool enabled, bool persist) {
     }
 
     if (enabled && isWayland)
-        statusBar()->showMessage("Always-on-top auf Wayland kann vom Compositor ignoriert werden.", 5000);
+        statusBar()->showMessage("Always-on-top on Wayland may be ignored by the compositor.", 5000);
 
     updateOnTopButton();
 }
@@ -205,7 +205,6 @@ void MainWindow::updateOnTopButton() {
         return;
 
     m_onTopBtn->setChecked(m_alwaysOnTop);
-    m_onTopBtn->setText(m_alwaysOnTop ? "📌*" : "📌");
     m_onTopBtn->setToolTip(m_alwaysOnTop ? "Always on top: ON" : "Always on top: OFF");
 
     QString style = ThemeColors::themeToggleButtonStyle(m_isDark);

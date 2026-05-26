@@ -70,10 +70,10 @@ void BaseConverterPage::setupUI() {
     inputGrid->setSpacing(6);
 
     struct { const char* label; QLineEdit** edit; const char* placeholder; } fields[] = {
-        {"HEX (0x)", &m_hexEdit, "e.g. DEADBEEF"},
-        {"DEC",      &m_decEdit, "e.g. 3735928559"},
-        {"BIN",      &m_binEdit, "e.g. 1101..."},
-        {"OCT",      &m_octEdit, "e.g. 33653337357"},
+        {"HEX", &m_hexEdit, "e.g. DEADBEEF"},
+        {"DEC", &m_decEdit, "e.g. 3735928559"},
+        {"BIN", &m_binEdit, "e.g. 1101..."},
+        {"OCT", &m_octEdit, "e.g. 33653337357"},
     };
     for (int i = 0; i < 4; ++i) {
         m_fieldLabels[i] = new QLabel(fields[i].label, this);
