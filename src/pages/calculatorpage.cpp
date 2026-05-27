@@ -1,4 +1,5 @@
 #include "calculatorpage.h"
+#include "core/calculatorcore.h"
 #include "ui/themecolors.h"
 #include <QGridLayout>
 #include <QVBoxLayout>
@@ -64,7 +65,7 @@ void CalculatorPage::setupUI() {
 
     // Keyboard shortcut hint bar
     m_hintLabel = new QLabel(
-        "⌨  0–9 / A–F  |  + - * /  |  % MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n       < LSL  |  > LSR  |  . / ,  Decimal  |  Enter =  |  Esc AC  |  ⌫ BS  |\n       Ctrl+D/H/B/O: Base  |  Ctrl+1–4: Word width  |  Shift+◀ ▶: Tab",
+        "  0–9 / A–F  |  + - * /  |  % MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n  < LSL  |  > LSR  |  . / ,  Decimal  |  Enter =  |  Esc AC  |  ⌫ BS  |\n  Ctrl+D/H/B/O: Base  |  Ctrl+1–4: Word width  |  Shift+◀ ▶: Tab",
         this);
     m_hintLabel->setWordWrap(true);
     root->addWidget(m_hintLabel);
@@ -198,23 +199,15 @@ void CalculatorPage::setupUI() {
 }
 
 long long CalculatorPage::maskToWidth(long long val) {
-    if (m_wordBits == 64) return val;
-    long long mask = (1LL << m_wordBits) - 1;
-    return val & mask;
+    return CalculatorCore::maskToWidth(val, m_wordBits);
 }
 
 QString CalculatorPage::toBaseString(long long val) {
-    long long masked = maskToWidth(val);
-    if (m_base == 16) return QString::number((unsigned long long)masked, 16).toUpper();
-    if (m_base == 2)  return QString::number((unsigned long long)masked, 2);
-    if (m_base == 8)  return QString::number((unsigned long long)masked, 8);
-    return QString::number(masked);
+    return CalculatorCore::toBaseString(val, m_base, m_wordBits);
 }
 
 long long CalculatorPage::fromBaseString(const QString& s) {
-    bool ok;
-    long long v = s.toLongLong(&ok, m_base);
-    return ok ? v : 0;
+    return CalculatorCore::fromBaseString(s, m_base);
 }
 
 void CalculatorPage::updateDisplay() {
@@ -347,12 +340,7 @@ void CalculatorPage::onEqualsClicked() {
 
     if (m_floatMode) {
         double a = m_accumulatorDouble, b = m_currentDouble;
-        double res = a;
-        if      (m_pendingOp == "+")   res = a + b;
-        else if (m_pendingOp == "-")   res = a - b;
-        else if (m_pendingOp == "*")   res = a * b;
-        else if (m_pendingOp == "/")   res = (b != 0.0) ? a / b : std::numeric_limits<double>::infinity();
-        else if (m_pendingOp == "MOD") res = std::fmod(a, b);
+        const double res = CalculatorCore::applyBinary(a, b, m_pendingOp);
         m_exprLabel->setText(formatDouble(a) + " " + m_pendingOp + " " + formatDouble(b) + " =");
         m_currentDouble = res;
         m_inputString.clear();
@@ -363,12 +351,7 @@ void CalculatorPage::onEqualsClicked() {
     }
 
     long long a = m_accumulator, b = m_current;
-    long long res = a;
-    if      (m_pendingOp == "+")   res = a + b;
-    else if (m_pendingOp == "-")   res = a - b;
-    else if (m_pendingOp == "*")   res = a * b;
-    else if (m_pendingOp == "/")   { res = (b != 0) ? a / b : 0; }
-    else if (m_pendingOp == "MOD") { res = (b != 0) ? a % b : 0; }
+    const long long res = CalculatorCore::applyBinary(a, b, m_pendingOp);
     m_exprLabel->setText(toBaseString(a) + " " + m_pendingOp + " " + toBaseString(b) + " =");
     m_current = maskToWidth(res);
     m_pendingOp.clear();
@@ -456,33 +439,33 @@ void CalculatorPage::onBitwiseClicked() {
     // ── Float-aware unary ops ────────────────────────────────────────────────
     if (op == "SQ") {
         if (m_floatMode) {
-            m_currentDouble *= m_currentDouble;
+            m_currentDouble = CalculatorCore::applyUnaryDouble(m_currentDouble, op);
             m_inputString.clear();
             updateDisplay();
             return;
         }
-        res = maskToWidth(b * b);
+        res = CalculatorCore::applyUnaryInt(b, op, m_wordBits);
     }
     else if (op == "SQRT") {
         if (m_floatMode) {
-            m_currentDouble = (m_currentDouble >= 0.0) ? std::sqrt(m_currentDouble) : std::numeric_limits<double>::quiet_NaN();
+            m_currentDouble = CalculatorCore::applyUnaryDouble(m_currentDouble, op);
             m_inputString.clear(); updateDisplay();
             return;
         }
-        res = (b >= 0) ? (long long)std::sqrt((double)b) : 0;
+        res = CalculatorCore::applyUnaryInt(b, op, m_wordBits);
     }
     else if (op == "abs") {
         if (m_floatMode) {
-            m_currentDouble = std::fabs(m_currentDouble);
+            m_currentDouble = CalculatorCore::applyUnaryDouble(m_currentDouble, op);
             m_inputString.clear();
             updateDisplay();
             return;
         }
-        res = std::abs(b);
+        res = CalculatorCore::applyUnaryInt(b, op, m_wordBits);
     }
     else if (op == "1/x") {
         if (m_floatMode) {
-            m_currentDouble = (m_currentDouble != 0.0) ? 1.0 / m_currentDouble : std::numeric_limits<double>::infinity();
+            m_currentDouble = CalculatorCore::applyUnaryDouble(m_currentDouble, op);
             m_exprLabel->setText("1 / " + formatDouble(m_currentDouble) + " =");
             m_inputString.clear();
             updateDisplay(); return;
@@ -498,16 +481,8 @@ void CalculatorPage::onBitwiseClicked() {
         }
         return;
     }
-    else if (op == "NOT")  res = maskToWidth(~b);
-    else if (op == "LSL")  res = maskToWidth(b << 1);
-    else if (op == "LSR")  res = maskToWidth((long long)((unsigned long long)b >> 1));
-    else if (op == "ROL") {
-        unsigned long long ub = (unsigned long long)maskToWidth(b);
-        res = maskToWidth((long long)((ub << 1) | (ub >> (m_wordBits - 1))));
-    }
-    else if (op == "ROR") {
-        unsigned long long ub = (unsigned long long)maskToWidth(b);
-        res = maskToWidth((long long)((ub >> 1) | (ub << (m_wordBits - 1))));
+    else if (op == "NOT" || op == "LSL" || op == "LSR" || op == "ROL" || op == "ROR") {
+        res = CalculatorCore::applyUnaryInt(b, op, m_wordBits);
     }
     else if (op == "MS") {
         memory = b;
@@ -535,9 +510,7 @@ void CalculatorPage::onBitwiseClicked() {
 
 // ─── Float formatting ─────────────────────────────────────────────────────────
 QString CalculatorPage::formatDouble(double val) {
-    if (std::isinf(val)) return val > 0 ? "∞" : "-∞";
-    if (std::isnan(val)) return "NaN";
-    return QString::number(val, 'g', 12);
+    return CalculatorCore::formatDouble(val);
 }
 
 // ─── Theme ────────────────────────────────────────────────────────────────────

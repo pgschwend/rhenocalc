@@ -1,4 +1,5 @@
 #pragma once
+#include "core/unitconvertercore.h"
 #include <QWidget>
 #include <QLineEdit>
 #include <QComboBox>
@@ -33,7 +34,6 @@ private:
     QGroupBox* m_convGroup;
     QGroupBox* m_refGroup;
 
-    struct UnitDef { QString name; double toBase; };
-    QList<QList<UnitDef>> m_categories;
+    QList<QList<UnitConverterCore::UnitDef>> m_categories;
     QStringList m_categoryNames;
 };

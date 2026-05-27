@@ -29,9 +29,13 @@ set(SOURCES
         src/pages/calculatorpage.h   src/pages/calculatorpage.cpp
         src/pages/baseconverterpage.h src/pages/baseconverterpage.cpp
         src/pages/unitconverterpage.h src/pages/unitconverterpage.cpp
-        src/pages/ipcalc.cpp
         src/pages/networkpage.cpp
         src/pages/crchashpage.h src/pages/crchashpage.cpp
+        src/core/calculatorcore.h src/core/calculatorcore.cpp
+        src/core/baseconvertercore.h src/core/baseconvertercore.cpp
+        src/core/unitconvertercore.h src/core/unitconvertercore.cpp
+        src/core/networkcalc.h src/core/networkcalc.cpp
+        src/core/crchashcore.h src/core/crchashcore.cpp
         src/info.h
 )
 

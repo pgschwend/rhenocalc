@@ -1,4 +1,5 @@
 #include "baseconverterpage.h"
+#include "core/baseconvertercore.h"
 #include "ui/themecolors.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -7,8 +8,6 @@
 #include <QScrollArea>
 #include <QSizePolicy>
 #include <QFont>
-#include <cstring>
-#include <cmath>
 
 // ─── BitButton ───────────────────────────────────────────────────────────────
 
@@ -230,30 +229,14 @@ void BaseConverterPage::onSignedToggled(bool checked) {
     updateInfoLabels(m_value);
 }
 
-unsigned long long applyMask(unsigned long long val, int bits) {
-    if (bits == 64) return val;
-    return val & ((1ULL << bits) - 1);
-}
-
 void BaseConverterPage::updateAll(unsigned long long value, QLineEdit* skip) {
     if (m_updating) return;
     m_updating = true;
-    m_value = applyMask(value, m_wordBits);
+    m_value = BaseConverterCore::applyMask(value, m_wordBits);
 
     if (m_hexEdit != skip) m_hexEdit->setText(QString::number(m_value, 16).toUpper());
     if (m_decEdit != skip) m_decEdit->setText(QString::number(m_value));
-    if (m_binEdit != skip) {
-        QString b = QString::number(m_value, 2);
-        // Pad to word width
-        while (b.length() < m_wordBits) b.prepend('0');
-        // Insert spaces every 4 bits for readability
-        QString spaced;
-        for (int i = 0; i < b.length(); ++i) {
-            if (i > 0 && (b.length() - i) % 4 == 0) spaced += ' ';
-            spaced += b[i];
-        }
-        m_binEdit->setText(spaced);
-    }
+    if (m_binEdit != skip) m_binEdit->setText(BaseConverterCore::formatBinarySpaced(m_value, m_wordBits));
     if (m_octEdit != skip) m_octEdit->setText(QString::number(m_value, 8));
 
     updateBitButtons(m_value);
@@ -273,34 +256,23 @@ void BaseConverterPage::updateInfoLabels(unsigned long long value) {
     // Unsigned
     m_unsignedLabel->setText(QString::number(value));
     // Hex
-    m_hexInfoLabel->setText("0x" + QString::number(value, 16).toUpper().rightJustified(m_wordBits/4, '0'));
+    m_hexInfoLabel->setText(BaseConverterCore::hexWithPadding(value, m_wordBits));
 
     // Signed interpretation
-    long long sval = value;
-    if (m_wordBits < 64) {
-        long long signBit = 1LL << (m_wordBits - 1);
-        if (value & (unsigned long long)signBit)
-            sval = (long long)(value | ~((1ULL << m_wordBits) - 1));
-    }
+    long long sval = BaseConverterCore::signedValue(value, m_wordBits);
     m_signedLabel->setText(QString::number(sval));
 
     // Float (only meaningful for 32-bit)
     if (m_wordBits == 32) {
-        quint32 v32 = (quint32)value;
-        float f;
-        std::memcpy(&f, &v32, 4);
-        if (std::isnan(f)) m_floatLabel->setText("NaN");
-        else if (std::isinf(f)) m_floatLabel->setText(f > 0 ? "+Inf" : "-Inf");
-        else m_floatLabel->setText(QString::number((double)f, 'g', 8));
+        m_floatLabel->setText(BaseConverterCore::float32String(value));
     } else {
         m_floatLabel->setText(m_wordBits == 64 ? "(use 32-bit)" : "—");
     }
 
     // Byte labels
     for (int i = 0; i < m_wordBits / 8; ++i) {
-        quint8 byte = (quint8)((value >> (i * 8)) & 0xFF);
-        m_byteLabels[i]->setText(QString("%1").arg(byte, 2, 16, QChar('0')).toUpper());
-        m_byteLabels[i]->setToolTip(QString("Byte %1: 0x%2 = %3").arg(i).arg(byte, 2, 16, QChar('0')).toUpper().arg(byte));
+        m_byteLabels[i]->setText(BaseConverterCore::byteHex(value, i));
+        m_byteLabels[i]->setToolTip(BaseConverterCore::byteTooltip(value, i));
     }
 }
 
@@ -311,32 +283,23 @@ void BaseConverterPage::onBitToggled(int bit, bool state) {
 }
 
 void BaseConverterPage::onHexChanged() {
-    QString s = m_hexEdit->text().trimmed().remove(' ');
-    bool ok;
-    unsigned long long v = s.toULongLong(&ok, 16);
-    if (ok) updateAll(v, m_hexEdit);
+    unsigned long long v = 0;
+    if (BaseConverterCore::tryParse(m_hexEdit->text(), 16, v)) updateAll(v, m_hexEdit);
 }
 
 void BaseConverterPage::onDecChanged() {
-    QString s = m_decEdit->text().trimmed().remove(' ');
-    bool ok;
-    unsigned long long v = s.toULongLong(&ok, 10);
-    if (!ok) { long long sv = s.toLongLong(&ok, 10); if (ok) v = (unsigned long long)sv; }
-    if (ok) updateAll(v, m_decEdit);
+    unsigned long long v = 0;
+    if (BaseConverterCore::tryParse(m_decEdit->text(), 10, v)) updateAll(v, m_decEdit);
 }
 
 void BaseConverterPage::onBinChanged() {
-    QString s = m_binEdit->text().trimmed().remove(' ');
-    bool ok;
-    unsigned long long v = s.toULongLong(&ok, 2);
-    if (ok) updateAll(v, m_binEdit);
+    unsigned long long v = 0;
+    if (BaseConverterCore::tryParse(m_binEdit->text(), 2, v)) updateAll(v, m_binEdit);
 }
 
 void BaseConverterPage::onOctChanged() {
-    QString s = m_octEdit->text().trimmed().remove(' ');
-    bool ok;
-    unsigned long long v = s.toULongLong(&ok, 8);
-    if (ok) updateAll(v, m_octEdit);
+    unsigned long long v = 0;
+    if (BaseConverterCore::tryParse(m_octEdit->text(), 8, v)) updateAll(v, m_octEdit);
 }
 
 void BaseConverterPage::applyTheme(bool dark) {
