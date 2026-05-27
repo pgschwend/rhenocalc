@@ -4,11 +4,6 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFont>
-#include <QFrame>
-#include <QToolTip>
-#include <cmath>
-#include <climits>
-#include <limits>
 
 CalculatorPage::CalculatorPage(QWidget* parent) : QWidget(parent) {
     setupUI();
@@ -35,11 +30,11 @@ void CalculatorPage::setupUI() {
     m_baseCombo->addItems({"Decimal (10)", "Hexadecimal (16)", "Binary (2)", "Octal (8)"});
     m_baseCombo->setMinimumWidth(90);
 
-    m_wordLabel = new QLabel("Word:", this);
+    m_wordLabel = new QLabel("Mode:", this);
     m_wordLabel->setStyleSheet("font-size:13px;");
     m_widthCombo = new QComboBox(this);
-    m_widthCombo->addItems({"8-bit", "16-bit", "32-bit", "64-bit"});
-    m_widthCombo->setCurrentIndex(2);
+    m_widthCombo->addItems({"8-bit", "16-bit", "32-bit", "64-bit", "Scientific"});
+    m_widthCombo->setCurrentIndex(4);
 
     topRow->addWidget(m_baseLabel);
     topRow->addWidget(m_baseCombo);
@@ -64,7 +59,7 @@ void CalculatorPage::setupUI() {
 
     // Keyboard shortcut hint bar
     m_hintLabel = new QLabel(
-        "⌨  0–9 / A–F  |  + - * /  |  % MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n       < LSL  |  > LSR  |  . / ,  Decimal  |  Enter =  |  Esc AC  |  ⌫ BS  |\n       Ctrl+D/H/B/O: Base  |  Ctrl+1–4: Word width  |  Shift+◀ ▶: Tab",
+        "  0–9 / A–F  |  + - * /  |  % MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n  < LSL  |  > LSR  |  . / ,  Decimal  |  Enter =  |  Esc AC  |  ⌫ BS  |\n  Ctrl+D/H/B/O: Base  |  Ctrl+1–5: Mode  |  Shift+◀ ▶: Tab",
         this);
     m_hintLabel->setWordWrap(true);
     root->addWidget(m_hintLabel);
@@ -116,7 +111,7 @@ void CalculatorPage::setupUI() {
 
     auto* clrBtn = makeBtn("CE", ThemeColors::calcClearButton(true));
     m_clearBtns << clrBtn;
-    connect(clrBtn, &QPushButton::clicked, this, [this]{ m_current=0; m_newInput=true; updateDisplay(); });
+    connect(clrBtn, &QPushButton::clicked, this, [this]{ m_engine.clearEntry(); updateDisplay(); });
     grid->addWidget(clrBtn, 1, 6);
 
     auto* powBtn = makeBtn("x²", ThemeColors::calcFuncButton(true));
@@ -198,59 +193,41 @@ void CalculatorPage::setupUI() {
 }
 
 long long CalculatorPage::maskToWidth(long long val) {
-    if (m_wordBits == 64) return val;
-    long long mask = (1LL << m_wordBits) - 1;
-    return val & mask;
+    return CalculatorCore::maskToWidth(val, m_engine.wordBits());
 }
 
 QString CalculatorPage::toBaseString(long long val) {
-    long long masked = maskToWidth(val);
-    if (m_base == 16) return QString::number((unsigned long long)masked, 16).toUpper();
-    if (m_base == 2)  return QString::number((unsigned long long)masked, 2);
-    if (m_base == 8)  return QString::number((unsigned long long)masked, 8);
-    return QString::number(masked);
+    return CalculatorCore::toBaseString(val, m_engine.base(), m_engine.wordBits());
 }
 
 long long CalculatorPage::fromBaseString(const QString& s) {
-    bool ok;
-    long long v = s.toLongLong(&ok, m_base);
-    return ok ? v : 0;
+    return CalculatorCore::fromBaseString(s, m_engine.base());
 }
 
 void CalculatorPage::updateDisplay() {
-    if (m_floatMode) {
-        // While the user is actively typing (m_inputString is being built), show the raw string.
-        // Otherwise format the stored double nicely.
-        if (!m_inputString.isEmpty()) {
-            m_display->setText(m_inputString);
-        } else {
-            m_display->setText(formatDouble(m_currentDouble));
-        }
-    } else {
-        m_display->setText(toBaseString(m_current));
-    }
-    bool hexMode = (m_base == 16);
+    m_display->setText(m_engine.displayText());
+    m_exprLabel->setText(m_engine.expressionText());
+    bool hexMode = (m_engine.base() == 16);
     for (int i = 0; i < 6; ++i) m_hexBtns[i]->setEnabled(hexMode);
 }
 
 void CalculatorPage::onBaseChanged(int index) {
     const int bases[] = {10, 16, 2, 8};
-    m_base = bases[index];
-    // Leaving decimal mode: drop float state and convert to integer
-    if (m_base != 10 && m_floatMode) {
-        m_floatMode = false;
-        m_inputString.clear();
-        m_current = static_cast<long long>(m_currentDouble);
-        m_currentDouble = 0.0;
-    }
-    m_newInput = true;
+    m_engine.setBase(bases[index]);
+
+    // "prec" is decimal-only; fallback to 64-bit in non-decimal bases.
+    if (bases[index] != 10 && m_widthCombo->currentIndex() == 4)
+        m_widthCombo->setCurrentIndex(3);
+
     updateDisplay();
 }
 
 void CalculatorPage::onWordWidthChanged(int index) {
     const int widths[] = {8, 16, 32, 64};
-    m_wordBits = widths[index];
-    m_current = maskToWidth(m_current);
+    const bool precMode = (index == 4);
+    m_engine.setBigMode(precMode);
+    if (!precMode)
+        m_engine.setWordBits(widths[index]);
     updateDisplay();
 }
 
@@ -260,52 +237,7 @@ void CalculatorPage::onDigitClicked() {
 }
 
 void CalculatorPage::pressDigit(const QString& d) {
-    // ── Decimal point ──────────────────────────────────────────────────────────
-    if (d == ".") {
-        if (m_base != 10) return;
-        if (m_floatMode && m_inputString.contains('.')) return; // already has a decimal point
-        m_floatMode = true;
-        if (m_newInput) {
-            // No number entered yet → start with "0."
-            m_inputString   = "0.";
-            m_currentDouble = 0.0;
-            m_newInput = false;
-        } else if (m_inputString.isEmpty()) {
-            // User typed digits in integer mode (m_inputString unused until now) → preserve them
-            m_inputString   = QString::number(m_current) + ".";
-            m_currentDouble = static_cast<double>(m_current);
-        } else {
-            // Already in float-mode input (digits after operator) → just append dot
-            m_inputString  += ".";
-            m_currentDouble = m_inputString.toDouble();
-        }
-        updateDisplay();
-        return;
-    }
-
-    // ── Float mode: append digit to the input string ───────────────────────────
-    if (m_floatMode) {
-        if (m_newInput) {
-            // Start a brand-new number but stay in float mode (operator was already pressed)
-            m_inputString  = d;
-            m_currentDouble = d.toDouble();
-            m_newInput = false;
-            updateDisplay();
-            return;
-        } else {
-            m_inputString  += d;
-            m_currentDouble = m_inputString.toDouble();
-            updateDisplay();
-            return;
-        }
-    }
-
-    // ── Integer digit input ────────────────────────────────────────────────────
-    if (m_newInput) { m_current = 0; m_newInput = false; }
-    QString cur = toBaseString(m_current);
-    if (cur == "0") cur = d;
-    else cur += d;
-    m_current = maskToWidth(fromBaseString(cur));
+    m_engine.pressDigit(d);
     updateDisplay();
 }
 
@@ -318,105 +250,27 @@ void CalculatorPage::onOperatorClicked() {
 }
 
 void CalculatorPage::pressOperator(const QString& op) {
-    if (!m_pendingOp.isEmpty()) {
-        onEqualsClicked();
-    }
-    // In decimal mode, always use double arithmetic so that e.g. 7/3 = 2.333...
-    if (m_base == 10 && !m_floatMode) {
-        m_floatMode = true;
-        m_currentDouble = static_cast<double>(m_current);
-        m_inputString.clear();
-    }
-    if (m_floatMode) {
-        m_accumulatorDouble = m_currentDouble;
-        m_inputString.clear();
-        m_pendingOp = op;
-        m_exprLabel->setText(formatDouble(m_accumulatorDouble) + " " + op);
-    } else {
-        m_accumulator = m_current;
-        m_pendingOp   = op;
-        m_exprLabel->setText(toBaseString(m_accumulator) + " " + op);
-    }
-    m_newInput = true;
+    m_engine.pressOperator(op);
+    updateDisplay();
 }
 
-static long long memory = 0;
-
 void CalculatorPage::onEqualsClicked() {
-    if (m_pendingOp.isEmpty()) return;
-
-    if (m_floatMode) {
-        double a = m_accumulatorDouble, b = m_currentDouble;
-        double res = a;
-        if      (m_pendingOp == "+")   res = a + b;
-        else if (m_pendingOp == "-")   res = a - b;
-        else if (m_pendingOp == "*")   res = a * b;
-        else if (m_pendingOp == "/")   res = (b != 0.0) ? a / b : std::numeric_limits<double>::infinity();
-        else if (m_pendingOp == "MOD") res = std::fmod(a, b);
-        m_exprLabel->setText(formatDouble(a) + " " + m_pendingOp + " " + formatDouble(b) + " =");
-        m_currentDouble = res;
-        m_inputString.clear();
-        m_pendingOp.clear();
-        m_newInput = true;
-        updateDisplay();
-        return;
-    }
-
-    long long a = m_accumulator, b = m_current;
-    long long res = a;
-    if      (m_pendingOp == "+")   res = a + b;
-    else if (m_pendingOp == "-")   res = a - b;
-    else if (m_pendingOp == "*")   res = a * b;
-    else if (m_pendingOp == "/")   { res = (b != 0) ? a / b : 0; }
-    else if (m_pendingOp == "MOD") { res = (b != 0) ? a % b : 0; }
-    m_exprLabel->setText(toBaseString(a) + " " + m_pendingOp + " " + toBaseString(b) + " =");
-    m_current = maskToWidth(res);
-    m_pendingOp.clear();
-    m_newInput = true;
+    m_engine.equals();
     updateDisplay();
 }
 
 void CalculatorPage::onClearClicked() {
-    m_current = 0;
-    m_accumulator = 0;
-    m_pendingOp.clear();
-    m_currentDouble = 0.0;
-    m_accumulatorDouble = 0.0;
-    m_floatMode = false;
-    m_inputString.clear();
-    m_newInput = true;
-    m_exprLabel->clear();
+    m_engine.clearAll();
     updateDisplay();
 }
 
 void CalculatorPage::onBackspaceClicked() {
-    if (m_floatMode) {
-        if (m_inputString.isEmpty()) return;
-        m_inputString.chop(1);
-        // If we removed the decimal point or are left with just sign/empty → leave float mode
-        if (m_inputString.isEmpty() || m_inputString == "-" || !m_inputString.contains('.')) {
-            m_floatMode = false;
-            m_current = m_inputString.isEmpty() ? 0 : static_cast<long long>(m_inputString.toDouble());
-            m_inputString.clear();
-        } else {
-            m_currentDouble = m_inputString.toDouble();
-        }
-        updateDisplay();
-        return;
-    }
-    QString s = toBaseString(m_current);
-    if (s.length() > 1) s.chop(1); else s = "0";
-    m_current = fromBaseString(s);
+    m_engine.backspace();
     updateDisplay();
 }
 
 void CalculatorPage::onNegateClicked() {
-    if (m_floatMode) {
-        m_currentDouble = -m_currentDouble;
-        m_inputString.clear(); // will be reformatted by updateDisplay
-    } else {
-        m_current = maskToWidth(-m_current);
-    }
+    m_engine.negate();
     updateDisplay();
 }
 
@@ -424,11 +278,7 @@ void CalculatorPage::onPiClicked() {
     auto* btn = qobject_cast<QPushButton*>(sender());
     QString op = btn->objectName();
 
-    if (op == "π") {
-        m_floatMode = true;
-        m_currentDouble = 3.14159265359;
-        m_inputString.clear(); // will be reformatted by updateDisplay
-    }
+    if (op == "π") m_engine.setPi();
 
     updateDisplay();
 }
@@ -436,108 +286,13 @@ void CalculatorPage::onPiClicked() {
 void CalculatorPage::onBitwiseClicked() {
     auto* btn = qobject_cast<QPushButton*>(sender());
     QString op = btn->objectName();
-    long long a = m_accumulator, b = m_current;
-    long long res = m_current;
-
-    if (op == "AND") { m_accumulator = b; m_pendingOp = "AND"; m_exprLabel->setText(toBaseString(b) + " AND"); m_newInput=true; return; }
-    if (op == "OR")  { m_accumulator = b; m_pendingOp = "OR";  m_exprLabel->setText(toBaseString(b) + " OR");  m_newInput=true; return; }
-    if (op == "XOR") { m_accumulator = b; m_pendingOp = "XOR"; m_exprLabel->setText(toBaseString(b) + " XOR"); m_newInput=true; return; }
-
-    if (!m_pendingOp.isEmpty() && (op == "AND" || op == "OR" || op == "XOR")) {
-        if (m_pendingOp == "AND") res = a & b;
-        if (m_pendingOp == "OR")  res = a | b;
-        if (m_pendingOp == "XOR") res = a ^ b;
-        m_pendingOp.clear(); m_newInput = true;
-        m_current = maskToWidth(res);
-        updateDisplay(); return;
-
-    }
-
-    // ── Float-aware unary ops ────────────────────────────────────────────────
-    if (op == "SQ") {
-        if (m_floatMode) {
-            m_currentDouble *= m_currentDouble;
-            m_inputString.clear();
-            updateDisplay();
-            return;
-        }
-        res = maskToWidth(b * b);
-    }
-    else if (op == "SQRT") {
-        if (m_floatMode) {
-            m_currentDouble = (m_currentDouble >= 0.0) ? std::sqrt(m_currentDouble) : std::numeric_limits<double>::quiet_NaN();
-            m_inputString.clear(); updateDisplay();
-            return;
-        }
-        res = (b >= 0) ? (long long)std::sqrt((double)b) : 0;
-    }
-    else if (op == "abs") {
-        if (m_floatMode) {
-            m_currentDouble = std::fabs(m_currentDouble);
-            m_inputString.clear();
-            updateDisplay();
-            return;
-        }
-        res = std::abs(b);
-    }
-    else if (op == "1/x") {
-        if (m_floatMode) {
-            m_currentDouble = (m_currentDouble != 0.0) ? 1.0 / m_currentDouble : std::numeric_limits<double>::infinity();
-            m_exprLabel->setText("1 / " + formatDouble(m_currentDouble) + " =");
-            m_inputString.clear();
-            updateDisplay(); return;
-        }
-        m_exprLabel->setText("1 / " + toBaseString(b) + " = ");
-        if (b) {
-            // Switch to float mode for the result
-            m_floatMode = true;
-            m_currentDouble = 1.0 / static_cast<double>(b);
-            m_inputString.clear();
-            m_newInput = true;
-            updateDisplay();
-        }
-        return;
-    }
-    else if (op == "NOT")  res = maskToWidth(~b);
-    else if (op == "LSL")  res = maskToWidth(b << 1);
-    else if (op == "LSR")  res = maskToWidth((long long)((unsigned long long)b >> 1));
-    else if (op == "ROL") {
-        unsigned long long ub = (unsigned long long)maskToWidth(b);
-        res = maskToWidth((long long)((ub << 1) | (ub >> (m_wordBits - 1))));
-    }
-    else if (op == "ROR") {
-        unsigned long long ub = (unsigned long long)maskToWidth(b);
-        res = maskToWidth((long long)((ub >> 1) | (ub << (m_wordBits - 1))));
-    }
-    else if (op == "MS") {
-        memory = b;
-        m_exprLabel->setText("M← " + toBaseString(b));
-        return;
-    }
-    else if (op == "MR") {
-        res = memory;
-        // Keep integer/float state in sync so MR works as operand after decimal operators.
-        if (m_floatMode) {
-            m_currentDouble = static_cast<double>(memory);
-            m_inputString.clear();
-        }
-        m_exprLabel->setText("M→ " + toBaseString(memory));
-    }
-    else if (op == "MC") {
-        memory = 0;
-        m_exprLabel->setText("M cleared"); return;
-    }
-
-    m_current = res;
-    m_newInput = true;
+    m_engine.applyBitwiseOrFunction(op);
     updateDisplay();
 }
 
 // ─── Float formatting ─────────────────────────────────────────────────────────
 QString CalculatorPage::formatDouble(double val) {
-    if (std::isinf(val)) return val > 0 ? "∞" : "-∞";
-    if (std::isnan(val)) return "NaN";
-    return QString::number(val, 'g', 12);
+    return CalculatorCore::formatDouble(val);
 }
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
@@ -580,11 +335,11 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
     }
 
     // ── Digits 0-9 ───────────────────────────────────────────────────────────
-    if (key >= Qt::Key_0 && key <= Qt::Key_9) {
+    if (key >= Qt::Key_0 && key <= Qt::Key_9 && (mod == Qt::NoModifier || mod == Qt::ShiftModifier)) {
         QString d = QString::number(key - Qt::Key_0);
         // In non-decimal bases, check validity
-        if (m_base == 2  && d.toInt() > 1)  { QWidget::keyPressEvent(event); return; }
-        if (m_base == 8  && d.toInt() > 7)  { QWidget::keyPressEvent(event); return; }
+        if (m_engine.base() == 2  && d.toInt() > 1)  { QWidget::keyPressEvent(event); return; }
+        if (m_engine.base() == 8  && d.toInt() > 7)  { QWidget::keyPressEvent(event); return; }
         pressDigit(d);
         return;
     }
@@ -594,7 +349,7 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
     }
 
     // ── Hex letters A-F ──────────────────────────────────────────────────────
-    if (m_base == 16) {
+    if (m_engine.base() == 16 && (mod == Qt::NoModifier || mod == Qt::ShiftModifier)) {
         if (key >= Qt::Key_A && key <= Qt::Key_F) {
             pressDigit(QString(QChar('A' + (key - Qt::Key_A))));
             return;
@@ -623,36 +378,27 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
     // ── Bitwise ops via keyboard shortcuts ───────────────────────────────────
     // & = AND, | = OR, ^ = XOR, ~ = NOT, < = LSL, > = LSR
     case Qt::Key_Ampersand:  // & → AND (first operand)
-        m_accumulator = m_current;
-        m_pendingOp = "AND";
-        m_exprLabel->setText(toBaseString(m_accumulator) + " AND");
-        m_newInput = true;
+        m_engine.applyBitwiseOrFunction("AND");
+        updateDisplay();
         return;
     case Qt::Key_Bar:        // | → OR
-        m_accumulator = m_current;
-        m_pendingOp = "OR";
-        m_exprLabel->setText(toBaseString(m_accumulator) + " OR");
-        m_newInput = true;
+        m_engine.applyBitwiseOrFunction("OR");
+        updateDisplay();
         return;
     case Qt::Key_AsciiCircum: // ^ → XOR
-        m_accumulator = m_current;
-        m_pendingOp = "XOR";
-        m_exprLabel->setText(toBaseString(m_accumulator) + " XOR");
-        m_newInput = true;
+        m_engine.applyBitwiseOrFunction("XOR");
+        updateDisplay();
         return;
     case Qt::Key_AsciiTilde: // ~ → NOT (immediate)
-        m_current = maskToWidth(~m_current);
-        m_newInput = true;
+        m_engine.applyBitwiseOrFunction("NOT");
         updateDisplay();
         return;
     case Qt::Key_Less:       // < → LSL (shift left)
-        m_current = maskToWidth(m_current << 1);
-        m_newInput = true;
+        m_engine.applyBitwiseOrFunction("LSL");
         updateDisplay();
         return;
     case Qt::Key_Greater:    // > → LSR (logical shift right)
-        m_current = maskToWidth((long long)((unsigned long long)m_current >> 1));
-        m_newInput = true;
+        m_engine.applyBitwiseOrFunction("LSR");
         updateDisplay();
         return;
     case Qt::Key_N:          // N → NEG
@@ -675,7 +421,7 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
         break;
 
     // ── Word width shortcuts ─────────────────────────────────────────────────
-    // Ctrl+1..4 = 8/16/32/64-bit
+    // Ctrl+1..5 = 8/16/32/64-bit/Scientific
     case Qt::Key_1:
         if (mod == Qt::ControlModifier) { m_widthCombo->setCurrentIndex(0); return; }
         break;
@@ -687,6 +433,9 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
         break;
     case Qt::Key_4:
         if (mod == Qt::ControlModifier) { m_widthCombo->setCurrentIndex(3); return; }
+        break;
+    case Qt::Key_5:
+        if (mod == Qt::ControlModifier) { m_widthCombo->setCurrentIndex(4); return; }
         break;
 
     default: break;

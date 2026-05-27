@@ -1,6 +1,6 @@
 #include "networkpage.h"
 
-#include "networkcalc.h"
+#include "core/networkcalc.h"
 #include "ui/themecolors.h"
 
 #include <QGridLayout>
@@ -12,7 +12,7 @@
 #include <QScrollArea>
 #include <QSizePolicy>
 #include <QSpinBox>
-//#include <QVBoxLayout>
+#include <QVBoxLayout>
 
 namespace {
 

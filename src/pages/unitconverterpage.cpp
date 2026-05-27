@@ -5,128 +5,10 @@
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
-#include <QFont>
-#include <cmath>
-#include <limits>
 
 UnitConverterPage::UnitConverterPage(QWidget* parent) : QWidget(parent) {
-    // Define categories: name + units with factor to SI base
-    // Frequency: base = Hz
-    m_categoryNames = {
-        "Frequency (Hz)", "Time / Period (s)", "Pressure",
-        "Distance", "Speed", "Data Rate (bps)", "Data Size (bytes)",
-        "Temperature", "Power (W)", "Energy (J)", "Angle"
-    };
-
-    // Frequency
-    m_categories.append({
-        {"Hz",   1.0},
-        {"kHz",  1e3},
-        {"MHz",  1e6},
-        {"GHz",  1e9},
-        {"THz",  1e12},
-        {"mHz",  1e-3},
-        {"s",    0.0},
-        {"ms",   0.0},
-        {"us",   0.0},
-    });
-
-    // Time
-    m_categories.append({
-        {"s",    1.0},
-        {"ms",   1e-3},
-        {"µs",   1e-6},
-        {"ns",   1e-9},
-        {"ps",   1e-12},
-        {"min",  60.0},
-        {"h",    3600.0},
-        {"day",  86400.0},
-    });
-
-    // Pressure (base = Pa)
-    m_categories.append({
-        {"bar",         100000.0},
-        {"kPa",         1000.0},
-        {"psi",         6894.757293168},
-    });
-
-    // Distance (base = m)
-    m_categories.append({
-        {"km",          1000.0},
-        {"mile",        1609.344},
-        {"naut mile",   1852.0},
-    });
-
-    // Speed (base = m/s)
-    m_categories.append({
-        {"m/s",   1.0},
-        {"km/h",  0.2777777777777778},
-        {"knots", 0.5144444444444445},
-        {"mph",   0.44704},
-        {"nmph",  0.5144444444444445},
-    });
-
-    // Data Rate
-    m_categories.append({
-        {"bps",   1.0},
-        {"kbps",  1e3},
-        {"Mbps",  1e6},
-        {"Gbps",  1e9},
-        {"Byte/s",8.0},
-        {"KB/s",  8e3},
-        {"MB/s",  8e6},
-        {"GB/s",  8e9},
-    });
-
-    // Data Size
-    m_categories.append({
-        {"Byte",   1.0},
-        {"KB",     1024.0},
-        {"MB",     1024.0*1024.0},
-        {"GB",     1024.0*1024.0*1024.0},
-        {"TB",     1024.0*1024.0*1024.0*1024.0},
-        {"bit",    0.125},
-        {"kbit",   125.0},
-        {"Mbit",   125000.0},
-    });
-
-    // Temperature (special case - handled separately)
-    m_categories.append({
-        {"°C",  1.0},
-        {"°F",  1.0},
-        {"K",   1.0},
-    });
-
-    // Power
-    m_categories.append({
-        {"W",    1.0},
-        {"mW",   1e-3},
-        {"µW",   1e-6},
-        {"kW",   1e3},
-        {"MW",   1e6},
-        {"dBm",  1.0}, // special
-        {"hp",   745.7},
-    });
-
-    // Energy
-    m_categories.append({
-        {"J",    1.0},
-        {"mJ",   1e-3},
-        {"µJ",   1e-6},
-        {"kJ",   1e3},
-        {"MJ",   1e6},
-        {"Wh",   3600.0},
-        {"kWh",  3.6e6},
-        {"eV",   1.60218e-19},
-    });
-
-    // Angle
-    m_categories.append({
-        {"°",    1.0},
-        {"rad",  180.0 / M_PI},
-        {"mrad", 0.18 / M_PI},
-        {"grad", 0.9},
-    });
+    m_categoryNames = UnitConverterCore::defaultCategoryNames();
+    m_categories = UnitConverterCore::defaultCategories();
 
     setupUI();
 }
@@ -178,7 +60,6 @@ void UnitConverterPage::setupUI() {
     convLayout->addWidget(m_fromUnit, 0, 2);
 
     convLayout->addWidget(lbl("To:"), 1, 0);
-    auto* toRow = new QHBoxLayout();
 
     m_resultLabel = new QLabel("—", this);
     m_resultLabel->setStyleSheet("font-family:'Consolas';font-size:16px;border-radius:4px;padding:4px 6px;min-width:96px;");
@@ -200,8 +81,7 @@ void UnitConverterPage::setupUI() {
     // Quick reference table for the category
     m_refGroup = new QGroupBox("Quick Reference", this);
     m_refGroup->setStyleSheet(m_convGroup->styleSheet());
-    auto* refLayout = new QGridLayout(m_refGroup);
-    refLayout->setSpacing(6);
+    new QGridLayout(m_refGroup);
     // This will be populated on category change - we skip dynamic generation here
     // and just show useful embedded-specific hints via formulaLabel
     root->addWidget(m_refGroup);
@@ -251,99 +131,16 @@ void UnitConverterPage::convert() {
     int toIdx   = m_toUnit->currentIndex();
     if (fromIdx < 0 || toIdx < 0 || fromIdx >= m_categories[cat].size() || toIdx >= m_categories[cat].size()) return;
 
-    // Frequency: supports reciprocal conversion with period units
-    if (m_categoryNames[cat] == "Frequency (Hz)") {
-        const QString fromU = m_fromUnit->currentText();
-        const QString toU = m_toUnit->currentText();
-
-        const auto isPeriodUnit = [](const QString& unit) {
-            return unit == "s" || unit == "ms" || unit == "us";
-        };
-        const auto periodToSeconds = [](double value, const QString& unit) {
-            if (unit == "ms") return value * 1e-3;
-            if (unit == "us") return value * 1e-6;
-            return value;
-        };
-        const auto secondsToPeriod = [](double seconds, const QString& unit) {
-            if (unit == "ms") return seconds * 1e3;
-            if (unit == "us") return seconds * 1e6;
-            return seconds;
-        };
-
-        double hzValue = 0.0;
-        if (isPeriodUnit(fromU)) {
-            const double seconds = periodToSeconds(fromVal, fromU);
-            hzValue = (seconds == 0.0) ? std::numeric_limits<double>::infinity() : 1.0 / seconds;
-        } else {
-            hzValue = fromVal * m_categories[cat][fromIdx].toBase;
-        }
-
-        double result = 0.0;
-        if (isPeriodUnit(toU)) {
-            const double seconds = (hzValue == 0.0) ? std::numeric_limits<double>::infinity() : 1.0 / hzValue;
-            result = secondsToPeriod(seconds, toU);
-        } else {
-            result = hzValue / m_categories[cat][toIdx].toBase;
-        }
-
-        QString resultStr;
-        if (std::isinf(result))
-            resultStr = "inf";
-        else if (std::abs(result) >= 1e9 || (std::abs(result) < 1e-6 && result != 0.0))
-            resultStr = QString::number(result, 'e', 6);
-        else
-            resultStr = QString::number(result, 'g', 10);
-
-        m_resultLabel->setText(resultStr + " " + toU);
-        m_formulaLabel->setText(QString("%1 %2 = %3 %4").arg(fromVal).arg(fromU).arg(resultStr).arg(toU));
+    const UnitConverterCore::ConversionResult result = UnitConverterCore::convert(
+        fromVal, cat, fromIdx, toIdx, m_categories, m_categoryNames);
+    if (!result.valid) {
+        m_resultLabel->setText("—");
+        m_formulaLabel->clear();
         return;
     }
 
-    // Temperature: special
-    if (m_categoryNames[cat] == "Temperature") {
-        double result = fromVal;
-        QString fromU = m_fromUnit->currentText();
-        QString toU   = m_toUnit->currentText();
-        double c = fromVal;
-        if      (fromU == "°F") c = (fromVal - 32.0) * 5.0 / 9.0;
-        else if (fromU == "K")  c = fromVal - 273.15;
-        if      (toU == "°F")  result = c * 9.0 / 5.0 + 32.0;
-        else if (toU == "K")   result = c + 273.15;
-        else                    result = c;
-        m_resultLabel->setText(QString::number(result, 'g', 10) + " " + toU);
-        m_formulaLabel->setText(QString("%1 %2 → %3 %4").arg(fromVal).arg(fromU).arg(result).arg(toU));
-        return;
-    }
-
-    // Power: dBm special
-    bool fromDbm = (m_fromUnit->currentText() == "dBm");
-    bool toDbm   = (m_toUnit->currentText()   == "dBm");
-    double baseVal;
-    if (fromDbm) {
-        baseVal = 1e-3 * std::pow(10.0, fromVal / 10.0); // dBm -> W
-    } else {
-        baseVal = fromVal * m_categories[cat][fromIdx].toBase;
-    }
-    double result;
-    if (toDbm) {
-        result = 10.0 * std::log10(baseVal / 1e-3); // W -> dBm
-    } else {
-        result = baseVal / m_categories[cat][toIdx].toBase;
-    }
-
-    // Format nicely
-    QString resultStr;
-    if (std::abs(result) >= 1e9 || (std::abs(result) < 1e-6 && result != 0))
-        resultStr = QString::number(result, 'e', 6);
-    else
-        resultStr = QString::number(result, 'g', 10);
-
-    m_resultLabel->setText(resultStr + " " + m_toUnit->currentText());
-    m_formulaLabel->setText(
-        QString("%1 %2 = %3 %4")
-        .arg(fromVal).arg(m_fromUnit->currentText())
-        .arg(resultStr).arg(m_toUnit->currentText())
-    );
+    m_resultLabel->setText(result.resultText);
+    m_formulaLabel->setText(result.formulaText);
 }
 
 void UnitConverterPage::applyTheme(bool dark) {
