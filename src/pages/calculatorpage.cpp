@@ -30,11 +30,11 @@ void CalculatorPage::setupUI() {
     m_baseCombo->addItems({"Decimal (10)", "Hexadecimal (16)", "Binary (2)", "Octal (8)"});
     m_baseCombo->setMinimumWidth(90);
 
-    m_wordLabel = new QLabel("Word:", this);
+    m_wordLabel = new QLabel("Mode:", this);
     m_wordLabel->setStyleSheet("font-size:13px;");
     m_widthCombo = new QComboBox(this);
-    m_widthCombo->addItems({"8-bit", "16-bit", "32-bit", "64-bit"});
-    m_widthCombo->setCurrentIndex(2);
+    m_widthCombo->addItems({"8-bit", "16-bit", "32-bit", "64-bit", "Scientific"});
+    m_widthCombo->setCurrentIndex(4);
 
     topRow->addWidget(m_baseLabel);
     topRow->addWidget(m_baseCombo);
@@ -59,7 +59,7 @@ void CalculatorPage::setupUI() {
 
     // Keyboard shortcut hint bar
     m_hintLabel = new QLabel(
-        "  0–9 / A–F  |  + - * /  |  % MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n  < LSL  |  > LSR  |  . / ,  Decimal  |  Enter =  |  Esc AC  |  ⌫ BS  |\n  Ctrl+D/H/B/O: Base  |  Ctrl+1–4: Word width  |  Shift+◀ ▶: Tab",
+        "  0–9 / A–F  |  + - * /  |  % MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n  < LSL  |  > LSR  |  . / ,  Decimal  |  Enter =  |  Esc AC  |  ⌫ BS  |\n  Ctrl+D/H/B/O: Base  |  Ctrl+1–5: Mode  |  Shift+◀ ▶: Tab",
         this);
     m_hintLabel->setWordWrap(true);
     root->addWidget(m_hintLabel);
@@ -214,12 +214,20 @@ void CalculatorPage::updateDisplay() {
 void CalculatorPage::onBaseChanged(int index) {
     const int bases[] = {10, 16, 2, 8};
     m_engine.setBase(bases[index]);
+
+    // "prec" is decimal-only; fallback to 64-bit in non-decimal bases.
+    if (bases[index] != 10 && m_widthCombo->currentIndex() == 4)
+        m_widthCombo->setCurrentIndex(3);
+
     updateDisplay();
 }
 
 void CalculatorPage::onWordWidthChanged(int index) {
     const int widths[] = {8, 16, 32, 64};
-    m_engine.setWordBits(widths[index]);
+    const bool precMode = (index == 4);
+    m_engine.setBigMode(precMode);
+    if (!precMode)
+        m_engine.setWordBits(widths[index]);
     updateDisplay();
 }
 
@@ -327,7 +335,7 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
     }
 
     // ── Digits 0-9 ───────────────────────────────────────────────────────────
-    if (key >= Qt::Key_0 && key <= Qt::Key_9) {
+    if (key >= Qt::Key_0 && key <= Qt::Key_9 && (mod == Qt::NoModifier || mod == Qt::ShiftModifier)) {
         QString d = QString::number(key - Qt::Key_0);
         // In non-decimal bases, check validity
         if (m_engine.base() == 2  && d.toInt() > 1)  { QWidget::keyPressEvent(event); return; }
@@ -413,7 +421,7 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
         break;
 
     // ── Word width shortcuts ─────────────────────────────────────────────────
-    // Ctrl+1..4 = 8/16/32/64-bit
+    // Ctrl+1..5 = 8/16/32/64-bit/Scientific
     case Qt::Key_1:
         if (mod == Qt::ControlModifier) { m_widthCombo->setCurrentIndex(0); return; }
         break;
@@ -425,6 +433,9 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
         break;
     case Qt::Key_4:
         if (mod == Qt::ControlModifier) { m_widthCombo->setCurrentIndex(3); return; }
+        break;
+    case Qt::Key_5:
+        if (mod == Qt::ControlModifier) { m_widthCombo->setCurrentIndex(4); return; }
         break;
 
     default: break;

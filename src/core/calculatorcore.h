@@ -8,9 +8,11 @@ class CalculatorEngine {
 public:
 	void setBase(int base);
 	void setWordBits(int bits);
+	void setBigMode(bool enabled);
 
 	int base() const { return m_base; }
 	int wordBits() const { return m_wordBits; }
+	bool bigMode() const { return m_bigMode; }
 
 	QString displayText() const;
 	QString expressionText() const { return m_expression; }
@@ -35,9 +37,14 @@ private:
 	QString m_expression;
 	bool m_newInput = true;
 	bool m_floatMode = false;
+	bool m_bigMode = false;
 	int m_base = 10;
 	int m_wordBits = 32;
 	long long m_memory = 0;
+
+	QString m_bigCurrent = "0";
+	QString m_bigAccumulator = "0";
+	QString m_bigMemory = "0";
 };
 
 long long maskToWidth(long long value, int bits);
