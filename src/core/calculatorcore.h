@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QStringList>
 
 namespace CalculatorCore {
 
@@ -19,6 +20,8 @@ public:
 	QString expressionText() const { return m_expression; }
 
 	void pressDigit(const QString& digit);
+	void pressLeftParen();
+	void pressRightParen();
 	void pressOperator(const QString& op);
 	void equals();
 	void clearAll();
@@ -46,6 +49,12 @@ private:
 	QString m_bigCurrent = "0";
 	QString m_bigAccumulator = "0";
 	QString m_bigMemory = "0";
+	QStringList m_infixTokens;
+	int m_openParens = 0;
+
+	QString currentOperandToken() const;
+	void syncExpressionOperand();
+	void resetExpressionBuilder();
 };
 
 long long maskToWidth(long long value, int bits);

@@ -334,6 +334,15 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
         return;
     }
 
+    if (key == Qt::Key_ParenLeft) {
+        pressDigit("(");
+        return;
+    }
+    if (key == Qt::Key_ParenRight) {
+        pressDigit(")");
+        return;
+    }
+
     // ── Digits 0-9 ───────────────────────────────────────────────────────────
     const bool hasBlockedModifier = (mod & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier));
     if (key >= Qt::Key_0 && key <= Qt::Key_9 && !hasBlockedModifier) {

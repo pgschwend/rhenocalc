@@ -233,6 +233,137 @@ QString applyBigBinary(const QString& aIn, const QString& bIn, const QString& op
     return a;
 }
 
+bool isBinaryOperatorToken(const QString& token) {
+    return token == "+" || token == "-" || token == "*" || token == "/" ||
+           token == "MOD" || token == "AND" || token == "OR" || token == "XOR";
+}
+
+int precedenceOf(const QString& token) {
+    if (token == "OR") return 1;
+    if (token == "XOR") return 2;
+    if (token == "AND") return 3;
+    if (token == "+" || token == "-") return 4;
+    if (token == "*" || token == "/" || token == "MOD") return 5;
+    return 0;
+}
+
+bool toRpn(const QStringList& tokens, QStringList* outRpn) {
+    outRpn->clear();
+    QVector<QString> opStack;
+
+    for (const QString& tk : tokens) {
+        if (tk == "(") {
+            opStack.push_back(tk);
+            continue;
+        }
+        if (tk == ")") {
+            bool foundLeft = false;
+            while (!opStack.isEmpty()) {
+                const QString top = opStack.back();
+                opStack.pop_back();
+                if (top == "(") {
+                    foundLeft = true;
+                    break;
+                }
+                outRpn->append(top);
+            }
+            if (!foundLeft)
+                return false;
+            continue;
+        }
+        if (isBinaryOperatorToken(tk)) {
+            while (!opStack.isEmpty() && isBinaryOperatorToken(opStack.back()) &&
+                   precedenceOf(opStack.back()) >= precedenceOf(tk)) {
+                outRpn->append(opStack.back());
+                opStack.pop_back();
+            }
+            opStack.push_back(tk);
+            continue;
+        }
+
+        outRpn->append(tk);
+    }
+
+    while (!opStack.isEmpty()) {
+        if (opStack.back() == "(" || opStack.back() == ")")
+            return false;
+        outRpn->append(opStack.back());
+        opStack.pop_back();
+    }
+    return true;
+}
+
+bool evalIntRpn(const QStringList& rpn, int base, int bits, long long* result) {
+    QVector<long long> st;
+    for (const QString& tk : rpn) {
+        if (isBinaryOperatorToken(tk)) {
+            if (st.size() < 2)
+                return false;
+            const long long b = st.back(); st.pop_back();
+            const long long a = st.back(); st.pop_back();
+            st.push_back(CalculatorCore::maskToWidth(CalculatorCore::applyBinary(a, b, tk), bits));
+            continue;
+        }
+
+        bool ok = false;
+        const long long v = tk.toLongLong(&ok, base);
+        if (!ok)
+            return false;
+        st.push_back(CalculatorCore::maskToWidth(v, bits));
+    }
+
+    if (st.size() != 1)
+        return false;
+    *result = CalculatorCore::maskToWidth(st.back(), bits);
+    return true;
+}
+
+bool evalDoubleRpn(const QStringList& rpn, double* result) {
+    QVector<double> st;
+    for (const QString& tk : rpn) {
+        if (isBinaryOperatorToken(tk)) {
+            if (st.size() < 2)
+                return false;
+            const double b = st.back(); st.pop_back();
+            const double a = st.back(); st.pop_back();
+            st.push_back(CalculatorCore::applyBinary(a, b, tk));
+            continue;
+        }
+
+        bool ok = false;
+        const double v = tk.toDouble(&ok);
+        if (!ok)
+            return false;
+        st.push_back(v);
+    }
+
+    if (st.size() != 1)
+        return false;
+    *result = st.back();
+    return true;
+}
+
+bool evalBigRpn(const QStringList& rpn, QString* result) {
+    QVector<QString> st;
+    for (const QString& tk : rpn) {
+        if (isBinaryOperatorToken(tk)) {
+            if (st.size() < 2)
+                return false;
+            const QString b = st.back(); st.pop_back();
+            const QString a = st.back(); st.pop_back();
+            st.push_back(normalizeBig(applyBigBinary(a, b, tk)));
+            continue;
+        }
+
+        st.push_back(normalizeBig(tk));
+    }
+
+    if (st.size() != 1)
+        return false;
+    *result = normalizeBig(st.back());
+    return true;
+}
+
 } // namespace
 
 namespace CalculatorCore {
@@ -336,7 +467,46 @@ QString CalculatorEngine::displayText() const {
     return toBaseString(m_current, m_base, m_wordBits);
 }
 
+QString CalculatorEngine::currentOperandToken() const {
+    if (m_bigMode && m_base == 10)
+        return normalizeBig(m_bigCurrent);
+    if (m_floatMode) {
+        if (!m_inputString.isEmpty())
+            return m_inputString;
+        return formatDouble(m_currentDouble);
+    }
+    return toBaseString(m_current, m_base, m_wordBits);
+}
+
+void CalculatorEngine::syncExpressionOperand() {
+    if (m_infixTokens.isEmpty())
+        return;
+
+    const QString value = currentOperandToken();
+    const QString last = m_infixTokens.last();
+    if (isBinaryOperatorToken(last) || last == "(") {
+        m_infixTokens.append(value);
+    } else if (last != ")") {
+        m_infixTokens.last() = value;
+    }
+    m_expression = m_infixTokens.join(" ");
+}
+
+void CalculatorEngine::resetExpressionBuilder() {
+    m_infixTokens.clear();
+    m_openParens = 0;
+}
+
 void CalculatorEngine::pressDigit(const QString& digit) {
+    if (digit == "(") {
+        pressLeftParen();
+        return;
+    }
+    if (digit == ")") {
+        pressRightParen();
+        return;
+    }
+
     if (m_bigMode && m_base == 10) {
         if (digit == ".")
             return;
@@ -349,6 +519,7 @@ void CalculatorEngine::pressDigit(const QString& digit) {
             cur += digit;
         }
         m_bigCurrent = normalizeBig(cur);
+        syncExpressionOperand();
         return;
     }
 
@@ -367,6 +538,7 @@ void CalculatorEngine::pressDigit(const QString& digit) {
             m_inputString += ".";
             m_currentDouble = m_inputString.toDouble();
         }
+        syncExpressionOperand();
         return;
     }
 
@@ -379,6 +551,7 @@ void CalculatorEngine::pressDigit(const QString& digit) {
             m_inputString += digit;
             m_currentDouble = m_inputString.toDouble();
         }
+        syncExpressionOperand();
         return;
     }
 
@@ -391,43 +564,125 @@ void CalculatorEngine::pressDigit(const QString& digit) {
     if (cur == "0") cur = digit;
     else cur += digit;
     m_current = maskToWidth(fromBaseString(cur, m_base), m_wordBits);
+    syncExpressionOperand();
+}
+
+void CalculatorEngine::pressLeftParen() {
+    if (!m_infixTokens.isEmpty()) {
+        const QString last = m_infixTokens.last();
+        if (last != "(" && !isBinaryOperatorToken(last))
+            m_infixTokens.append("*");
+    }
+
+    m_infixTokens.append("(");
+    ++m_openParens;
+    m_expression = m_infixTokens.join(" ");
+    m_newInput = true;
+}
+
+void CalculatorEngine::pressRightParen() {
+    if (m_openParens <= 0)
+        return;
+    if (!m_infixTokens.isEmpty()) {
+        const QString last = m_infixTokens.last();
+        if (isBinaryOperatorToken(last) || last == "(") {
+            if (!m_newInput)
+                syncExpressionOperand();
+        }
+    }
+
+    if (m_infixTokens.isEmpty())
+        return;
+
+    const QString last = m_infixTokens.last();
+    if (last == "(" || isBinaryOperatorToken(last))
+        return;
+
+    m_infixTokens.append(")");
+    --m_openParens;
+    m_expression = m_infixTokens.join(" ");
+    m_newInput = true;
 }
 
 void CalculatorEngine::pressOperator(const QString& op) {
-    if (m_bigMode && m_base == 10) {
-        if (!m_pendingOp.isEmpty())
-            equals();
-
-        m_bigAccumulator = m_bigCurrent;
-        m_pendingOp = op;
-        m_expression = normalizeBig(m_bigAccumulator) + " " + op;
-        m_newInput = true;
+    if (!isBinaryOperatorToken(op))
         return;
-    }
 
-    if (!m_pendingOp.isEmpty())
-        equals();
-
-    if (m_base == 10 && !m_floatMode) {
-        m_floatMode = true;
-        m_currentDouble = static_cast<double>(m_current);
-        m_inputString.clear();
-    }
-
-    if (m_floatMode) {
-        m_accumulatorDouble = m_currentDouble;
-        m_inputString.clear();
-        m_pendingOp = op;
-        m_expression = formatDouble(m_accumulatorDouble) + " " + op;
+    if (m_infixTokens.isEmpty()) {
+        m_infixTokens << currentOperandToken() << op;
     } else {
-        m_accumulator = m_current;
-        m_pendingOp = op;
-        m_expression = toBaseString(m_accumulator, m_base, m_wordBits) + " " + op;
+        const QString last = m_infixTokens.last();
+        if (isBinaryOperatorToken(last)) {
+            m_infixTokens.last() = op;
+        } else if (last != "(") {
+            m_infixTokens << op;
+        }
     }
+
+    m_expression = m_infixTokens.join(" ");
+    m_pendingOp.clear();
     m_newInput = true;
 }
 
 void CalculatorEngine::equals() {
+    if (!m_infixTokens.isEmpty()) {
+        QStringList tokens = m_infixTokens;
+        if (isBinaryOperatorToken(tokens.last())) {
+            if (!m_newInput) {
+                tokens << currentOperandToken();
+            } else if (tokens.size() >= 2 && !isBinaryOperatorToken(tokens[tokens.size() - 2]) && tokens[tokens.size() - 2] != "(") {
+                tokens << tokens[tokens.size() - 2];
+            } else {
+                m_expression = "Error";
+                resetExpressionBuilder();
+                return;
+            }
+        }
+
+        for (int i = 0; i < m_openParens; ++i)
+            tokens << ")";
+
+        QStringList rpn;
+        if (!toRpn(tokens, &rpn)) {
+            m_expression = "Error";
+            resetExpressionBuilder();
+            return;
+        }
+
+        if (m_bigMode && m_base == 10) {
+            QString res;
+            if (!evalBigRpn(rpn, &res)) {
+                m_expression = "Error";
+                resetExpressionBuilder();
+                return;
+            }
+            m_bigCurrent = normalizeBig(res);
+        } else if (m_floatMode) {
+            double res = 0.0;
+            if (!evalDoubleRpn(rpn, &res)) {
+                m_expression = "Error";
+                resetExpressionBuilder();
+                return;
+            }
+            m_currentDouble = res;
+            m_inputString.clear();
+        } else {
+            long long res = 0;
+            if (!evalIntRpn(rpn, m_base, m_wordBits, &res)) {
+                m_expression = "Error";
+                resetExpressionBuilder();
+                return;
+            }
+            m_current = maskToWidth(res, m_wordBits);
+        }
+
+        m_expression = tokens.join(" ") + " =";
+        resetExpressionBuilder();
+        m_pendingOp.clear();
+        m_newInput = true;
+        return;
+    }
+
     if (m_pendingOp.isEmpty()) return;
 
     if (m_bigMode && m_base == 10) {
@@ -476,6 +731,7 @@ void CalculatorEngine::clearAll() {
     m_bigCurrent = "0";
     m_bigAccumulator = "0";
     m_bigMemory = "0";
+    resetExpressionBuilder();
 }
 
 void CalculatorEngine::clearEntry() {
@@ -483,6 +739,7 @@ void CalculatorEngine::clearEntry() {
         m_bigCurrent = "0";
     m_current = 0;
     m_newInput = true;
+    syncExpressionOperand();
 }
 
 void CalculatorEngine::backspace() {
@@ -492,6 +749,7 @@ void CalculatorEngine::backspace() {
         if (neg) s.remove(0, 1);
         if (s.length() > 1) s.chop(1); else s = "0";
         m_bigCurrent = normalizeBig((neg && s != "0") ? ("-" + s) : s);
+        syncExpressionOperand();
         return;
     }
 
@@ -505,18 +763,21 @@ void CalculatorEngine::backspace() {
         } else {
             m_currentDouble = m_inputString.toDouble();
         }
+        syncExpressionOperand();
         return;
     }
 
     QString s = toBaseString(m_current, m_base, m_wordBits);
     if (s.length() > 1) s.chop(1); else s = "0";
     m_current = fromBaseString(s, m_base);
+    syncExpressionOperand();
 }
 
 void CalculatorEngine::negate() {
     if (m_bigMode && m_base == 10) {
         const QString s = normalizeBig(m_bigCurrent);
         m_bigCurrent = (s == "0") ? "0" : (s.startsWith('-') ? s.mid(1) : ("-" + s));
+        syncExpressionOperand();
         return;
     }
 
@@ -526,6 +787,7 @@ void CalculatorEngine::negate() {
     } else {
         m_current = maskToWidth(-m_current, m_wordBits);
     }
+    syncExpressionOperand();
 }
 
 void CalculatorEngine::setPi() {
@@ -535,6 +797,7 @@ void CalculatorEngine::setPi() {
     m_floatMode = true;
     m_currentDouble = 3.14159265359;
     m_inputString.clear();
+    syncExpressionOperand();
 }
 
 void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
