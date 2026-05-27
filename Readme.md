@@ -3,7 +3,6 @@
 RhenoCalc is a Qt desktop toolbox focused on practical engineering utilities.
 It combines a calculator, converters, network tools, and CRC/hash functions in one app.
 
-Current app version: `V0.1.1`
 
 ## Features
 
