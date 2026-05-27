@@ -341,7 +341,7 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
     }
 
     // ── Hex letters A-F ──────────────────────────────────────────────────────
-    if (m_engine.base() == 16) {
+    if (m_engine.base() == 16 && (mod == Qt::NoModifier || mod == Qt::ShiftModifier)) {
         if (key >= Qt::Key_A && key <= Qt::Key_F) {
             pressDigit(QString(QChar('A' + (key - Qt::Key_A))));
             return;
