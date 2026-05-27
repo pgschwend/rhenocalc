@@ -39,13 +39,13 @@ MainWindow::MainWindow(QWidget* parent)
     applyAlwaysOnTop(m_alwaysOnTop, false);
 
     // Tab navigation with Shift+Left / Shift+Right
-    auto* prevTab = new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_Left), this);
+    auto* prevTab = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Left), this);
     connect(prevTab, &QShortcut::activated, this, [this]() {
         int idx = m_tabWidget->currentIndex();
         m_tabWidget->setCurrentIndex((idx - 1 + m_tabWidget->count()) % m_tabWidget->count());
         m_calcPage->setFocus();
     });
-    auto* nextTab = new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_Right), this);
+    auto* nextTab = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Right), this);
     connect(nextTab, &QShortcut::activated, this, [this]() {
         int idx = m_tabWidget->currentIndex();
         m_tabWidget->setCurrentIndex((idx + 1) % m_tabWidget->count());

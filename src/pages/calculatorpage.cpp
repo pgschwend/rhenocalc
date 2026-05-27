@@ -59,7 +59,7 @@ void CalculatorPage::setupUI() {
 
     // Keyboard shortcut hint bar
     m_hintLabel = new QLabel(
-        "  0–9 / A–F  |  + - * /  |  % MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n  < LSL  |  > LSR  |  . / ,  Decimal  |  Enter =  |  Esc AC  |  ⌫ BS  |\n  Ctrl+D/H/B/O: Base  |  Ctrl+1–5: Mode  |  Shift+◀ ▶: Tab",
+        "  0–9 / A–F  |  + - * /  |  % MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n  < LSL  |  > LSR  |  . / ,  Decimal  |  Enter =  |  Esc AC  |  ⌫ BS  |\n  Ctrl+D/H/B/O: Base  |  Ctrl+1–5: Mode  |  Ctrl+◀ ▶: Tab",
         this);
     m_hintLabel->setWordWrap(true);
     root->addWidget(m_hintLabel);
