@@ -9,6 +9,7 @@ public:
 	void setBase(int base);
 	void setWordBits(int bits);
 	void setBigMode(bool enabled);
+	bool isClearState() const;
 
 	int base() const { return m_base; }
 	int wordBits() const { return m_wordBits; }

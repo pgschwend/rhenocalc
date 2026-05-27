@@ -308,6 +308,22 @@ void CalculatorEngine::setBigMode(bool enabled) {
     m_newInput = true;
 }
 
+bool CalculatorEngine::isClearState() const {
+    if (!m_pendingOp.isEmpty() || !m_expression.isEmpty())
+        return false;
+
+    if (m_bigMode && m_base == 10)
+        return normalizeBig(m_bigCurrent) == "0" && m_newInput;
+
+    if (m_floatMode) {
+        if (!m_inputString.isEmpty())
+            return false;
+        return std::fabs(m_currentDouble) <= std::numeric_limits<double>::epsilon() && m_newInput;
+    }
+
+    return m_current == 0 && m_newInput;
+}
+
 QString CalculatorEngine::displayText() const {
     if (m_bigMode && m_base == 10)
         return normalizeBig(m_bigCurrent);
