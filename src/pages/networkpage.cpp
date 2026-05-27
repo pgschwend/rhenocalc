@@ -9,6 +9,8 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QScrollArea>
+#include <QSizePolicy>
 #include <QSpinBox>
 #include <QVBoxLayout>
 
@@ -28,7 +30,25 @@ NetworkPage::NetworkPage(QWidget* parent) : QWidget(parent) {
 }
 
 void NetworkPage::setupUI() {
-    auto* root = new QVBoxLayout(this);
+    setMinimumSize(0, 0);
+    setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+
+    auto* outer = new QVBoxLayout(this);
+    outer->setContentsMargins(0, 0, 0, 0);
+    outer->setSpacing(0);
+
+    auto* scroll = new QScrollArea(this);
+    scroll->setWidgetResizable(true);
+    scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll->setFrameShape(QFrame::NoFrame);
+
+    auto* content = new QWidget(scroll);
+    content->setMinimumSize(0, 0);
+    content->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+
+    auto* root = new QVBoxLayout(content);
+    root->setSizeConstraint(QLayout::SetNoConstraint);
     root->setSpacing(8);
     root->setContentsMargins(12, 12, 12, 12);
 
@@ -42,11 +62,15 @@ void NetworkPage::setupUI() {
 
     subnetGrid->addWidget(new QLabel("CIDR input:", this), 0, 0);
     m_cidrEdit = new QLineEdit(this);
+    m_cidrEdit->setMinimumWidth(0);
+    m_cidrEdit->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     m_cidrEdit->setPlaceholderText("e.g. 192.168.1.34/24 or 192.168.1.34/255.255.255.0");
     subnetGrid->addWidget(m_cidrEdit, 0, 1, 1, 3);
 
     subnetGrid->addWidget(new QLabel("IP address:", this), 1, 0);
     m_ipEdit = new QLineEdit(this);
+    m_ipEdit->setMinimumWidth(0);
+    m_ipEdit->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     m_ipEdit->setPlaceholderText("e.g. 192.168.1.34");
     subnetGrid->addWidget(m_ipEdit, 1, 1);
 
@@ -59,6 +83,8 @@ void NetworkPage::setupUI() {
 
     subnetGrid->addWidget(new QLabel("Subnet mask:", this), 2, 0);
     m_maskEdit = new QLineEdit(this);
+    m_maskEdit->setMinimumWidth(0);
+    m_maskEdit->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     m_maskEdit->setPlaceholderText("optional if CIDR/prefix is set");
     subnetGrid->addWidget(m_maskEdit, 2, 1);
 
@@ -66,7 +92,11 @@ void NetworkPage::setupUI() {
     m_devicesSpin = new QSpinBox(this);
     m_devicesSpin->setRange(1, 1000000);
     m_devicesSpin->setValue(254);
+    m_devicesSpin->setMinimumWidth(0);
     subnetGrid->addWidget(m_devicesSpin, 2, 3);
+
+    subnetGrid->setColumnStretch(1, 2);
+    subnetGrid->setColumnStretch(3, 1);
 
     m_calcBtn = new QPushButton("Calculate subnet", this);
     m_planBtn = new QPushButton("Plan prefix by devices", this);
@@ -82,39 +112,50 @@ void NetworkPage::setupUI() {
 
     outGrid->addWidget(new QLabel("Short notation:", this), 0, 0);
     m_cidrValue = makeValueLabel(this);
+    m_cidrValue->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     outGrid->addWidget(m_cidrValue, 0, 1);
 
     outGrid->addWidget(new QLabel("Network address:", this), 1, 0);
     m_networkValue = makeValueLabel(this);
+    m_networkValue->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     outGrid->addWidget(m_networkValue, 1, 1);
 
     outGrid->addWidget(new QLabel("Broadcast:", this), 2, 0);
     m_broadcastValue = makeValueLabel(this);
+    m_broadcastValue->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     outGrid->addWidget(m_broadcastValue, 2, 1);
 
     outGrid->addWidget(new QLabel("First host:", this), 3, 0);
     m_firstHostValue = makeValueLabel(this);
+    m_firstHostValue->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     outGrid->addWidget(m_firstHostValue, 3, 1);
 
     outGrid->addWidget(new QLabel("Last host:", this), 4, 0);
     m_lastHostValue = makeValueLabel(this);
+    m_lastHostValue->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     outGrid->addWidget(m_lastHostValue, 4, 1);
 
     outGrid->addWidget(new QLabel("Wildcard mask:", this), 5, 0);
     m_wildcardValue = makeValueLabel(this);
+    m_wildcardValue->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     outGrid->addWidget(m_wildcardValue, 5, 1);
 
     outGrid->addWidget(new QLabel("Usable hosts:", this), 6, 0);
     m_hostsValue = makeValueLabel(this);
+    m_hostsValue->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     outGrid->addWidget(m_hostsValue, 6, 1);
 
     outGrid->addWidget(new QLabel("IP class:", this), 7, 0);
     m_ipClassValue = makeValueLabel(this);
+    m_ipClassValue->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     outGrid->addWidget(m_ipClassValue, 7, 1);
 
     outGrid->addWidget(new QLabel("Scope:", this), 8, 0);
     m_scopeValue = makeValueLabel(this);
+    m_scopeValue->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     outGrid->addWidget(m_scopeValue, 8, 1);
+
+    outGrid->setColumnStretch(1, 1);
 
     root->addWidget(m_outputGroup);
 
@@ -122,6 +163,8 @@ void NetworkPage::setupUI() {
     auto* toolsLayout = new QHBoxLayout(m_toolsGroup);
     toolsLayout->addWidget(new QLabel("IPv4 as uint32:", this));
     m_uintEdit = new QLineEdit(this);
+    m_uintEdit->setMinimumWidth(0);
+    m_uintEdit->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     m_uintEdit->setPlaceholderText("e.g. 3232235777");
     toolsLayout->addWidget(m_uintEdit);
     m_ipToUintBtn = new QPushButton("IP -> uint32", this);
@@ -129,11 +172,15 @@ void NetworkPage::setupUI() {
     toolsLayout->addWidget(m_ipToUintBtn);
     toolsLayout->addWidget(m_uintToIpBtn);
     root->addWidget(m_toolsGroup);
+    toolsLayout->setStretch(1, 1);
 
     m_statusLabel = new QLabel("Enter CIDR/IP and click Calculate.", this);
     m_statusLabel->setWordWrap(true);
     root->addWidget(m_statusLabel);
     root->addStretch();
+
+    scroll->setWidget(content);
+    outer->addWidget(scroll);
 
     connect(m_calcBtn, &QPushButton::clicked, this, &NetworkPage::onCalculateClicked);
     connect(m_planBtn, &QPushButton::clicked, this, &NetworkPage::onPlanHostsClicked);
@@ -284,5 +331,4 @@ void NetworkPage::applyTheme(bool dark) {
     m_scopeValue->setStyleSheet(resS);
     m_statusLabel->setStyleSheet(frmS);
 }
-
 

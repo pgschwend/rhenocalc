@@ -28,8 +28,8 @@ set(SOURCES
         src/pages/calculatorpage.h   src/pages/calculatorpage.cpp
         src/pages/baseconverterpage.h src/pages/baseconverterpage.cpp
         src/pages/unitconverterpage.h src/pages/unitconverterpage.cpp
-        src/pages/networkcalc.h src/pages/ipcalc.cpp
-        src/pages/networkpage.h src/pages/iptoolspage.cpp
+        src/pages/ipcalc.cpp
+        src/pages/networkpage.cpp
 )
 
 if(WIN32)
