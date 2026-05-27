@@ -1,4 +1,5 @@
 #pragma once
+#include "core/calculatorcore.h"
 #include <QWidget>
 #include <QLineEdit>
 #include <QPushButton>
@@ -36,7 +37,6 @@ private:
     void updateDisplay();
     void pressDigit(const QString& d);
     void pressOperator(const QString& op);
-    void applyResult(long long result);
     QPushButton* makeBtn(const QString& text, const QString& style = "");
     QString toBaseString(long long val);
     long long fromBaseString(const QString& s);
@@ -62,15 +62,5 @@ private:
     QList<QPushButton*> m_clearBtns;
     QPushButton*        m_eqBtn = nullptr;
 
-    long long m_current       = 0;
-    long long m_accumulator   = 0;
-    double    m_currentDouble = 0.0;
-    double    m_accumulatorDouble = 0.0;
-    QString   m_pendingOp;
-    QString   m_inputString;       // used in float mode to build input character-by-character
-    bool      m_newInput      = true;
-    bool      m_hasDecimal    = false;
-    bool      m_floatMode     = false;
-    int       m_base          = 10;
-    int       m_wordBits      = 32;
+    CalculatorCore::CalculatorEngine m_engine;
 };

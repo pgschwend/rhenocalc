@@ -5,9 +5,6 @@
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
-#include <QFont>
-#include <cmath>
-#include <limits>
 
 UnitConverterPage::UnitConverterPage(QWidget* parent) : QWidget(parent) {
     m_categoryNames = UnitConverterCore::defaultCategoryNames();
@@ -63,7 +60,6 @@ void UnitConverterPage::setupUI() {
     convLayout->addWidget(m_fromUnit, 0, 2);
 
     convLayout->addWidget(lbl("To:"), 1, 0);
-    auto* toRow = new QHBoxLayout();
 
     m_resultLabel = new QLabel("—", this);
     m_resultLabel->setStyleSheet("font-family:'Consolas';font-size:16px;border-radius:4px;padding:4px 6px;min-width:96px;");
@@ -85,8 +81,7 @@ void UnitConverterPage::setupUI() {
     // Quick reference table for the category
     m_refGroup = new QGroupBox("Quick Reference", this);
     m_refGroup->setStyleSheet(m_convGroup->styleSheet());
-    auto* refLayout = new QGridLayout(m_refGroup);
-    refLayout->setSpacing(6);
+    new QGridLayout(m_refGroup);
     // This will be populated on category change - we skip dynamic generation here
     // and just show useful embedded-specific hints via formulaLabel
     root->addWidget(m_refGroup);
