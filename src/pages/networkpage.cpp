@@ -12,7 +12,7 @@
 #include <QScrollArea>
 #include <QSizePolicy>
 #include <QSpinBox>
-#include <QVBoxLayout>
+//#include <QVBoxLayout>
 
 namespace {
 
