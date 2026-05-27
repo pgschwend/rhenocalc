@@ -4,6 +4,8 @@
 #include <QHBoxLayout>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QScrollArea>
+#include <QSizePolicy>
 #include <QFont>
 #include <cstring>
 #include <cmath>
@@ -44,7 +46,24 @@ BaseConverterPage::BaseConverterPage(QWidget* parent) : QWidget(parent) {
 }
 
 void BaseConverterPage::setupUI() {
-    auto* root = new QVBoxLayout(this);
+    setMinimumSize(0, 0);
+    setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+
+    auto* outer = new QVBoxLayout(this);
+    outer->setContentsMargins(0, 0, 0, 0);
+    outer->setSpacing(0);
+
+    auto* scroll = new QScrollArea(this);
+    scroll->setWidgetResizable(true);
+    scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll->setFrameShape(QFrame::NoFrame);
+
+    auto* content = new QWidget(scroll);
+    content->setMinimumSize(0, 0);
+    content->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+
+    auto* root = new QVBoxLayout(content);
     root->setSizeConstraint(QLayout::SetNoConstraint);
     root->setSpacing(8);
     root->setContentsMargins(10, 10, 10, 10);
@@ -180,6 +199,9 @@ void BaseConverterPage::setupUI() {
     // Initial state
     onWordWidthChanged(2); // 32-bit
     updateAll(0);
+
+    scroll->setWidget(content);
+    outer->addWidget(scroll);
 }
 
 void BaseConverterPage::onWordWidthChanged(int index) {

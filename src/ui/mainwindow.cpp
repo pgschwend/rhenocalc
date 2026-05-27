@@ -2,6 +2,7 @@
 #include "pages/calculatorpage.h"
 #include "pages/baseconverterpage.h"
 #include "pages/unitconverterpage.h"
+#include "pages/networkpage.h"
 #include "themecolors.h"
 #include <QApplication>
 #include <QStyleFactory>
@@ -12,6 +13,7 @@
 #include <QHBoxLayout>
 #include <QWidget>
 #include <QGuiApplication>
+#include <QIcon>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -19,6 +21,7 @@ MainWindow::MainWindow(QWidget* parent)
     , m_calcPage(nullptr)
     , m_basePage(nullptr)
     , m_unitPage(nullptr)
+    , m_networkPage(nullptr)
 {
     // Load theme from QSettings (default: dark)
     QSettings settings("RhenoCalc", "RhenoCalc");
@@ -89,17 +92,21 @@ void MainWindow::setupUI() {
     m_calcPage = new CalculatorPage(this);
     m_basePage = new BaseConverterPage(this);
     m_unitPage = new UnitConverterPage(this);
+    m_networkPage = new NetworkPage(this);
 
     m_tabWidget->addTab(m_calcPage, "Calc");
     m_tabWidget->addTab(m_basePage, "Base");
     m_tabWidget->addTab(m_unitPage, "Unit");
+    m_tabWidget->addTab(m_networkPage, "Network");
 
     // Buttons top right in the tab bar
-    m_onTopBtn = new QPushButton("T", this);
+    m_onTopBtn = new QPushButton(this);
     m_onTopBtn->setCheckable(true);
     m_onTopBtn->setFixedSize(32, 26);
     m_onTopBtn->setCursor(Qt::PointingHandCursor);
     m_onTopBtn->setFocusPolicy(Qt::NoFocus);
+    m_onTopBtn->setIcon(QIcon(":/icons/pin_gray.svg"));
+    m_onTopBtn->setIconSize(QSize(14, 14));
     connect(m_onTopBtn, &QPushButton::clicked, this, [this]() {
         applyAlwaysOnTop(!m_alwaysOnTop, true);
         m_calcPage->setFocus();
@@ -144,6 +151,7 @@ void MainWindow::applyTheme(bool dark) {
     m_calcPage->applyTheme(dark);
     m_basePage->applyTheme(dark);
     m_unitPage->applyTheme(dark);
+    m_networkPage->applyTheme(dark);
 
     // ── Status Bar ────────────────────────────────────────────────────────────
     statusBar()->setStyleSheet(ThemeColors::statusBarStyle(dark));
@@ -208,7 +216,13 @@ void MainWindow::updateOnTopButton() {
     m_onTopBtn->setToolTip(m_alwaysOnTop ? "Always on top: ON" : "Always on top: OFF");
 
     QString style = ThemeColors::themeToggleButtonStyle(m_isDark);
-    if (m_alwaysOnTop)
-        style += "QPushButton{border:1px solid #f1c40f;}";
+    if (m_alwaysOnTop) {
+        if (m_isDark) {
+            style += "QPushButton{border:2px solid #dfdfdf;}";
+        }
+        else {
+            style += "QPushButton{border:2px solid #f1c40f;}";
+        }
+    }
     m_onTopBtn->setStyleSheet(style);
 }
