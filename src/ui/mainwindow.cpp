@@ -117,6 +117,7 @@ void MainWindow::setupUI() {
         m_calcPage->setFocus();
     });
 
+
     m_themeBtn = new QPushButton("☀", this);
     m_themeBtn->setFixedSize(32, 26);
     m_themeBtn->setCursor(Qt::PointingHandCursor);
@@ -179,37 +180,26 @@ void MainWindow::applyAlwaysOnTop(bool enabled, bool persist) {
         settings.setValue("alwaysOnTop", m_alwaysOnTop);
     }
 
+    // Toggle the flag and re-show the window.
     const bool wasVisible = isVisible();
-    const bool wasMaximized = isMaximized();
-    const bool wasFullScreen = isFullScreen();
-    const QRect normalGeo = normalGeometry().isValid() ? normalGeometry() : geometry();
+    const QRect geo = geometry();
 
-    const QString platform = QGuiApplication::platformName().toLower();
-    const bool isX11 = platform.contains("xcb");
-    const bool isWayland = platform.contains("wayland");
+    Qt::WindowFlags flags = windowFlags();
+    if (enabled)
+        flags |= Qt::WindowStaysOnTopHint;
+    else
+        flags &= ~Qt::WindowStaysOnTopHint;
 
-    // On Linux/WMs, setting individual flags and re-showing is more reliable than setWindowFlags().
-    setWindowFlag(Qt::WindowStaysOnTopHint, enabled);
-    setWindowFlag(Qt::X11BypassWindowManagerHint, enabled && isX11);
+    // setWindowFlags() hides the window internally – save geometry first.
+    setWindowFlags(flags);
 
     if (wasVisible) {
-        if (wasFullScreen) {
-            showFullScreen();
-        } else if (wasMaximized) {
-            showMaximized();
-        } else {
-            showNormal();
-            setGeometry(normalGeo);
-        }
-    }
-
-    if (isVisible()) {
+        setGeometry(geo);
+        show();
         raise();
         activateWindow();
     }
 
-    if (enabled && isWayland)
-        statusBar()->showMessage("Always-on-top on Wayland may be ignored by the compositor.", 5000);
 
     updateOnTopButton();
 }

@@ -75,3 +75,5 @@ target_link_libraries(RhenoCalc
         Qt::Gui
         Qt::Widgets
 )
+
+
