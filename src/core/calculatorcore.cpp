@@ -840,8 +840,6 @@ void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
             m_bigMemory = "0";
             m_expression = "M cleared";
             return;
-        } else if (op == "abs") {
-            res = isNegBig(b) ? b.mid(1) : b;
         } else {
             // Unsupported in big-int mode (e.g. sqrt, 1/x, rol/ror)
             return;
@@ -871,13 +869,21 @@ void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
         return;
     }
 
-    if (op == "SQ" || op == "SQRT" || op == "abs") {
+    if (op == "SQ" || op == "SQRT") {
         if (m_floatMode) {
             m_currentDouble = applyUnaryDouble(m_currentDouble, op);
             m_inputString.clear();
             return;
         }
         res = applyUnaryInt(b, op, m_wordBits);
+    } else if (op == "log" || op == "ln") {
+        const double in = m_floatMode ? m_currentDouble : static_cast<double>(b);
+        m_currentDouble = applyUnaryDouble(in, op);
+        m_floatMode = true;
+        m_inputString.clear();
+        m_expression = op + "(" + formatDouble(in) + ") =";
+        m_newInput = true;
+        return;
     } else if (op == "1/x") {
         if (m_floatMode) {
             m_currentDouble = applyUnaryDouble(m_currentDouble, op);
@@ -940,7 +946,6 @@ double applyBinary(double a, double b, const QString& op) {
 long long applyUnaryInt(long long value, const QString& op, int bits) {
     if (op == "SQ") return maskToWidth(value * value, bits);
     if (op == "SQRT") return value >= 0 ? static_cast<long long>(std::sqrt(static_cast<double>(value))) : 0;
-    if (op == "abs") return std::abs(value);
     if (op == "NOT") return maskToWidth(~value, bits);
     if (op == "LSL") return maskToWidth(value << 1, bits);
     if (op == "LSR") return maskToWidth(static_cast<long long>(static_cast<unsigned long long>(value) >> 1), bits);
@@ -958,8 +963,9 @@ long long applyUnaryInt(long long value, const QString& op, int bits) {
 double applyUnaryDouble(double value, const QString& op) {
     if (op == "SQ") return value * value;
     if (op == "SQRT") return value >= 0.0 ? std::sqrt(value) : std::numeric_limits<double>::quiet_NaN();
-    if (op == "abs") return std::fabs(value);
     if (op == "1/x") return value != 0.0 ? 1.0 / value : std::numeric_limits<double>::infinity();
+    if (op == "log") return value > 0.0 ? std::log10(value) : std::numeric_limits<double>::quiet_NaN();
+    if (op == "ln") return value > 0.0 ? std::log(value) : std::numeric_limits<double>::quiet_NaN();
     return value;
 }
 

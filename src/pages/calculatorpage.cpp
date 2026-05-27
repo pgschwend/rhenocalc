@@ -118,13 +118,13 @@ void CalculatorPage::setupUI() {
     powBtn->setObjectName("SQ");
     m_funcBtns << powBtn;
     connect(powBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
-    grid->addWidget(powBtn, 2, 4);
+    grid->addWidget(powBtn, 3, 5);
 
     auto* sqrtBtn = makeBtn("√x", ThemeColors::calcFuncButton(true));
     sqrtBtn->setObjectName("SQRT");
     m_funcBtns << sqrtBtn;
     connect(sqrtBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
-    grid->addWidget(sqrtBtn, 2, 5);
+    grid->addWidget(sqrtBtn, 3, 6);
 
     auto* clearAllBtn = makeBtn("AC", ThemeColors::calcClearButton(true));
     m_clearBtns << clearAllBtn;
@@ -134,10 +134,32 @@ void CalculatorPage::setupUI() {
     // Digits + operators (rows 3-6)
     struct BtnDef { QString label; int row, col; QString style; };
     QList<BtnDef> defs = {
-        {"7",3,0,ThemeColors::calcNumButton(true)},{"8",3,1,ThemeColors::calcNumButton(true)},{"9",3,2,ThemeColors::calcNumButton(true)},{"÷",3,3,ThemeColors::calcOpButton(true)},{"(",3,4,ThemeColors::calcFuncButton(true)},{")",3,5,ThemeColors::calcFuncButton(true)},{"π",3,6,ThemeColors::calcBitButton(true)},
-        {"4",4,0,ThemeColors::calcNumButton(true)},{"5",4,1,ThemeColors::calcNumButton(true)},{"6",4,2,ThemeColors::calcNumButton(true)},{"×",4,3,ThemeColors::calcOpButton(true)},{"1/x",4,4,ThemeColors::calcFuncButton(true)},{"abs",4,5,ThemeColors::calcFuncButton(true)},{"NA",4,6,ThemeColors::calcBitButton(true)},
-        {"1",5,0,ThemeColors::calcNumButton(true)},{"2",5,1,ThemeColors::calcNumButton(true)},{"3",5,2,ThemeColors::calcNumButton(true)},{"-",5,3,ThemeColors::calcOpButton(true)},{"MS",5,4,ThemeColors::calcFuncButton(true)},{"MR",5,5,ThemeColors::calcFuncButton(true)},{"MC",5,6,ThemeColors::calcFuncButton(true)},
-        {"0",6,0,ThemeColors::calcNumButton(true)},{"00",6,1,ThemeColors::calcNumButton(true)},{".",6,2,ThemeColors::calcNumButton(true)},{"+",6,3,ThemeColors::calcOpButton(true)},{"=",6,4,ThemeColors::calcEqButton(true)},
+        {"7",3,0,ThemeColors::calcNumButton(true)},
+        {"8",3,1,ThemeColors::calcNumButton(true)},
+        {"9",3,2,ThemeColors::calcNumButton(true)},
+        {"÷",3,3,ThemeColors::calcOpButton(true)},
+        {"(",2,4,ThemeColors::calcFuncButton(true)},
+        {")",2,5,ThemeColors::calcFuncButton(true)},
+        {"π",3,4,ThemeColors::calcBitButton(true)},
+        {"4",4,0,ThemeColors::calcNumButton(true)},
+        {"5",4,1,ThemeColors::calcNumButton(true)},
+        {"6",4,2,ThemeColors::calcNumButton(true)},
+        {"×",4,3,ThemeColors::calcOpButton(true)},
+        {"1/x",4,4,ThemeColors::calcFuncButton(true)},
+        {"log",4,5,ThemeColors::calcFuncButton(true)},
+        {"ln",4,6,ThemeColors::calcFuncButton(true)},
+        {"1",5,0,ThemeColors::calcNumButton(true)},
+        {"2",5,1,ThemeColors::calcNumButton(true)},
+        {"3",5,2,ThemeColors::calcNumButton(true)},
+        {"-",5,3,ThemeColors::calcOpButton(true)},
+        {"MS",5,4,ThemeColors::calcFuncButton(true)},
+        {"MR",5,5,ThemeColors::calcFuncButton(true)},
+        {"MC",5,6,ThemeColors::calcFuncButton(true)},
+        {"0",6,0,ThemeColors::calcNumButton(true)},
+        {"00",6,1,ThemeColors::calcNumButton(true)},
+        {".",6,2,ThemeColors::calcNumButton(true)},
+        {"+",6,3,ThemeColors::calcOpButton(true)},
+        {"=",6,4,ThemeColors::calcEqButton(true)},
     };
 
     // Make = button span 3 cols
@@ -158,7 +180,7 @@ void CalculatorPage::setupUI() {
             m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onPiClicked);
             grid->addWidget(b, d.row, d.col);
-        } else if (d.label == "1/x" || d.label == "abs" || d.label == "NA") {
+        } else if (d.label == "1/x" || d.label == "log" || d.label == "ln") {
             b->setObjectName(d.label);
             m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
