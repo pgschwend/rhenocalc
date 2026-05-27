@@ -2,6 +2,7 @@
 #include "pages/calculatorpage.h"
 #include "pages/baseconverterpage.h"
 #include "pages/unitconverterpage.h"
+#include "pages/networkpage.h"
 #include "themecolors.h"
 #include <QApplication>
 #include <QStyleFactory>
@@ -20,6 +21,7 @@ MainWindow::MainWindow(QWidget* parent)
     , m_calcPage(nullptr)
     , m_basePage(nullptr)
     , m_unitPage(nullptr)
+    , m_networkPage(nullptr)
 {
     // Load theme from QSettings (default: dark)
     QSettings settings("RhenoCalc", "RhenoCalc");
@@ -90,10 +92,12 @@ void MainWindow::setupUI() {
     m_calcPage = new CalculatorPage(this);
     m_basePage = new BaseConverterPage(this);
     m_unitPage = new UnitConverterPage(this);
+    m_networkPage = new NetworkPage(this);
 
     m_tabWidget->addTab(m_calcPage, "Calc");
     m_tabWidget->addTab(m_basePage, "Base");
     m_tabWidget->addTab(m_unitPage, "Unit");
+    m_tabWidget->addTab(m_networkPage, "Network");
 
     // Buttons top right in the tab bar
     m_onTopBtn = new QPushButton(this);
@@ -147,6 +151,7 @@ void MainWindow::applyTheme(bool dark) {
     m_calcPage->applyTheme(dark);
     m_basePage->applyTheme(dark);
     m_unitPage->applyTheme(dark);
+    m_networkPage->applyTheme(dark);
 
     // ── Status Bar ────────────────────────────────────────────────────────────
     statusBar()->setStyleSheet(ThemeColors::statusBarStyle(dark));
