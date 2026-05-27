@@ -5,6 +5,7 @@
 #include "pages/networkpage.h"
 #include "pages/crchashpage.h"
 #include "themecolors.h"
+#include "info.h"
 #include <QApplication>
 #include <QStyleFactory>
 #include <QFile>
@@ -134,7 +135,7 @@ void MainWindow::setupUI() {
     m_tabWidget->setCornerWidget(corner, Qt::TopRightCorner);
 
     setCentralWidget(m_tabWidget);
-    statusBar()->showMessage("RhenoCalc  |  Embedded Engineering Toolbox  |  v1.0");
+    statusBar()->showMessage(QString("RhenoCalc  |  Embedded Engineering Toolbox  |  ") + APP_VERSION_STRING);
 }
 
 void MainWindow::applyTheme(bool dark) {

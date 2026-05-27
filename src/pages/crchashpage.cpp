@@ -11,6 +11,8 @@
 #include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QScrollArea>
+#include <QSizePolicy>
 #include <QVBoxLayout>
 
 namespace {
@@ -226,6 +228,37 @@ QString hashHex(const QByteArray& data, QCryptographicHash::Algorithm alg) {
     return QCryptographicHash::hash(data, alg).toHex().toUpper();
 }
 
+QString algorithmFormula(Algorithm alg) {
+    switch (alg) {
+    case Algorithm::Crc8Maxim:
+        return "CRC-8/MAXIM: G(x)=x^8+x^5+x^4+1, init=0x00, xorOut=0x00, refin/refout=true.";
+    case Algorithm::Crc8J1850:
+        return "CRC-8/J1850: G(x)=x^8+x^4+x^3+x^2+1, init=0xFF, xorOut=0xFF, refin/refout=false.";
+    case Algorithm::Crc16Modbus:
+        return "CRC-16/MODBUS: G(x)=x^16+x^15+x^2+1, init=0xFFFF, xorOut=0x0000, refin/refout=true.";
+    case Algorithm::CrcCcitt:
+        return "CRC-CCITT: G(x)=x^16+x^12+x^5+1, init=0xFFFF, xorOut=0x0000, refin/refout=false.";
+    case Algorithm::Crc32Iso3309:
+        return "CRC-32/ISO 3309: G(x)=0x04C11DB7, init=0xFFFFFFFF, xorOut=0xFFFFFFFF, refin/refout=true.";
+    case Algorithm::Crc32C:
+        return "CRC-32C/Castagnoli: G(x)=0x1EDC6F41, init=0xFFFFFFFF, xorOut=0xFFFFFFFF, refin/refout=true.";
+    case Algorithm::MurmurHash3:
+        return "MurmurHash3 x86_32: k*=c1; k=ROTL32(k,15); k*=c2; h^=k; h=ROTL32(h,13)*5+0xe6546b64; h=fmix32(h^len).";
+    case Algorithm::XxHash32:
+        return "xxHash32: block mixing with primes p1..p5, avalanche steps h^=h>>15; h*=p2; h^=h>>13; h*=p3; h^=h>>16.";
+    case Algorithm::Md5:
+        return "MD5: digest = MD5(m), 128-bit Merkle-Damgard hash over 512-bit blocks.";
+    case Algorithm::Sha1:
+        return "SHA-1: digest = SHA1(m), 160-bit Merkle-Damgard hash over 512-bit blocks.";
+    case Algorithm::Sha256:
+        return "SHA-256: digest = SHA256(m), 256-bit SHA-2 compression over 512-bit blocks.";
+    case Algorithm::Sha512:
+        return "SHA-512: digest = SHA512(m), 512-bit SHA-2 compression over 1024-bit blocks.";
+    }
+
+    return QString();
+}
+
 } // namespace
 
 CrcHashPage::CrcHashPage(QWidget* parent) : QWidget(parent) {
@@ -235,7 +268,24 @@ CrcHashPage::CrcHashPage(QWidget* parent) : QWidget(parent) {
 }
 
 void CrcHashPage::setupUI() {
-    auto* root = new QVBoxLayout(this);
+    setMinimumSize(0, 0);
+    setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+
+    auto* outer = new QVBoxLayout(this);
+    outer->setContentsMargins(0, 0, 0, 0);
+    outer->setSpacing(0);
+
+    auto* scroll = new QScrollArea(this);
+    scroll->setWidgetResizable(true);
+    scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll->setFrameShape(QFrame::NoFrame);
+
+    auto* content = new QWidget(scroll);
+    content->setMinimumSize(0, 0);
+    content->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+
+    auto* root = new QVBoxLayout(content);
     root->setSpacing(8);
     root->setContentsMargins(12, 12, 12, 12);
 
@@ -297,11 +347,25 @@ void CrcHashPage::setupUI() {
     outGrid->addWidget(m_statusLabel, 1, 0, 1, 3);
 
     root->addWidget(m_outputGroup);
+
+    m_infoGroup = new QGroupBox("Info", this);
+    auto* infoLayout = new QVBoxLayout(m_infoGroup);
+    infoLayout->setContentsMargins(8, 8, 8, 8);
+    infoLayout->setSpacing(4);
+    m_formulaLabel = new QLabel(this);
+    m_formulaLabel->setWordWrap(true);
+    m_formulaLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    infoLayout->addWidget(m_formulaLabel);
+    root->addWidget(m_infoGroup);
+
     root->addStretch();
 
     connect(m_algoCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CrcHashPage::recalculate);
     connect(m_inputEdit, &QPlainTextEdit::textChanged, this, &CrcHashPage::recalculate);
     connect(m_copyBtn, &QPushButton::clicked, this, &CrcHashPage::copyResult);
+
+    scroll->setWidget(content);
+    outer->addWidget(scroll);
 }
 
 void CrcHashPage::recalculate() {
@@ -350,6 +414,7 @@ void CrcHashPage::recalculate() {
 
     m_outputEdit->setText(result);
     m_statusLabel->setText(QString("%1 bytes processed").arg(data.size()));
+    m_formulaLabel->setText(algorithmFormula(alg));
 }
 
 void CrcHashPage::copyResult() {
@@ -369,9 +434,11 @@ void CrcHashPage::applyTheme(bool dark) {
     m_titleLabel->setStyleSheet(ttlS);
     m_inputGroup->setStyleSheet(grpS);
     m_outputGroup->setStyleSheet(grpS);
+    m_infoGroup->setStyleSheet(grpS);
 
     m_inputEdit->setStyleSheet(fldS);
     m_outputEdit->setStyleSheet(resS);
     m_statusLabel->setStyleSheet(frmS);
+    m_formulaLabel->setStyleSheet(frmS);
 }
 

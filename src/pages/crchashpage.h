@@ -26,6 +26,7 @@ private:
     QLabel* m_titleLabel = nullptr;
     QGroupBox* m_inputGroup = nullptr;
     QGroupBox* m_outputGroup = nullptr;
+    QGroupBox* m_infoGroup = nullptr;
 
     QLabel* m_algoLabel = nullptr;
     QComboBox* m_algoCombo = nullptr;
@@ -33,5 +34,6 @@ private:
     QLineEdit* m_outputEdit = nullptr;
     QPushButton* m_copyBtn = nullptr;
     QLabel* m_statusLabel = nullptr;
+    QLabel* m_formulaLabel = nullptr;
 };
 

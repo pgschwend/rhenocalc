@@ -1,3 +1,6 @@
+# Execute with following command:
+# powershell -ExecutionPolicy Bypass -File D:\32_QT\rhenocalc\scripts\deploy_windows.ps1 -VerboseProbe
+
 param(
     [string]$BuildType = "Release",
     [string]$SourceDir = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path,
