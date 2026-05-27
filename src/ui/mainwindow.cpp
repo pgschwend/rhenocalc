@@ -3,7 +3,9 @@
 #include "pages/baseconverterpage.h"
 #include "pages/unitconverterpage.h"
 #include "pages/networkpage.h"
+#include "pages/crchashpage.h"
 #include "themecolors.h"
+#include "info.h"
 #include <QApplication>
 #include <QStyleFactory>
 #include <QFile>
@@ -22,6 +24,7 @@ MainWindow::MainWindow(QWidget* parent)
     , m_basePage(nullptr)
     , m_unitPage(nullptr)
     , m_networkPage(nullptr)
+    , m_crcHashPage(nullptr)
 {
     // Load theme from QSettings (default: dark)
     QSettings settings("RhenoCalc", "RhenoCalc");
@@ -93,11 +96,13 @@ void MainWindow::setupUI() {
     m_basePage = new BaseConverterPage(this);
     m_unitPage = new UnitConverterPage(this);
     m_networkPage = new NetworkPage(this);
+    m_crcHashPage = new CrcHashPage(this);
 
     m_tabWidget->addTab(m_calcPage, "Calc");
     m_tabWidget->addTab(m_basePage, "Base");
     m_tabWidget->addTab(m_unitPage, "Unit");
     m_tabWidget->addTab(m_networkPage, "Network");
+    m_tabWidget->addTab(m_crcHashPage, "CRC/Hash");
 
     // Buttons top right in the tab bar
     m_onTopBtn = new QPushButton(this);
@@ -130,7 +135,7 @@ void MainWindow::setupUI() {
     m_tabWidget->setCornerWidget(corner, Qt::TopRightCorner);
 
     setCentralWidget(m_tabWidget);
-    statusBar()->showMessage("RhenoCalc  |  Embedded Engineering Toolbox  |  v1.0");
+    statusBar()->showMessage(QString("RhenoCalc  |  Embedded Engineering Toolbox  |  ") + APP_VERSION_STRING);
 }
 
 void MainWindow::applyTheme(bool dark) {
@@ -152,6 +157,7 @@ void MainWindow::applyTheme(bool dark) {
     m_basePage->applyTheme(dark);
     m_unitPage->applyTheme(dark);
     m_networkPage->applyTheme(dark);
+    m_crcHashPage->applyTheme(dark);
 
     // ── Status Bar ────────────────────────────────────────────────────────────
     statusBar()->setStyleSheet(ThemeColors::statusBarStyle(dark));

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 project(RhenoCalc)
 
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -30,6 +31,8 @@ set(SOURCES
         src/pages/unitconverterpage.h src/pages/unitconverterpage.cpp
         src/pages/ipcalc.cpp
         src/pages/networkpage.cpp
+        src/pages/crchashpage.h src/pages/crchashpage.cpp
+        src/info.h
 )
 
 if(WIN32)
