@@ -104,10 +104,11 @@ void CalculatorPage::setupUI() {
     connect(modBtn, &QPushButton::clicked, this, &CalculatorPage::onOperatorClicked);
     grid->addWidget(modBtn, 1, 4);
 
-    auto* negBtn = makeBtn("+/-", ThemeColors::calcFuncButton(true));
-    m_funcBtns << negBtn;
-    connect(negBtn, &QPushButton::clicked, this, &CalculatorPage::onNegateClicked);
-    grid->addWidget(negBtn, 1, 5);
+    auto* invBtn = makeBtn("1/x", ThemeColors::calcFuncButton(true));
+    invBtn->setObjectName("1/x");
+    m_funcBtns << invBtn;
+    connect(invBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
+    grid->addWidget(invBtn, 1, 5);
 
     auto* clrBtn = makeBtn("CE", ThemeColors::calcClearButton(true));
     m_clearBtns << clrBtn;
@@ -145,7 +146,7 @@ void CalculatorPage::setupUI() {
         {"5",4,1,ThemeColors::calcNumButton(true)},
         {"6",4,2,ThemeColors::calcNumButton(true)},
         {"×",4,3,ThemeColors::calcOpButton(true)},
-        {"1/x",4,4,ThemeColors::calcFuncButton(true)},
+        {"e",4,4,ThemeColors::calcFuncButton(true)},
         {"log",4,5,ThemeColors::calcFuncButton(true)},
         {"ln",4,6,ThemeColors::calcFuncButton(true)},
         {"1",5,0,ThemeColors::calcNumButton(true)},
@@ -155,8 +156,8 @@ void CalculatorPage::setupUI() {
         {"MS",5,4,ThemeColors::calcFuncButton(true)},
         {"MR",5,5,ThemeColors::calcFuncButton(true)},
         {"MC",5,6,ThemeColors::calcFuncButton(true)},
-        {"0",6,0,ThemeColors::calcNumButton(true)},
-        {"00",6,1,ThemeColors::calcNumButton(true)},
+        {"+/-",6,0,ThemeColors::calcFuncButton(true)},
+        {"0",6,1,ThemeColors::calcNumButton(true)},
         {".",6,2,ThemeColors::calcNumButton(true)},
         {"+",6,3,ThemeColors::calcOpButton(true)},
         {"=",6,4,ThemeColors::calcEqButton(true)},
@@ -175,7 +176,7 @@ void CalculatorPage::setupUI() {
             m_opBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onOperatorClicked);
             grid->addWidget(b, d.row, d.col);
-        } else if (d.label == "π") {
+        } else if (d.label == "π" || d.label == "e") {
             b->setObjectName(d.label);
             m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onPiClicked);
@@ -184,6 +185,10 @@ void CalculatorPage::setupUI() {
             b->setObjectName(d.label);
             m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
+            grid->addWidget(b, d.row, d.col);
+        } else if (d.label == "+/-") {
+            m_funcBtns << b;
+            connect(b, &QPushButton::clicked, this, &CalculatorPage::onNegateClicked);
             grid->addWidget(b, d.row, d.col);
         } else if (d.label == "MS" || d.label == "MR" || d.label == "MC") {
             b->setObjectName(d.label);
@@ -301,6 +306,7 @@ void CalculatorPage::onPiClicked() {
     QString op = btn->objectName();
 
     if (op == "π") m_engine.setPi();
+    else if (op == "e") m_engine.setEuler();
 
     updateDisplay();
 }

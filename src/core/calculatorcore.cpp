@@ -800,6 +800,16 @@ void CalculatorEngine::setPi() {
     syncExpressionOperand();
 }
 
+void CalculatorEngine::setEuler() {
+    if (m_bigMode && m_base == 10)
+        return;
+
+    m_floatMode = true;
+    m_currentDouble = 2.71828182846;
+    m_inputString.clear();
+    syncExpressionOperand();
+}
+
 void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
     if (m_bigMode && m_base == 10) {
         const QString a = normalizeBig(m_bigAccumulator);
