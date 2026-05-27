@@ -103,6 +103,7 @@ Thumbs.db
 *.so
 *.dylib
 *.bin
+*.zip
 
 # === Qt-specific Directories ===
 .moc/

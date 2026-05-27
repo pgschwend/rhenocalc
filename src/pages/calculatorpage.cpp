@@ -335,7 +335,8 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
     }
 
     // ── Digits 0-9 ───────────────────────────────────────────────────────────
-    if (key >= Qt::Key_0 && key <= Qt::Key_9 && (mod == Qt::NoModifier || mod == Qt::ShiftModifier)) {
+    const bool hasBlockedModifier = (mod & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier));
+    if (key >= Qt::Key_0 && key <= Qt::Key_9 && !hasBlockedModifier) {
         QString d = QString::number(key - Qt::Key_0);
         // In non-decimal bases, check validity
         if (m_engine.base() == 2  && d.toInt() > 1)  { QWidget::keyPressEvent(event); return; }
