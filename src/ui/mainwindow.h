@@ -11,6 +11,7 @@ class CalculatorPage;
 class BaseConverterPage;
 class UnitConverterPage;
 class NetworkPage;
+class CrcHashPage;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -36,6 +37,7 @@ private:
     BaseConverterPage* m_basePage;
     UnitConverterPage* m_unitPage;
     NetworkPage*       m_networkPage;
+    CrcHashPage*       m_crcHashPage;
     QPushButton*       m_onTopBtn = nullptr;
     QPushButton*       m_themeBtn = nullptr;
     bool               m_isDark   = true;
