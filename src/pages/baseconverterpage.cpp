@@ -226,7 +226,7 @@ void BaseConverterPage::onWordWidthChanged(int index) {
 
 void BaseConverterPage::onSignedToggled(bool checked) {
     m_signed = checked;
-    updateInfoLabels(m_value);
+    updateAll(m_value);
 }
 
 void BaseConverterPage::updateAll(unsigned long long value, QLineEdit* skip) {
@@ -235,7 +235,13 @@ void BaseConverterPage::updateAll(unsigned long long value, QLineEdit* skip) {
     m_value = BaseConverterCore::applyMask(value, m_wordBits);
 
     if (m_hexEdit != skip) m_hexEdit->setText(QString::number(m_value, 16).toUpper());
-    if (m_decEdit != skip) m_decEdit->setText(QString::number(m_value));
+    if (m_decEdit != skip) {
+        if (m_signed) {
+            m_decEdit->setText(QString::number(BaseConverterCore::signedValue(m_value, m_wordBits)));
+        } else {
+            m_decEdit->setText(QString::number(static_cast<qulonglong>(m_value)));
+        }
+    }
     if (m_binEdit != skip) m_binEdit->setText(BaseConverterCore::formatBinarySpaced(m_value, m_wordBits));
     if (m_octEdit != skip) m_octEdit->setText(QString::number(m_value, 8));
 

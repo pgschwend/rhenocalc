@@ -19,7 +19,7 @@ void UnitConverterPage::setupUI() {
     root->setSpacing(8);
     root->setContentsMargins(12, 12, 12, 12);
 
-    auto* title = new QLabel("Unit Converter for Embedded Engineering", this);
+    auto* title = new QLabel("Unit Converter", this);
     m_titleLabel = title;
     title->setStyleSheet("font-size:16px;font-weight:bold;");
     root->addWidget(title);
