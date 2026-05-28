@@ -21,6 +21,7 @@ private slots:
     void onDigitClicked();
     void onOperatorClicked();
     void onEqualsClicked();
+    void onClearEntryOrAllClicked();
     void onClearClicked();
     void onBackspaceClicked();
     void onPiClicked();
@@ -35,6 +36,7 @@ protected:
 private:
     void setupUI();
     void updateDisplay();
+    void resetCeClearCycle();
     void pressDigit(const QString& d);
     void pressOperator(const QString& op);
     QPushButton* makeBtn(const QString& text, const QString& style = "");
@@ -61,6 +63,7 @@ private:
     QList<QPushButton*> m_funcBtns;
     QList<QPushButton*> m_clearBtns;
     QPushButton*        m_eqBtn = nullptr;
+    bool                m_ceEntryCleared = false;
 
     CalculatorCore::CalculatorEngine m_engine;
 };

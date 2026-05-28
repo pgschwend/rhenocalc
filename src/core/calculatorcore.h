@@ -29,6 +29,7 @@ public:
 	void backspace();
 	void negate();
 	void setPi();
+	void setEuler();
 	void applyBitwiseOrFunction(const QString& op);
 
 private:

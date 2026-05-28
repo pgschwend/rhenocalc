@@ -104,40 +104,63 @@ void CalculatorPage::setupUI() {
     connect(modBtn, &QPushButton::clicked, this, &CalculatorPage::onOperatorClicked);
     grid->addWidget(modBtn, 1, 4);
 
-    auto* negBtn = makeBtn("+/-", ThemeColors::calcFuncButton(true));
-    m_funcBtns << negBtn;
-    connect(negBtn, &QPushButton::clicked, this, &CalculatorPage::onNegateClicked);
-    grid->addWidget(negBtn, 1, 5);
+    auto* invBtn = makeBtn("1/x", ThemeColors::calcFuncButton(true));
+    invBtn->setObjectName("1/x");
+    m_funcBtns << invBtn;
+    connect(invBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
+    grid->addWidget(invBtn, 1, 5);
 
     auto* clrBtn = makeBtn("CE", ThemeColors::calcClearButton(true));
     m_clearBtns << clrBtn;
-    connect(clrBtn, &QPushButton::clicked, this, [this]{ m_engine.clearEntry(); updateDisplay(); });
+    connect(clrBtn, &QPushButton::clicked, this, &CalculatorPage::onClearEntryOrAllClicked);
     grid->addWidget(clrBtn, 1, 6);
 
     auto* powBtn = makeBtn("x²", ThemeColors::calcFuncButton(true));
     powBtn->setObjectName("SQ");
     m_funcBtns << powBtn;
     connect(powBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
-    grid->addWidget(powBtn, 2, 4);
+    grid->addWidget(powBtn, 3, 5);
 
     auto* sqrtBtn = makeBtn("√x", ThemeColors::calcFuncButton(true));
     sqrtBtn->setObjectName("SQRT");
     m_funcBtns << sqrtBtn;
     connect(sqrtBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
-    grid->addWidget(sqrtBtn, 2, 5);
+    grid->addWidget(sqrtBtn, 3, 6);
 
-    auto* clearAllBtn = makeBtn("AC", ThemeColors::calcClearButton(true));
+    auto* clearAllBtn = makeBtn("2nd", ThemeColors::calcClearButton(true));
     m_clearBtns << clearAllBtn;
-    connect(clearAllBtn, &QPushButton::clicked, this, &CalculatorPage::onClearClicked);
+    connect(clearAllBtn, &QPushButton::clicked, this, []{});
     grid->addWidget(clearAllBtn, 2, 6);
 
     // Digits + operators (rows 3-6)
     struct BtnDef { QString label; int row, col; QString style; };
     QList<BtnDef> defs = {
-        {"7",3,0,ThemeColors::calcNumButton(true)},{"8",3,1,ThemeColors::calcNumButton(true)},{"9",3,2,ThemeColors::calcNumButton(true)},{"÷",3,3,ThemeColors::calcOpButton(true)},{"(",3,4,ThemeColors::calcFuncButton(true)},{")",3,5,ThemeColors::calcFuncButton(true)},{"π",3,6,ThemeColors::calcBitButton(true)},
-        {"4",4,0,ThemeColors::calcNumButton(true)},{"5",4,1,ThemeColors::calcNumButton(true)},{"6",4,2,ThemeColors::calcNumButton(true)},{"×",4,3,ThemeColors::calcOpButton(true)},{"1/x",4,4,ThemeColors::calcFuncButton(true)},{"abs",4,5,ThemeColors::calcFuncButton(true)},{"NA",4,6,ThemeColors::calcBitButton(true)},
-        {"1",5,0,ThemeColors::calcNumButton(true)},{"2",5,1,ThemeColors::calcNumButton(true)},{"3",5,2,ThemeColors::calcNumButton(true)},{"-",5,3,ThemeColors::calcOpButton(true)},{"MS",5,4,ThemeColors::calcFuncButton(true)},{"MR",5,5,ThemeColors::calcFuncButton(true)},{"MC",5,6,ThemeColors::calcFuncButton(true)},
-        {"0",6,0,ThemeColors::calcNumButton(true)},{"00",6,1,ThemeColors::calcNumButton(true)},{".",6,2,ThemeColors::calcNumButton(true)},{"+",6,3,ThemeColors::calcOpButton(true)},{"=",6,4,ThemeColors::calcEqButton(true)},
+        {"7",3,0,ThemeColors::calcNumButton(true)},
+        {"8",3,1,ThemeColors::calcNumButton(true)},
+        {"9",3,2,ThemeColors::calcNumButton(true)},
+        {"÷",3,3,ThemeColors::calcOpButton(true)},
+        {"(",2,4,ThemeColors::calcFuncButton(true)},
+        {")",2,5,ThemeColors::calcFuncButton(true)},
+        {"π",3,4,ThemeColors::calcBitButton(true)},
+        {"4",4,0,ThemeColors::calcNumButton(true)},
+        {"5",4,1,ThemeColors::calcNumButton(true)},
+        {"6",4,2,ThemeColors::calcNumButton(true)},
+        {"×",4,3,ThemeColors::calcOpButton(true)},
+        {"e",4,4,ThemeColors::calcFuncButton(true)},
+        {"log",4,5,ThemeColors::calcFuncButton(true)},
+        {"ln",4,6,ThemeColors::calcFuncButton(true)},
+        {"1",5,0,ThemeColors::calcNumButton(true)},
+        {"2",5,1,ThemeColors::calcNumButton(true)},
+        {"3",5,2,ThemeColors::calcNumButton(true)},
+        {"-",5,3,ThemeColors::calcOpButton(true)},
+        {"MS",5,4,ThemeColors::calcFuncButton(true)},
+        {"MR",5,5,ThemeColors::calcFuncButton(true)},
+        {"MC",5,6,ThemeColors::calcFuncButton(true)},
+        {"+/-",6,0,ThemeColors::calcFuncButton(true)},
+        {"0",6,1,ThemeColors::calcNumButton(true)},
+        {".",6,2,ThemeColors::calcNumButton(true)},
+        {"+",6,3,ThemeColors::calcOpButton(true)},
+        {"=",6,4,ThemeColors::calcEqButton(true)},
     };
 
     // Make = button span 3 cols
@@ -153,15 +176,19 @@ void CalculatorPage::setupUI() {
             m_opBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onOperatorClicked);
             grid->addWidget(b, d.row, d.col);
-        } else if (d.label == "π") {
+        } else if (d.label == "π" || d.label == "e") {
             b->setObjectName(d.label);
             m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onPiClicked);
             grid->addWidget(b, d.row, d.col);
-        } else if (d.label == "1/x" || d.label == "abs" || d.label == "NA") {
+        } else if (d.label == "1/x" || d.label == "log" || d.label == "ln") {
             b->setObjectName(d.label);
             m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
+            grid->addWidget(b, d.row, d.col);
+        } else if (d.label == "+/-") {
+            m_funcBtns << b;
+            connect(b, &QPushButton::clicked, this, &CalculatorPage::onNegateClicked);
             grid->addWidget(b, d.row, d.col);
         } else if (d.label == "MS" || d.label == "MR" || d.label == "MC") {
             b->setObjectName(d.label);
@@ -212,6 +239,7 @@ void CalculatorPage::updateDisplay() {
 }
 
 void CalculatorPage::onBaseChanged(int index) {
+    resetCeClearCycle();
     const int bases[] = {10, 16, 2, 8};
     m_engine.setBase(bases[index]);
 
@@ -223,6 +251,7 @@ void CalculatorPage::onBaseChanged(int index) {
 }
 
 void CalculatorPage::onWordWidthChanged(int index) {
+    resetCeClearCycle();
     const int widths[] = {8, 16, 32, 64};
     const bool precMode = (index == 4);
     m_engine.setBigMode(precMode);
@@ -237,6 +266,7 @@ void CalculatorPage::onDigitClicked() {
 }
 
 void CalculatorPage::pressDigit(const QString& d) {
+    resetCeClearCycle();
     m_engine.pressDigit(d);
     updateDisplay();
 }
@@ -250,44 +280,68 @@ void CalculatorPage::onOperatorClicked() {
 }
 
 void CalculatorPage::pressOperator(const QString& op) {
+    resetCeClearCycle();
     m_engine.pressOperator(op);
     updateDisplay();
 }
 
 void CalculatorPage::onEqualsClicked() {
+    resetCeClearCycle();
     m_engine.equals();
     updateDisplay();
 }
 
+void CalculatorPage::onClearEntryOrAllClicked() {
+    const bool hasVisibleInput = (m_engine.displayText() != "0") || !m_engine.expressionText().isEmpty();
+    if (!m_ceEntryCleared && hasVisibleInput) {
+        m_engine.clearEntry();
+        m_ceEntryCleared = true;
+    } else {
+        m_engine.clearAll();
+        m_ceEntryCleared = false;
+    }
+    updateDisplay();
+}
+
 void CalculatorPage::onClearClicked() {
+    resetCeClearCycle();
     m_engine.clearAll();
     updateDisplay();
 }
 
 void CalculatorPage::onBackspaceClicked() {
+    resetCeClearCycle();
     m_engine.backspace();
     updateDisplay();
 }
 
 void CalculatorPage::onNegateClicked() {
+    resetCeClearCycle();
     m_engine.negate();
     updateDisplay();
 }
 
 void CalculatorPage::onPiClicked() {
+    resetCeClearCycle();
     auto* btn = qobject_cast<QPushButton*>(sender());
     QString op = btn->objectName();
 
     if (op == "π") m_engine.setPi();
+    else if (op == "e") m_engine.setEuler();
 
     updateDisplay();
 }
 
 void CalculatorPage::onBitwiseClicked() {
+    resetCeClearCycle();
     auto* btn = qobject_cast<QPushButton*>(sender());
     QString op = btn->objectName();
     m_engine.applyBitwiseOrFunction(op);
     updateDisplay();
+}
+
+void CalculatorPage::resetCeClearCycle() {
+    m_ceEntryCleared = false;
 }
 
 // ─── Float formatting ─────────────────────────────────────────────────────────
