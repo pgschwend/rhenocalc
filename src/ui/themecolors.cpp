@@ -171,6 +171,12 @@ QString calcClearButton(bool dark) {
         .arg(c(dark, "calc_clear_bg"), c(dark, "calc_clear_fg"), c(dark, "calc_clear_hover"));
 }
 
+QString calcSecondFuncButton(bool dark) {
+    return QString("QPushButton{background:%1;color:%2;font-size:11px;border-radius:4px;padding:4px;}"
+                   "QPushButton:hover{background:%3;}")
+        .arg(c(dark, "calc_clear_bg"), c(dark, "calc_clear_fg"), c(dark, "calc_clear_hover"));
+}
+
 QString calcDisplayStyle(bool dark) {
     return QString("background:%1;color:%2;font-size:22px;font-family:'Consolas','Courier New',monospace;"
                    "border:1px solid %3;border-radius:4px;padding:4px 8px;")

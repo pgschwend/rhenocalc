@@ -127,10 +127,10 @@ void CalculatorPage::setupUI() {
     connect(sqrtBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
     grid->addWidget(sqrtBtn, 3, 6);
 
-    auto* clearAllBtn = makeBtn("2nd", ThemeColors::calcClearButton(true));
-    m_clearBtns << clearAllBtn;
-    connect(clearAllBtn, &QPushButton::clicked, this, []{});
-    grid->addWidget(clearAllBtn, 2, 6);
+    auto* secondFuncBtn = makeBtn("2nd", ThemeColors::calcSecondFuncButton(true));
+    m_clearBtns << secondFuncBtn;
+    connect(secondFuncBtn, &QPushButton::clicked, this, []{});
+    grid->addWidget(secondFuncBtn, 2, 6);
 
     // Digits + operators (rows 3-6)
     struct BtnDef { QString label; int row, col; QString style; };
@@ -358,6 +358,7 @@ void CalculatorPage::applyTheme(bool dark) {
     const QString hexS  = ThemeColors::calcHexButton(dark);
     const QString eqS   = ThemeColors::calcEqButton(dark);
     const QString clrS  = ThemeColors::calcClearButton(dark);
+    const QString secS  = ThemeColors::calcSecondFuncButton(dark);
     const QString dispS = ThemeColors::calcDisplayStyle(dark);
     const QString exprS = ThemeColors::calcExprStyle(dark);
     const QString hintS = ThemeColors::calcHintStyle(dark);
