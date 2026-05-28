@@ -112,7 +112,7 @@ void CalculatorPage::setupUI() {
 
     auto* clrBtn = makeBtn("CE", ThemeColors::calcClearButton(true));
     m_clearBtns << clrBtn;
-    connect(clrBtn, &QPushButton::clicked, this, [this]{ m_engine.clearEntry(); updateDisplay(); });
+    connect(clrBtn, &QPushButton::clicked, this, &CalculatorPage::onClearEntryOrAllClicked);
     grid->addWidget(clrBtn, 1, 6);
 
     auto* powBtn = makeBtn("x²", ThemeColors::calcFuncButton(true));
@@ -127,9 +127,9 @@ void CalculatorPage::setupUI() {
     connect(sqrtBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
     grid->addWidget(sqrtBtn, 3, 6);
 
-    auto* clearAllBtn = makeBtn("AC", ThemeColors::calcClearButton(true));
+    auto* clearAllBtn = makeBtn("2nd", ThemeColors::calcClearButton(true));
     m_clearBtns << clearAllBtn;
-    connect(clearAllBtn, &QPushButton::clicked, this, &CalculatorPage::onClearClicked);
+    connect(clearAllBtn, &QPushButton::clicked, this, []{});
     grid->addWidget(clearAllBtn, 2, 6);
 
     // Digits + operators (rows 3-6)
@@ -239,6 +239,7 @@ void CalculatorPage::updateDisplay() {
 }
 
 void CalculatorPage::onBaseChanged(int index) {
+    resetCeClearCycle();
     const int bases[] = {10, 16, 2, 8};
     m_engine.setBase(bases[index]);
 
@@ -250,6 +251,7 @@ void CalculatorPage::onBaseChanged(int index) {
 }
 
 void CalculatorPage::onWordWidthChanged(int index) {
+    resetCeClearCycle();
     const int widths[] = {8, 16, 32, 64};
     const bool precMode = (index == 4);
     m_engine.setBigMode(precMode);
@@ -264,6 +266,7 @@ void CalculatorPage::onDigitClicked() {
 }
 
 void CalculatorPage::pressDigit(const QString& d) {
+    resetCeClearCycle();
     m_engine.pressDigit(d);
     updateDisplay();
 }
@@ -277,31 +280,49 @@ void CalculatorPage::onOperatorClicked() {
 }
 
 void CalculatorPage::pressOperator(const QString& op) {
+    resetCeClearCycle();
     m_engine.pressOperator(op);
     updateDisplay();
 }
 
 void CalculatorPage::onEqualsClicked() {
+    resetCeClearCycle();
     m_engine.equals();
     updateDisplay();
 }
 
+void CalculatorPage::onClearEntryOrAllClicked() {
+    const bool hasVisibleInput = (m_engine.displayText() != "0") || !m_engine.expressionText().isEmpty();
+    if (!m_ceEntryCleared && hasVisibleInput) {
+        m_engine.clearEntry();
+        m_ceEntryCleared = true;
+    } else {
+        m_engine.clearAll();
+        m_ceEntryCleared = false;
+    }
+    updateDisplay();
+}
+
 void CalculatorPage::onClearClicked() {
+    resetCeClearCycle();
     m_engine.clearAll();
     updateDisplay();
 }
 
 void CalculatorPage::onBackspaceClicked() {
+    resetCeClearCycle();
     m_engine.backspace();
     updateDisplay();
 }
 
 void CalculatorPage::onNegateClicked() {
+    resetCeClearCycle();
     m_engine.negate();
     updateDisplay();
 }
 
 void CalculatorPage::onPiClicked() {
+    resetCeClearCycle();
     auto* btn = qobject_cast<QPushButton*>(sender());
     QString op = btn->objectName();
 
@@ -312,10 +333,15 @@ void CalculatorPage::onPiClicked() {
 }
 
 void CalculatorPage::onBitwiseClicked() {
+    resetCeClearCycle();
     auto* btn = qobject_cast<QPushButton*>(sender());
     QString op = btn->objectName();
     m_engine.applyBitwiseOrFunction(op);
     updateDisplay();
+}
+
+void CalculatorPage::resetCeClearCycle() {
+    m_ceEntryCleared = false;
 }
 
 // ─── Float formatting ─────────────────────────────────────────────────────────
