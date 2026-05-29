@@ -2,23 +2,25 @@
 setlocal enabledelayedexpansion
 title RhenoCalc Updater
 
-:: Arguments: %1 = extracted update folder, %2 = app directory, %3 = app executable path
-set "UPDATE_DIR=%~1"
+:: Arguments: %1 = ZIP file path, %2 = app directory, %3 = app executable path
+set "ZIP_FILE=%~1"
 set "APP_DIR=%~2"
 set "APP_EXE=%~3"
+set "TEMP_DIR=%APP_DIR%\rhenocalc_update_temp"
 
 echo ============================================
 echo  RhenoCalc Update Script
 echo ============================================
 echo.
-echo Update source: %UPDATE_DIR%
-echo Target:        %APP_DIR%
-echo Executable:    %APP_EXE%
+echo ZIP file:   %ZIP_FILE%
+echo Target:     %APP_DIR%
+echo Executable: %APP_EXE%
+echo Temp dir:   %TEMP_DIR%
 echo.
 
-:: Validate arguments
-if not exist "%UPDATE_DIR%" (
-    echo ERROR: Update directory not found: %UPDATE_DIR%
+:: Validate ZIP file exists
+if not exist "%ZIP_FILE%" (
+    echo ERROR: ZIP file not found: %ZIP_FILE%
     pause
     exit
 )
@@ -30,7 +32,7 @@ if exist "%TEST_FILE%" (
     del "%TEST_FILE%" 2>nul
 ) else (
     echo Requesting administrator rights...
-    powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c \"\"%~f0\" \"%UPDATE_DIR%\" \"%APP_DIR%\" \"%APP_EXE%\"\"' -Verb RunAs"
+    powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c \"\"%~f0\" \"%ZIP_FILE%\" \"%APP_DIR%\" \"%APP_EXE%\"\"' -Verb RunAs"
     exit
 )
 
@@ -45,14 +47,39 @@ if not errorlevel 1 (
 echo Application closed.
 echo.
 
-:: Show what we're copying
-echo Files in update package:
-dir /b "%UPDATE_DIR%"
+:: ── Extract ZIP file ─────────────────────────────────────────────────────
+echo Extracting update...
+if exist "%TEMP_DIR%" rmdir /s /q "%TEMP_DIR%"
+powershell -NoProfile -Command "Expand-Archive -Path '%ZIP_FILE%' -DestinationPath '%TEMP_DIR%' -Force"
+if errorlevel 1 (
+    echo ERROR: Extraction failed!
+    pause
+    exit
+)
+echo Extraction complete.
 echo.
 
-:: Copy files
+:: ── Detect if ZIP has single root folder ─────────────────────────────────
+set "SOURCE_DIR=%TEMP_DIR%"
+set "SUBFOLDER_COUNT=0"
+for /d %%D in ("%TEMP_DIR%\*") do (
+    set "INNER_DIR=%%D"
+    set /a SUBFOLDER_COUNT+=1
+)
+if %SUBFOLDER_COUNT% equ 1 (
+    set "SOURCE_DIR=!INNER_DIR!"
+    echo Detected single root folder: !SOURCE_DIR!
+)
+
+:: Show what we're copying
+echo.
+echo Files in update package:
+dir /b "%SOURCE_DIR%"
+echo.
+
+:: ── Copy files ───────────────────────────────────────────────────────────
 echo Installing update...
-xcopy "%UPDATE_DIR%\*" "%APP_DIR%\" /s /y /q
+xcopy "%SOURCE_DIR%\*" "%APP_DIR%\" /s /y /q
 if errorlevel 1 (
     echo ERROR: Failed to copy files!
     pause
@@ -61,20 +88,27 @@ if errorlevel 1 (
 echo Files copied successfully.
 echo.
 
-:: ── Cleanup: Delete downloaded ZIP and extracted folder ──────────────────
-echo Cleaning up update files...
+:: ── Cleanup ──────────────────────────────────────────────────────────────
+echo Cleaning up...
 
-:: Delete the extracted update folder
-if exist "%UPDATE_DIR%" (
-    rmdir /s /q "%UPDATE_DIR%"
-    echo Deleted: %UPDATE_DIR%
+:: Delete temp extraction folder
+if exist "%TEMP_DIR%" (
+    rmdir /s /q "%TEMP_DIR%" 2>nul
+    if exist "%TEMP_DIR%" (
+        echo WARNING: Could not delete temp folder
+    ) else (
+        echo Deleted: %TEMP_DIR%
+    )
 )
 
-:: Delete the ZIP file (should be in same directory as extracted folder)
-set "ZIP_FILE=%APP_DIR%\rhenocalc_update.zip"
+:: Delete ZIP file
 if exist "%ZIP_FILE%" (
-    del /f /q "%ZIP_FILE%"
-    echo Deleted: %ZIP_FILE%
+    del /f /q "%ZIP_FILE%" 2>nul
+    if exist "%ZIP_FILE%" (
+        echo WARNING: Could not delete ZIP file
+    ) else (
+        echo Deleted: %ZIP_FILE%
+    )
 )
 
 echo.
@@ -83,17 +117,29 @@ echo  Update complete!
 echo ============================================
 echo.
 
-:: Restart the application
+:: ── Restart application ──────────────────────────────────────────────────
 echo Starting RhenoCalc...
+
+set "TARGET_EXE="
 if exist "%APP_EXE%" (
-    start "" "%APP_EXE%"
-) else (
-    start "" "%APP_DIR%\RhenoCalc.exe"
+    set "TARGET_EXE=%APP_EXE%"
+) else if exist "%APP_DIR%\RhenoCalc.exe" (
+    set "TARGET_EXE=%APP_DIR%\RhenoCalc.exe"
 )
 
-:: Explicitly exit - no ghost processes
+if defined TARGET_EXE (
+    echo Launching: %TARGET_EXE%
+    cd /d "%APP_DIR%"
+    start "" "%TARGET_EXE%"
+) else (
+    echo ERROR: Could not find RhenoCalc.exe
+    pause
+    exit
+)
+
+:: ── Exit cleanly ─────────────────────────────────────────────────────────
 echo.
-echo Updater finished. Closing in 3 seconds...
-timeout /t 3 /nobreak >nul
+echo Updater finished.
+timeout /t 2 /nobreak >nul
 endlocal
 exit

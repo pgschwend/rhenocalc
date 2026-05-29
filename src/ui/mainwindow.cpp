@@ -21,6 +21,7 @@
 #include <QProcess>
 #include <QDir>
 #include <QProgressDialog>
+#include <QThread>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -91,40 +92,35 @@ MainWindow::MainWindow(QWidget* parent)
             });
 
             connect(updater, &Updater::downloadFinished, this, [this, updater, progress](const QString& zipPath) {
-                progress->setMaximum(0); // Indeterminate animation
-                progress->setLabelText("Extracting update...");
-                progress->setCancelButton(nullptr); // Can't cancel during extraction
+                progress->close();
+                delete progress;
 
-                connect(updater, &Updater::extractFinished, this, [this, updater, progress](const QString& extractedDir) {
-                    progress->close();
-                    progress->deleteLater();
+                // Cleanup updater resources BEFORE starting batch
+                updater->cleanup();
 
-                    // Cleanup updater resources before quitting
-                    updater->cleanup();
+                // Start batch script - it will extract, copy, and restart
+                QString appDir = QDir::toNativeSeparators(QApplication::applicationDirPath());
+                QString script = QDir::toNativeSeparators(appDir + "\\update.bat");
+                QString appExe = QDir::toNativeSeparators(QApplication::applicationFilePath());
+                QString nativeZipPath = QDir::toNativeSeparators(zipPath);
 
-                    // Start batch script to copy files and restart
-                    QString appDir = QApplication::applicationDirPath();
-                    QString script = appDir + "/update.bat";
-                    QString appExe = QApplication::applicationFilePath();
+                bool started = QProcess::startDetached("cmd.exe",
+                    QStringList{"/c", "call", script, nativeZipPath, appDir, appExe}, appDir);
 
-                    bool started = QProcess::startDetached("cmd.exe",
-                        QStringList{"/c", "call", script, extractedDir, appDir, appExe}, appDir);
+                if (!started) {
+                    QMessageBox::warning(this, "Update Error",
+                        "Could not start the update script.\nPlease update manually.");
+                    return;
+                }
 
-                    if (!started) {
-                        QMessageBox::warning(this, "Update Error",
-                            "Could not start the update script.\nPlease update manually.");
-                        return;
-                    }
-
-                    QApplication::quit();
-                });
-
-                updater->extractUpdate(zipPath);
+                // Give batch time to start, then quit
+                QThread::msleep(200);
+                QApplication::quit();
             });
 
             connect(updater, &Updater::updateError, this, [this, progress](const QString& error) {
                 progress->close();
-                progress->deleteLater();
+                delete progress;
                 QMessageBox::warning(this, "Update Error", error);
             });
 

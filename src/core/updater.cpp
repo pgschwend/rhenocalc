@@ -9,11 +9,8 @@
 #include <QJsonArray>
 #include <QVersionNumber>
 #include <QRegularExpression>
-#include <QStandardPaths>
 #include <QCoreApplication>
 #include <QDir>
-#include <QProcess>
-#include <QDebug>
 
 Updater::Updater(QObject* parent)
     : QObject(parent)
@@ -94,17 +91,17 @@ void Updater::onReleaseFetched(QNetworkReply* reply)
 
 void Updater::downloadUpdate(const QString& url)
 {
-    // Store update files in app directory, not temp
+    // Store update ZIP in app directory
     QString appDir = QCoreApplication::applicationDirPath();
     m_zipPath = appDir + "/rhenocalc_update.zip";
-    m_extractedDir = appDir + "/rhenocalc_update_temp";
 
-    // Clean up old files
+    // Clean up old file
     QFile::remove(m_zipPath);
-    QDir(m_extractedDir).removeRecursively();
 
-    m_downloadFile = new QFile(m_zipPath, this);
+    m_downloadFile = new QFile(m_zipPath);  // No parent - we manage lifetime manually
     if (!m_downloadFile->open(QIODevice::WriteOnly)) {
+        delete m_downloadFile;
+        m_downloadFile = nullptr;
         emit updateError("Could not create temporary file for download.");
         return;
     }
@@ -135,79 +132,50 @@ void Updater::onDownloadFinished()
         return;
     }
 
-    // Write any remaining data
+    // Write any remaining data and close file immediately
     m_downloadFile->write(m_downloadReply->readAll());
+    m_downloadFile->flush();
     m_downloadFile->close();
+    delete m_downloadFile;
+    m_downloadFile = nullptr;
 
     if (m_downloadReply->error() != QNetworkReply::NoError) {
-        emit updateError(QString("Download failed: %1").arg(m_downloadReply->errorString()));
-        m_downloadReply->deleteLater();
+        QString error = m_downloadReply->errorString();
+        m_downloadReply->close();
+        delete m_downloadReply;
         m_downloadReply = nullptr;
+        emit updateError(QString("Download failed: %1").arg(error));
         return;
     }
 
-    m_downloadReply->deleteLater();
+    m_downloadReply->close();
+    delete m_downloadReply;
     m_downloadReply = nullptr;
 
     emit downloadFinished(m_zipPath);
 }
 
-void Updater::extractUpdate(const QString& zipPath)
-{
-    // Use PowerShell to extract
-    QProcess* proc = new QProcess(this);
-    connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, [this, proc](int exitCode, QProcess::ExitStatus) {
-        proc->deleteLater();
-
-        if (exitCode != 0) {
-            emit updateError("Extraction failed.");
-            return;
-        }
-
-        // GitHub release ZIPs often have a single root folder - detect that
-        QDir extractedDir(m_extractedDir);
-        QStringList entries = extractedDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-
-        QString finalDir = m_extractedDir;
-        if (entries.size() == 1) {
-            // Single subfolder - use that as the source
-            finalDir = m_extractedDir + "/" + entries.first();
-        }
-
-        m_extractedDir = finalDir;
-        emit extractFinished(finalDir);
-    });
-
-    QString cmd = QString("Expand-Archive -Path \"%1\" -DestinationPath \"%2\" -Force")
-                      .arg(zipPath, m_extractedDir);
-    proc->start("powershell", QStringList{"-NoProfile", "-Command", cmd});
-}
-
 void Updater::cleanup()
 {
-    // Abort any ongoing download
+    // Abort any ongoing download - must delete synchronously since quit() follows
     if (m_downloadReply) {
         m_downloadReply->abort();
-        m_downloadReply->deleteLater();
+        m_downloadReply->close();
+        delete m_downloadReply;
         m_downloadReply = nullptr;
     }
 
-    // Close and delete download file
+    // Close and delete download file handle - MUST be synchronous
     if (m_downloadFile) {
         if (m_downloadFile->isOpen()) {
             m_downloadFile->close();
         }
-        m_downloadFile->deleteLater();
+        delete m_downloadFile;
         m_downloadFile = nullptr;
     }
 
-    // Clear network cache/connections
+    // Clear all network connections
     m_nam->clearConnectionCache();
-
-    // Remove downloaded ZIP (extractedDir is needed by batch script)
-    if (!m_zipPath.isEmpty()) {
-        QFile::remove(m_zipPath);
-    }
+    m_nam->clearAccessCache();
 }
 
