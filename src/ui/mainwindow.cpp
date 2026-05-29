@@ -67,15 +67,18 @@ MainWindow::MainWindow(QWidget* parent)
     // Auto-update check
     auto* updater = new Updater(this);
     connect(updater, &Updater::updateAvailable, this, [this, updater](const QString& version, const QString& url) {
-        auto result = QMessageBox::question(this, "Update Available",
+        QMessageBox msgBox(QMessageBox::Question, "Update Available",
             QString("A new version %1 is available.\nDo you want to update now?").arg(version),
-            QMessageBox::Yes | QMessageBox::No);
+            QMessageBox::Yes | QMessageBox::No, this);
+        msgBox.setFixedWidth(this->width());
+        auto result = msgBox.exec();
 
         if (result == QMessageBox::Yes) {
             // Create progress dialog for download
             auto* progress = new QProgressDialog("Downloading update...", "Cancel", 0, 100, this);
             progress->setWindowModality(Qt::WindowModal);
             progress->setMinimumDuration(0);
+            progress->setFixedWidth(this->width());
             progress->setValue(0);
             progress->show();
 
@@ -108,8 +111,11 @@ MainWindow::MainWindow(QWidget* parent)
                     QStringList{"/c", "call", script, nativeZipPath, appDir, appExe}, appDir);
 
                 if (!started) {
-                    QMessageBox::warning(this, "Update Error",
-                        "Could not start the update script.\nPlease update manually.");
+                    QMessageBox errorBox(QMessageBox::Warning, "Update Error",
+                        "Could not start the update script.\nPlease update manually.",
+                        QMessageBox::Ok, this);
+                    errorBox.setFixedWidth(this->width());
+                    errorBox.exec();
                     return;
                 }
 
@@ -121,7 +127,9 @@ MainWindow::MainWindow(QWidget* parent)
             connect(updater, &Updater::updateError, this, [this, progress](const QString& error) {
                 progress->close();
                 delete progress;
-                QMessageBox::warning(this, "Update Error", error);
+                QMessageBox errorBox(QMessageBox::Warning, "Update Error", error, QMessageBox::Ok, this);
+                errorBox.setFixedWidth(this->width());
+                errorBox.exec();
             });
 
             connect(progress, &QProgressDialog::canceled, this, [updater]() {
