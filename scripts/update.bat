@@ -6,11 +6,24 @@ set "DOWNLOAD_URL=%~1"
 set "APP_DIR=%~2"
 set "APP_EXE=%~3"
 
+:: ── Check if we can write to the app directory ───────────────────────────
+set "TEST_FILE=%APP_DIR%\_write_test.tmp"
+echo test > "%TEST_FILE%" 2>nul
+if exist "%TEST_FILE%" (
+    del "%TEST_FILE%" 2>nul
+) else (
+    :: No write access – re-launch with admin rights
+    powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c \"\"%~f0\" \"%DOWNLOAD_URL%\" \"%APP_DIR%\" \"%APP_EXE%\"\"' -Verb RunAs"
+    exit /b 0
+)
+
 :: Wait for the application to fully close
 timeout /t 2 /nobreak >nul
 
-:: Download the zip
-set "ZIP_FILE=%APP_DIR%\update_download.zip"
+:: Download to user TEMP (always writable)
+set "ZIP_FILE=%TEMP%\rhenocalc_update.zip"
+set "TEMP_DIR=%TEMP%\rhenocalc_update_temp"
+
 powershell -NoProfile -Command "& { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '%DOWNLOAD_URL%' -OutFile '%ZIP_FILE%' }"
 
 if not exist "%ZIP_FILE%" (
@@ -20,13 +33,10 @@ if not exist "%ZIP_FILE%" (
 )
 
 :: Extract to temp folder
-set "TEMP_DIR=%APP_DIR%\update_temp"
 if exist "%TEMP_DIR%" rmdir /s /q "%TEMP_DIR%"
 powershell -NoProfile -Command "Expand-Archive -Path '%ZIP_FILE%' -DestinationPath '%TEMP_DIR%' -Force"
 
-:: Copy new files over old ones
 :: GitHub release zips may have a single root folder or be flat
-:: Check if there's exactly one subfolder
 set "INNER="
 for /d %%D in ("%TEMP_DIR%\*") do (
     set "INNER=%%D"
@@ -45,4 +55,3 @@ rmdir /s /q "%TEMP_DIR%" 2>nul
 :: Restart the application
 start "" "%APP_EXE%"
 exit /b 0
-
