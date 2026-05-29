@@ -1,10 +1,14 @@
 
 ## TODO's
 
-- Subnetmask calculator
 - Copy/Paste ability
-- CRC analysis tool
-- Float calculation improvement
+- Float calculation on separate tab
 - Color code tool (with pipet)
+- Sin/Cos function
+
+
+- Somehow Tab reorganization (to avoid those arrows to move the tabs)
+- Automatic update mechanism
+- 
 
 

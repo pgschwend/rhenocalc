@@ -19,6 +19,7 @@ find_package(Qt6 COMPONENTS
         Core
         Gui
         Widgets
+        Network
         REQUIRED)
 
 set(SOURCES
@@ -36,6 +37,7 @@ set(SOURCES
         src/core/unitconvertercore.h src/core/unitconvertercore.cpp
         src/core/networkcalc.h src/core/networkcalc.cpp
         src/core/crchashcore.h src/core/crchashcore.cpp
+        src/core/updater.h src/core/updater.cpp
         src/info.h
 )
 
@@ -74,6 +76,13 @@ target_link_libraries(RhenoCalc
         Qt::Core
         Qt::Gui
         Qt::Widgets
+        Qt::Network
 )
+
+# Deploy updater script next to executable
+if(WIN32)
+    configure_file(${CMAKE_SOURCE_DIR}/scripts/update.bat
+                   ${CMAKE_BINARY_DIR}/update.bat COPYONLY)
+endif()
 
 

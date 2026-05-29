@@ -1,5 +1,7 @@
 #include "calculatorpage.h"
 #include "ui/themecolors.h"
+#include <QClipboard>
+#include <QGuiApplication>
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -127,10 +129,10 @@ void CalculatorPage::setupUI() {
     connect(sqrtBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
     grid->addWidget(sqrtBtn, 3, 6);
 
-    auto* clearAllBtn = makeBtn("2nd", ThemeColors::calcClearButton(true));
-    m_clearBtns << clearAllBtn;
-    connect(clearAllBtn, &QPushButton::clicked, this, []{});
-    grid->addWidget(clearAllBtn, 2, 6);
+    auto* secondFuncBtn = makeBtn("2nd", ThemeColors::calcSecondFuncButton(true));
+    m_clearBtns << secondFuncBtn;
+    connect(secondFuncBtn, &QPushButton::clicked, this, []{});
+    grid->addWidget(secondFuncBtn, 2, 6);
 
     // Digits + operators (rows 3-6)
     struct BtnDef { QString label; int row, col; QString style; };
@@ -358,6 +360,7 @@ void CalculatorPage::applyTheme(bool dark) {
     const QString hexS  = ThemeColors::calcHexButton(dark);
     const QString eqS   = ThemeColors::calcEqButton(dark);
     const QString clrS  = ThemeColors::calcClearButton(dark);
+    const QString secS  = ThemeColors::calcSecondFuncButton(dark);
     const QString dispS = ThemeColors::calcDisplayStyle(dark);
     const QString exprS = ThemeColors::calcExprStyle(dark);
     const QString hintS = ThemeColors::calcHintStyle(dark);
@@ -380,6 +383,80 @@ void CalculatorPage::applyTheme(bool dark) {
 void CalculatorPage::keyPressEvent(QKeyEvent* event) {
     const int key = event->key();
     const Qt::KeyboardModifiers mod = event->modifiers();
+
+    if (mod == Qt::ControlModifier && key == Qt::Key_C) {
+        if (auto* clipboard = QGuiApplication::clipboard())
+            clipboard->setText(m_engine.displayText());
+        return;
+    }
+
+    if (mod == Qt::ControlModifier && key == Qt::Key_V) {
+        auto* clipboard = QGuiApplication::clipboard();
+        if (!clipboard)
+            return;
+
+        QString text = clipboard->text().trimmed().toUpper();
+        if (text.isEmpty())
+            return;
+
+        text.remove(' ');
+        text.remove('_');
+        text.remove('\'');
+
+        if (m_engine.base() == 16 && text.startsWith("0X")) text.remove(0, 2);
+        if (m_engine.base() == 2  && text.startsWith("0B")) text.remove(0, 2);
+        if (m_engine.base() == 8  && text.startsWith("0O")) text.remove(0, 2);
+
+        bool negative = false;
+        if (text.startsWith('-')) {
+            negative = true;
+            text.remove(0, 1);
+        } else if (text.startsWith('+')) {
+            text.remove(0, 1);
+        }
+
+        if (text.isEmpty())
+            return;
+
+        const int base = m_engine.base();
+        bool hasValidDigit = false;
+        for (const QChar ch : text) {
+            if (ch.isDigit()) {
+                const int v = ch.unicode() - '0';
+                if ((base == 2 && v > 1) || (base == 8 && v > 7))
+                    return;
+                hasValidDigit = true;
+                continue;
+            }
+            if (base == 16 && ch >= 'A' && ch <= 'F') {
+                hasValidDigit = true;
+                continue;
+            }
+            if ((ch == '.' || ch == ',') && base == 10)
+                continue;
+            return;
+        }
+
+        if (!hasValidDigit)
+            return;
+
+        resetCeClearCycle();
+        m_engine.clearEntry();
+
+        for (const QChar ch : text) {
+            if (ch == ',') {
+                m_engine.pressDigit(".");
+            } else {
+                m_engine.pressDigit(QString(ch));
+            }
+        }
+
+        if (negative)
+            m_engine.negate();
+
+        updateDisplay();
+        return;
+    }
 
 
     // ── Decimal point (float mode) ────────────────────────────────────────────

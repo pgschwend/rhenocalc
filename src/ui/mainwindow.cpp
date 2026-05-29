@@ -6,6 +6,7 @@
 #include "pages/crchashpage.h"
 #include "themecolors.h"
 #include "info.h"
+#include "core/updater.h"
 #include <QApplication>
 #include <QStyleFactory>
 #include <QFile>
@@ -16,6 +17,9 @@
 #include <QWidget>
 #include <QGuiApplication>
 #include <QIcon>
+#include <QMessageBox>
+#include <QProcess>
+#include <QDir>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -57,6 +61,24 @@ MainWindow::MainWindow(QWidget* parent)
         if (!now && isActiveWindow())
             m_calcPage->setFocus();
     });
+
+    // Auto-update check
+    auto* updater = new Updater(this);
+    connect(updater, &Updater::updateAvailable, this, [this](const QString& version, const QString& url) {
+        auto result = QMessageBox::question(this, "Update Available",
+            QString("A new version %1 is available.\nDo you want to update now?").arg(version),
+            QMessageBox::Yes | QMessageBox::No);
+
+        if (result == QMessageBox::Yes) {
+            QString appDir = QApplication::applicationDirPath();
+            QString script = appDir + "/update.bat";
+            QStringList args;
+            args << url << appDir << QApplication::applicationFilePath();
+            QProcess::startDetached(script, args);
+            QApplication::quit();
+        }
+    });
+    updater->checkForUpdate();
 }
 
 MainWindow::~MainWindow() {}
