@@ -20,6 +20,7 @@
 #include <QMessageBox>
 #include <QProcess>
 #include <QDir>
+#include <QProgressDialog>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -64,18 +65,74 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Auto-update check
     auto* updater = new Updater(this);
-    connect(updater, &Updater::updateAvailable, this, [this](const QString& version, const QString& url) {
+    connect(updater, &Updater::updateAvailable, this, [this, updater](const QString& version, const QString& url) {
         auto result = QMessageBox::question(this, "Update Available",
             QString("A new version %1 is available.\nDo you want to update now?").arg(version),
             QMessageBox::Yes | QMessageBox::No);
 
         if (result == QMessageBox::Yes) {
-            QString appDir = QApplication::applicationDirPath();
-            QString script = appDir + "/update.bat";
-            QStringList args;
-            args << url << appDir << QApplication::applicationFilePath();
-            QProcess::startDetached(script, args);
-            QApplication::quit();
+            // Create progress dialog for download
+            auto* progress = new QProgressDialog("Downloading update...", "Cancel", 0, 100, this);
+            progress->setWindowModality(Qt::WindowModal);
+            progress->setMinimumDuration(0);
+            progress->setValue(0);
+            progress->show();
+
+            connect(updater, &Updater::downloadProgress, this, [progress](qint64 received, qint64 total) {
+                if (total > 0) {
+                    progress->setMaximum(static_cast<int>(total));
+                    progress->setValue(static_cast<int>(received));
+                    progress->setLabelText(QString("Downloading... %1 / %2 KB")
+                        .arg(received / 1024).arg(total / 1024));
+                } else {
+                    progress->setMaximum(0); // Indeterminate
+                    progress->setLabelText("Downloading...");
+                }
+            });
+
+            connect(updater, &Updater::downloadFinished, this, [this, updater, progress](const QString& zipPath) {
+                progress->setMaximum(0); // Indeterminate animation
+                progress->setLabelText("Extracting update...");
+                progress->setCancelButton(nullptr); // Can't cancel during extraction
+
+                connect(updater, &Updater::extractFinished, this, [this, updater, progress](const QString& extractedDir) {
+                    progress->close();
+                    progress->deleteLater();
+
+                    // Cleanup updater resources before quitting
+                    updater->cleanup();
+
+                    // Start batch script to copy files and restart
+                    QString appDir = QApplication::applicationDirPath();
+                    QString script = appDir + "/update.bat";
+                    QString appExe = QApplication::applicationFilePath();
+
+                    bool started = QProcess::startDetached("cmd.exe",
+                        QStringList{"/c", "call", script, extractedDir, appDir, appExe}, appDir);
+
+                    if (!started) {
+                        QMessageBox::warning(this, "Update Error",
+                            "Could not start the update script.\nPlease update manually.");
+                        return;
+                    }
+
+                    QApplication::quit();
+                });
+
+                updater->extractUpdate(zipPath);
+            });
+
+            connect(updater, &Updater::updateError, this, [this, progress](const QString& error) {
+                progress->close();
+                progress->deleteLater();
+                QMessageBox::warning(this, "Update Error", error);
+            });
+
+            connect(progress, &QProgressDialog::canceled, this, [updater]() {
+                updater->cleanup();
+            });
+
+            updater->downloadUpdate(url);
         }
     });
     updater->checkForUpdate();

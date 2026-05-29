@@ -1,10 +1,27 @@
 @echo off
 setlocal enabledelayedexpansion
+title RhenoCalc Updater
 
-:: Arguments: %1 = download URL, %2 = app directory, %3 = app executable path
-set "DOWNLOAD_URL=%~1"
+:: Arguments: %1 = extracted update folder, %2 = app directory, %3 = app executable path
+set "UPDATE_DIR=%~1"
 set "APP_DIR=%~2"
 set "APP_EXE=%~3"
+
+echo ============================================
+echo  RhenoCalc Update Script
+echo ============================================
+echo.
+echo Update source: %UPDATE_DIR%
+echo Target:        %APP_DIR%
+echo Executable:    %APP_EXE%
+echo.
+
+:: Validate arguments
+if not exist "%UPDATE_DIR%" (
+    echo ERROR: Update directory not found: %UPDATE_DIR%
+    pause
+    exit
+)
 
 :: ── Check if we can write to the app directory ───────────────────────────
 set "TEST_FILE=%APP_DIR%\_write_test.tmp"
@@ -12,46 +29,71 @@ echo test > "%TEST_FILE%" 2>nul
 if exist "%TEST_FILE%" (
     del "%TEST_FILE%" 2>nul
 ) else (
-    :: No write access – re-launch with admin rights
-    powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c \"\"%~f0\" \"%DOWNLOAD_URL%\" \"%APP_DIR%\" \"%APP_EXE%\"\"' -Verb RunAs"
-    exit /b 0
+    echo Requesting administrator rights...
+    powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c \"\"%~f0\" \"%UPDATE_DIR%\" \"%APP_DIR%\" \"%APP_EXE%\"\"' -Verb RunAs"
+    exit
 )
 
 :: Wait for the application to fully close
-timeout /t 2 /nobreak >nul
+echo Waiting for RhenoCalc to close...
+:wait_loop
+tasklist /FI "IMAGENAME eq RhenoCalc.exe" 2>nul | find "RhenoCalc.exe" >nul
+if not errorlevel 1 (
+    timeout /t 1 /nobreak >nul
+    goto wait_loop
+)
+echo Application closed.
+echo.
 
-:: Download to user TEMP (always writable)
-set "ZIP_FILE=%TEMP%\rhenocalc_update.zip"
-set "TEMP_DIR=%TEMP%\rhenocalc_update_temp"
+:: Show what we're copying
+echo Files in update package:
+dir /b "%UPDATE_DIR%"
+echo.
 
-powershell -NoProfile -Command "& { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '%DOWNLOAD_URL%' -OutFile '%ZIP_FILE%' }"
-
-if not exist "%ZIP_FILE%" (
-    echo ERROR: Download failed.
+:: Copy files
+echo Installing update...
+xcopy "%UPDATE_DIR%\*" "%APP_DIR%\" /s /y /q
+if errorlevel 1 (
+    echo ERROR: Failed to copy files!
     pause
-    exit /b 1
+    exit
+)
+echo Files copied successfully.
+echo.
+
+:: ── Cleanup: Delete downloaded ZIP and extracted folder ──────────────────
+echo Cleaning up update files...
+
+:: Delete the extracted update folder
+if exist "%UPDATE_DIR%" (
+    rmdir /s /q "%UPDATE_DIR%"
+    echo Deleted: %UPDATE_DIR%
 )
 
-:: Extract to temp folder
-if exist "%TEMP_DIR%" rmdir /s /q "%TEMP_DIR%"
-powershell -NoProfile -Command "Expand-Archive -Path '%ZIP_FILE%' -DestinationPath '%TEMP_DIR%' -Force"
-
-:: GitHub release zips may have a single root folder or be flat
-set "INNER="
-for /d %%D in ("%TEMP_DIR%\*") do (
-    set "INNER=%%D"
+:: Delete the ZIP file (should be in same directory as extracted folder)
+set "ZIP_FILE=%APP_DIR%\rhenocalc_update.zip"
+if exist "%ZIP_FILE%" (
+    del /f /q "%ZIP_FILE%"
+    echo Deleted: %ZIP_FILE%
 )
 
-if defined INNER (
-    xcopy "!INNER!\*" "%APP_DIR%\" /s /y /q >nul 2>&1
-) else (
-    xcopy "%TEMP_DIR%\*" "%APP_DIR%\" /s /y /q >nul 2>&1
-)
-
-:: Cleanup
-del "%ZIP_FILE%" 2>nul
-rmdir /s /q "%TEMP_DIR%" 2>nul
+echo.
+echo ============================================
+echo  Update complete!
+echo ============================================
+echo.
 
 :: Restart the application
-start "" "%APP_EXE%"
-exit /b 0
+echo Starting RhenoCalc...
+if exist "%APP_EXE%" (
+    start "" "%APP_EXE%"
+) else (
+    start "" "%APP_DIR%\RhenoCalc.exe"
+)
+
+:: Explicitly exit - no ghost processes
+echo.
+echo Updater finished. Closing in 3 seconds...
+timeout /t 3 /nobreak >nul
+endlocal
+exit
