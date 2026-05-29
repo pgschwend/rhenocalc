@@ -74,7 +74,11 @@ void Updater::onReleaseFetched(QNetworkReply* reply)
         if (downloadUrl.isEmpty()) {
             downloadUrl = obj["zipball_url"].toString();
         }
-        emit updateAvailable(tagName, downloadUrl);
+        if (!downloadUrl.isEmpty()) {
+            emit updateAvailable(tagName, downloadUrl);
+        } else {
+            emit checkFailed("Update found but no download asset available.");
+        }
     } else {
         emit noUpdateAvailable();
     }

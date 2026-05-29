@@ -582,6 +582,15 @@ New-Item -ItemType Directory -Force -Path $distAppDir | Out-Null
 
 Copy-Item -Path $builtExe -Destination (Join-Path $distAppDir "$AppName.exe") -Force
 
+# Copy update script
+$updateBat = Join-Path $SourceDir "scripts\update.bat"
+if (Test-Path $updateBat) {
+    Copy-Item -Path $updateBat -Destination (Join-Path $distAppDir "update.bat") -Force
+    Write-Output "Copied update.bat to deployment directory."
+} else {
+    Write-Warning "update.bat not found at '$updateBat' - skipping."
+}
+
 $modeArg = Get-WindeployqtModeArg -Mode $DeployMode
 $deployArgs = @()
 if ($modeArg) {
