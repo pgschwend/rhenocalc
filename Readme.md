@@ -43,6 +43,24 @@ On Windows, the output is `RhenoCalc.exe`. If Qt is detected correctly,
 
 These scripts help package the app with Qt runtime dependencies.
 
+## Installation
+
+### Windows
+
+Place the application folder in a user-writable location such as
+`%LOCALAPPDATA%\RhenoCalc` or any directory inside your user profile.
+Avoid installing it under `C:\Program Files` or other system-protected paths,
+because the built-in auto-update mechanism needs write access to replace files
+and will fail without administrator privileges.
+
+### Linux
+
+Place the application folder in a user-writable location such as
+`~/.local/share/RhenoCalc` or `~/RhenoCalc`.
+Avoid installing it under `/usr/local` or `/opt` unless you want to run
+updates with `sudo`. The auto-update mechanism requires write access to the
+application directory.
+
 ## Project Layout
 
 - `src/pages/`: Qt UI widgets, layouts, and signal/slot wiring
