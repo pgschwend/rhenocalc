@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=RhenoCalc
+Comment=Embedded Engineering Toolbox
+Exec=RhenoCalc
+Icon=calculator
+Categories=Utility;Calculator;
+Terminal=false
+
