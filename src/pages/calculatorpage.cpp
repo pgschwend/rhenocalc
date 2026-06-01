@@ -214,6 +214,9 @@ void CalculatorPage::setupUI() {
     connect(m_baseCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CalculatorPage::onBaseChanged);
     connect(m_widthCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CalculatorPage::onWordWidthChanged);
 
+    // Apply initial word-width / big-mode setting (connect was made after setCurrentIndex)
+    onWordWidthChanged(m_widthCombo->currentIndex());
+
     // Initially disable hex letters
     for (int i = 0; i < 6; ++i) m_hexBtns[i]->setEnabled(false);
 
