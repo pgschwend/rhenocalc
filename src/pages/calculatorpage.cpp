@@ -14,6 +14,7 @@ CalculatorPage::CalculatorPage(QWidget* parent) : QWidget(parent) {
 QPushButton* CalculatorPage::makeBtn(const QString& text, const QString& style) {
     auto* btn = new QPushButton(text, this);
     btn->setMinimumSize(34, 28);
+    btn->setFocusPolicy(Qt::NoFocus);
     btn->setStyleSheet(style.isEmpty() ? ThemeColors::calcNumButton(true) : style);
     return btn;
 }

@@ -2,8 +2,11 @@
 
 #include <QString>
 #include <QStringList>
+#include <boost/multiprecision/cpp_dec_float.hpp>
 
 namespace CalculatorCore {
+
+using BigDecimal = boost::multiprecision::cpp_dec_float_50;
 
 class CalculatorEngine {
 public:
@@ -47,9 +50,9 @@ private:
 	int m_wordBits = 32;
 	long long m_memory = 0;
 
-	QString m_bigCurrent = "0";
-	QString m_bigAccumulator = "0";
-	QString m_bigMemory = "0";
+	BigDecimal m_bigCurrent{0};
+	BigDecimal m_bigAccumulator{0};
+	BigDecimal m_bigMemory{0};
 	QStringList m_infixTokens;
 	int m_openParens = 0;
 
@@ -68,6 +71,9 @@ double applyBinary(double a, double b, const QString& op);
 
 long long applyUnaryInt(long long value, const QString& op, int bits);
 double applyUnaryDouble(double value, const QString& op);
+QString formatBigDecimal(const BigDecimal& value);
+BigDecimal applyBigBinary(const BigDecimal& a, const BigDecimal& b, const QString& op);
+BigDecimal applyBigUnary(const BigDecimal& value, const QString& op);
 
 } // namespace CalculatorCore
 
