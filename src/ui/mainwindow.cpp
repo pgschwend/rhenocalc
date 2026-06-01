@@ -22,6 +22,7 @@
 #include <QDir>
 #include <QProgressDialog>
 #include <QThread>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -139,7 +140,7 @@ MainWindow::MainWindow(QWidget* parent)
             updater->downloadUpdate(url);
         }
     });
-    updater->checkForUpdate();
+    QTimer::singleShot(1500, updater, &Updater::checkForUpdate);
 }
 
 MainWindow::~MainWindow() {}
