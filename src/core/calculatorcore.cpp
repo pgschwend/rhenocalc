@@ -16,7 +16,7 @@ namespace {
 QString bigToQString(const CalculatorCore::BigDecimal& v) {
     // Use default format (scientific when needed) with 12 significant digits
     std::string s = v.str(12);
-    
+
     if (s.empty() || s == "-0") s = "0";
     return QString::fromStdString(s);
 }
