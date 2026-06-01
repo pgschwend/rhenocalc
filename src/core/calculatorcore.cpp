@@ -508,8 +508,23 @@ void CalculatorEngine::pressDigit(const QString& digit) {
     }
 
     if (m_bigMode && m_base == 10) {
-        if (digit == ".")
+        if (digit == ".") {
+            // Switch from big-integer to float mode for decimal input
+            bool ok = false;
+            double val = normalizeBig(m_bigCurrent).toDouble(&ok);
+            m_bigMode = false;
+            m_floatMode = true;
+            m_currentDouble = ok ? val : 0.0;
+            if (m_newInput) {
+                m_inputString = "0.";
+                m_currentDouble = 0.0;
+                m_newInput = false;
+            } else {
+                m_inputString = normalizeBig(m_bigCurrent) + ".";
+            }
+            syncExpressionOperand();
             return;
+        }
 
         QString cur = normalizeBig(m_bigCurrent);
         if (m_newInput || cur == "0") {
