@@ -7,22 +7,16 @@
 #include <QVector>
 
 #include <boost/multiprecision/cpp_dec_float.hpp>
+#include <boost/math/constants/constants.hpp>
 
 namespace {
 
 // ── helpers for BigDecimal ────────────────────────────────────────────────────
 
 QString bigToQString(const CalculatorCore::BigDecimal& v) {
-    std::ostringstream oss;
-    oss << std::setprecision(50) << v;
-    std::string s = oss.str();
-
-    // Remove trailing zeros after decimal point
-    if (s.find('.') != std::string::npos) {
-        size_t last = s.find_last_not_of('0');
-        if (last != std::string::npos && s[last] == '.') --last;
-        s = s.substr(0, last + 1);
-    }
+    // Use default format (scientific when needed) with 12 significant digits
+    std::string s = v.str(12);
+    
     if (s.empty() || s == "-0") s = "0";
     return QString::fromStdString(s);
 }
@@ -651,28 +645,28 @@ void CalculatorEngine::negate() {
 
 void CalculatorEngine::setPi() {
     if (m_bigMode && m_base == 10) {
-        m_bigCurrent = qStringToBig("3.14159265358979323846264338327950288419716939938");
+        m_bigCurrent = boost::math::constants::pi<BigDecimal>();
         m_inputString.clear();
         syncExpressionOperand();
         return;
     }
 
     m_floatMode = true;
-    m_currentDouble = 3.14159265359;
+    m_currentDouble = boost::math::constants::pi<double>();
     m_inputString.clear();
     syncExpressionOperand();
 }
 
 void CalculatorEngine::setEuler() {
     if (m_bigMode && m_base == 10) {
-        m_bigCurrent = qStringToBig("2.71828182845904523536028747135266249775724709370");
+        m_bigCurrent = boost::math::constants::e<BigDecimal>();
         m_inputString.clear();
         syncExpressionOperand();
         return;
     }
 
     m_floatMode = true;
-    m_currentDouble = 2.71828182846;
+    m_currentDouble = boost::math::constants::e<double>();
     m_inputString.clear();
     syncExpressionOperand();
 }
