@@ -7,6 +7,16 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+# ── Boost.Multiprecision via FetchContent ──────────────────────────────────────
+include(FetchContent)
+FetchContent_Declare(
+    Boost
+    URL https://github.com/boostorg/boost/releases/download/boost-1.87.0/boost-1.87.0-cmake.tar.gz
+    DOWNLOAD_EXTRACT_TIMESTAMP ON
+)
+set(BOOST_INCLUDE_LIBRARIES multiprecision math)
+FetchContent_MakeAvailable(Boost)
+
 if(WIN32)
     set(CMAKE_PREFIX_PATH "C:/Qt/6.9.3/mingw_64")
 elseif(UNIX AND NOT APPLE)
@@ -77,6 +87,7 @@ target_link_libraries(RhenoCalc
         Qt::Gui
         Qt::Widgets
         Qt::Network
+        Boost::multiprecision
 )
 
 # Deploy updater script next to executable

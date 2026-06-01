@@ -2,235 +2,37 @@
 
 #include <cmath>
 #include <limits>
+#include <sstream>
+#include <iomanip>
 #include <QVector>
+
+#include <boost/multiprecision/cpp_dec_float.hpp>
 
 namespace {
 
-QString normalizeBig(QString s) {
-    s = s.trimmed();
-    if (s.isEmpty()) return "0";
+// ── helpers for BigDecimal ────────────────────────────────────────────────────
 
-    bool neg = false;
-    if (s.startsWith('+')) s.remove(0, 1);
-    if (s.startsWith('-')) {
-        neg = true;
-        s.remove(0, 1);
+QString bigToQString(const CalculatorCore::BigDecimal& v) {
+    std::ostringstream oss;
+    oss << std::setprecision(50) << v;
+    std::string s = oss.str();
+
+    // Remove trailing zeros after decimal point
+    if (s.find('.') != std::string::npos) {
+        size_t last = s.find_last_not_of('0');
+        if (last != std::string::npos && s[last] == '.') --last;
+        s = s.substr(0, last + 1);
     }
-
-    int i = 0;
-    while (i < s.size() - 1 && s[i] == '0') ++i;
-    s = s.mid(i);
-
-    if (s == "0") neg = false;
-    return neg ? ("-" + s) : s;
+    if (s.empty() || s == "-0") s = "0";
+    return QString::fromStdString(s);
 }
 
-QString absBig(const QString& s) {
-    return s.startsWith('-') ? s.mid(1) : s;
-}
-
-bool isNegBig(const QString& s) {
-    return s.startsWith('-') && s != "0";
-}
-
-int cmpAbsBig(const QString& aIn, const QString& bIn) {
-    const QString a = absBig(normalizeBig(aIn));
-    const QString b = absBig(normalizeBig(bIn));
-    if (a.size() != b.size()) return a.size() < b.size() ? -1 : 1;
-    if (a == b) return 0;
-    return a < b ? -1 : 1;
-}
-
-QString addAbsBig(const QString& aIn, const QString& bIn) {
-    const QString a = absBig(normalizeBig(aIn));
-    const QString b = absBig(normalizeBig(bIn));
-
-    QString out;
-    out.reserve((a.size() > b.size() ? a.size() : b.size()) + 1);
-
-    int i = a.size() - 1;
-    int j = b.size() - 1;
-    int carry = 0;
-    while (i >= 0 || j >= 0 || carry) {
-        int da = (i >= 0) ? (a[i].unicode() - '0') : 0;
-        int db = (j >= 0) ? (b[j].unicode() - '0') : 0;
-        const int sum = da + db + carry;
-        out.prepend(QChar('0' + (sum % 10)));
-        carry = sum / 10;
-        --i;
-        --j;
+CalculatorCore::BigDecimal qStringToBig(const QString& s) {
+    try {
+        return CalculatorCore::BigDecimal(s.toStdString());
+    } catch (...) {
+        return CalculatorCore::BigDecimal(0);
     }
-    return normalizeBig(out);
-}
-
-QString subAbsBig(const QString& aIn, const QString& bIn) {
-    // assumes |a| >= |b|
-    const QString a = absBig(normalizeBig(aIn));
-    const QString b = absBig(normalizeBig(bIn));
-
-    QString out;
-    out.reserve(a.size());
-
-    int i = a.size() - 1;
-    int j = b.size() - 1;
-    int borrow = 0;
-    while (i >= 0) {
-        int da = a[i].unicode() - '0' - borrow;
-        int db = (j >= 0) ? (b[j].unicode() - '0') : 0;
-        if (da < db) {
-            da += 10;
-            borrow = 1;
-        } else {
-            borrow = 0;
-        }
-        out.prepend(QChar('0' + (da - db)));
-        --i;
-        --j;
-    }
-    return normalizeBig(out);
-}
-
-QString addSignedBig(const QString& aIn, const QString& bIn) {
-    const QString a = normalizeBig(aIn);
-    const QString b = normalizeBig(bIn);
-    const bool na = isNegBig(a);
-    const bool nb = isNegBig(b);
-
-    if (na == nb) {
-        const QString sum = addAbsBig(a, b);
-        if (na && sum != "0") return "-" + sum;
-        return sum;
-    }
-
-    const int cmp = cmpAbsBig(a, b);
-    if (cmp == 0) return "0";
-    if (cmp > 0) {
-        const QString d = subAbsBig(a, b);
-        return na ? "-" + d : d;
-    }
-    const QString d = subAbsBig(b, a);
-    return nb ? "-" + d : d;
-}
-
-QString mulAbsBig(const QString& aIn, const QString& bIn) {
-    const QString a = absBig(normalizeBig(aIn));
-    const QString b = absBig(normalizeBig(bIn));
-    if (a == "0" || b == "0") return "0";
-
-    QVector<int> acc(a.size() + b.size(), 0);
-    for (int i = a.size() - 1; i >= 0; --i) {
-        const int da = a[i].unicode() - '0';
-        for (int j = b.size() - 1; j >= 0; --j) {
-            const int db = b[j].unicode() - '0';
-            const int idx = i + j + 1;
-            const int prod = da * db + acc[idx];
-            acc[idx] = prod % 10;
-            acc[idx - 1] += prod / 10;
-        }
-    }
-
-    QString out;
-    bool started = false;
-    for (int v : acc) {
-        if (!started && v == 0) continue;
-        started = true;
-        out.append(QChar('0' + v));
-    }
-    return out.isEmpty() ? "0" : out;
-}
-
-QString mulSignedBig(const QString& a, const QString& b) {
-    const bool neg = isNegBig(normalizeBig(a)) ^ isNegBig(normalizeBig(b));
-    const QString p = mulAbsBig(a, b);
-    if (neg && p != "0") return "-" + p;
-    return p;
-}
-
-QString mulByDigitAbs(const QString& aIn, int digit) {
-    if (digit <= 0) return "0";
-    if (digit == 1) return absBig(normalizeBig(aIn));
-
-    const QString a = absBig(normalizeBig(aIn));
-    QString out;
-    int carry = 0;
-    for (int i = a.size() - 1; i >= 0; --i) {
-        const int da = a[i].unicode() - '0';
-        const int p = da * digit + carry;
-        out.prepend(QChar('0' + (p % 10)));
-        carry = p / 10;
-    }
-    while (carry) {
-        out.prepend(QChar('0' + (carry % 10)));
-        carry /= 10;
-    }
-    return normalizeBig(out);
-}
-
-QPair<QString, QString> divmodAbsBig(const QString& aIn, const QString& bIn) {
-    const QString a = absBig(normalizeBig(aIn));
-    const QString b = absBig(normalizeBig(bIn));
-    if (b == "0") return {"0", "0"};
-    if (cmpAbsBig(a, b) < 0) return {"0", a};
-
-    QString quotient;
-    QString rem = "0";
-    quotient.reserve(a.size());
-
-    for (int i = 0; i < a.size(); ++i) {
-        rem = normalizeBig(rem + a.mid(i, 1));
-
-        int qd = 0;
-        for (int d = 9; d >= 1; --d) {
-            const QString t = mulByDigitAbs(b, d);
-            if (cmpAbsBig(t, rem) <= 0) {
-                qd = d;
-                rem = subAbsBig(rem, t);
-                break;
-            }
-        }
-        quotient.append(QChar('0' + qd));
-    }
-
-    return {normalizeBig(quotient), normalizeBig(rem)};
-}
-
-QPair<QString, QString> divmodSignedBig(const QString& aIn, const QString& bIn) {
-    const QString a = normalizeBig(aIn);
-    const QString b = normalizeBig(bIn);
-    if (b == "0") return {"0", "0"};
-
-    const bool negQ = isNegBig(a) ^ isNegBig(b);
-    const bool negR = isNegBig(a);
-    auto qr = divmodAbsBig(a, b);
-
-    QString q = qr.first;
-    QString r = qr.second;
-    if (negQ && q != "0") q.prepend('-');
-    if (negR && r != "0") r.prepend('-');
-    return {normalizeBig(q), normalizeBig(r)};
-}
-
-QString applyBigBinary(const QString& aIn, const QString& bIn, const QString& op) {
-    const QString a = normalizeBig(aIn);
-    const QString b = normalizeBig(bIn);
-
-    if (op == "+") return addSignedBig(a, b);
-    if (op == "-") return addSignedBig(a, b.startsWith('-') ? b.mid(1) : ("-" + b));
-    if (op == "*") return mulSignedBig(a, b);
-    if (op == "/") return divmodSignedBig(a, b).first;
-    if (op == "MOD") return divmodSignedBig(a, b).second;
-
-    // Bitwise operators in big-decimal mode: fallback to long long if possible.
-    bool okA = false;
-    bool okB = false;
-    const long long la = a.toLongLong(&okA);
-    const long long lb = b.toLongLong(&okB);
-    if (okA && okB) {
-        if (op == "AND") return QString::number(la & lb);
-        if (op == "OR") return QString::number(la | lb);
-        if (op == "XOR") return QString::number(la ^ lb);
-    }
-    return a;
 }
 
 bool isBinaryOperatorToken(const QString& token) {
@@ -343,24 +145,22 @@ bool evalDoubleRpn(const QStringList& rpn, double* result) {
     return true;
 }
 
-bool evalBigRpn(const QStringList& rpn, QString* result) {
-    QVector<QString> st;
+bool evalBigRpn(const QStringList& rpn, CalculatorCore::BigDecimal* result) {
+    QVector<CalculatorCore::BigDecimal> st;
     for (const QString& tk : rpn) {
         if (isBinaryOperatorToken(tk)) {
             if (st.size() < 2)
                 return false;
-            const QString b = st.back(); st.pop_back();
-            const QString a = st.back(); st.pop_back();
-            st.push_back(normalizeBig(applyBigBinary(a, b, tk)));
+            const auto b = st.back(); st.pop_back();
+            const auto a = st.back(); st.pop_back();
+            st.push_back(CalculatorCore::applyBigBinary(a, b, tk));
             continue;
         }
-
-        st.push_back(normalizeBig(tk));
+        st.push_back(qStringToBig(tk));
     }
-
     if (st.size() != 1)
         return false;
-    *result = normalizeBig(st.back());
+    *result = st.back();
     return true;
 }
 
@@ -394,15 +194,50 @@ QString formatDouble(double value) {
     return QString::number(value, 'g', 12);
 }
 
+QString formatBigDecimal(const BigDecimal& value) {
+    return bigToQString(value);
+}
+
+BigDecimal applyBigBinary(const BigDecimal& a, const BigDecimal& b, const QString& op) {
+    if (op == "+") return a + b;
+    if (op == "-") return a - b;
+    if (op == "*") return a * b;
+    if (op == "/") return b != 0 ? a / b : BigDecimal(0);
+    if (op == "MOD") {
+        if (b == 0) return BigDecimal(0);
+        BigDecimal q = a / b;
+        q = boost::multiprecision::trunc(q);
+        return a - q * b;
+    }
+    // Bitwise: fallback to long long
+    long long la = static_cast<long long>(a);
+    long long lb = static_cast<long long>(b);
+    if (op == "AND") return BigDecimal(la & lb);
+    if (op == "OR")  return BigDecimal(la | lb);
+    if (op == "XOR") return BigDecimal(la ^ lb);
+    return a;
+}
+
+BigDecimal applyBigUnary(const BigDecimal& value, const QString& op) {
+    if (op == "SQ")   return value * value;
+    if (op == "SQRT") return value >= 0 ? boost::multiprecision::sqrt(value) : BigDecimal(0);
+    if (op == "1/x")  return value != 0 ? BigDecimal(1) / value : BigDecimal(0);
+    if (op == "log")  return value > 0 ? boost::multiprecision::log10(value) : BigDecimal(0);
+    if (op == "ln")   return value > 0 ? boost::multiprecision::log(value) : BigDecimal(0);
+    if (op == "NOT") {
+        long long v = static_cast<long long>(value);
+        return BigDecimal(~v);
+    }
+    if (op == "LSL") return value * 2;
+    if (op == "LSR") return boost::multiprecision::trunc(value / 2);
+    return value;
+}
+
 void CalculatorEngine::setBase(int base) {
     m_base = base;
     if (m_bigMode && m_base != 10) {
-        bool okCur = false;
-        bool okAcc = false;
-        m_current = normalizeBig(m_bigCurrent).toLongLong(&okCur);
-        m_accumulator = normalizeBig(m_bigAccumulator).toLongLong(&okAcc);
-        if (!okCur) m_current = 0;
-        if (!okAcc) m_accumulator = 0;
+        m_current = static_cast<long long>(m_bigCurrent);
+        m_accumulator = static_cast<long long>(m_bigAccumulator);
     }
     if (m_base != 10 && m_floatMode) {
         m_floatMode = false;
@@ -426,15 +261,11 @@ void CalculatorEngine::setBigMode(bool enabled) {
     if (m_bigMode) {
         m_floatMode = false;
         m_inputString.clear();
-        m_bigCurrent = QString::number(m_current);
-        m_bigAccumulator = QString::number(m_accumulator);
+        m_bigCurrent = BigDecimal(m_current);
+        m_bigAccumulator = BigDecimal(m_accumulator);
     } else {
-        bool okCur = false;
-        bool okAcc = false;
-        m_current = normalizeBig(m_bigCurrent).toLongLong(&okCur);
-        m_accumulator = normalizeBig(m_bigAccumulator).toLongLong(&okAcc);
-        if (!okCur) m_current = 0;
-        if (!okAcc) m_accumulator = 0;
+        m_current = static_cast<long long>(m_bigCurrent);
+        m_accumulator = static_cast<long long>(m_bigAccumulator);
     }
     m_newInput = true;
 }
@@ -444,7 +275,7 @@ bool CalculatorEngine::isClearState() const {
         return false;
 
     if (m_bigMode && m_base == 10)
-        return normalizeBig(m_bigCurrent) == "0" && m_newInput;
+        return m_bigCurrent == 0 && m_newInput;
 
     if (m_floatMode) {
         if (!m_inputString.isEmpty())
@@ -456,8 +287,11 @@ bool CalculatorEngine::isClearState() const {
 }
 
 QString CalculatorEngine::displayText() const {
-    if (m_bigMode && m_base == 10)
-        return normalizeBig(m_bigCurrent);
+    if (m_bigMode && m_base == 10) {
+        if (!m_inputString.isEmpty())
+            return m_inputString;
+        return bigToQString(m_bigCurrent);
+    }
 
     if (m_floatMode) {
         if (!m_inputString.isEmpty())
@@ -468,8 +302,11 @@ QString CalculatorEngine::displayText() const {
 }
 
 QString CalculatorEngine::currentOperandToken() const {
-    if (m_bigMode && m_base == 10)
-        return normalizeBig(m_bigCurrent);
+    if (m_bigMode && m_base == 10) {
+        if (!m_inputString.isEmpty())
+            return m_inputString;
+        return bigToQString(m_bigCurrent);
+    }
     if (m_floatMode) {
         if (!m_inputString.isEmpty())
             return m_inputString;
@@ -509,31 +346,32 @@ void CalculatorEngine::pressDigit(const QString& digit) {
 
     if (m_bigMode && m_base == 10) {
         if (digit == ".") {
-            // Switch from big-integer to float mode for decimal input
-            bool ok = false;
-            double val = normalizeBig(m_bigCurrent).toDouble(&ok);
-            m_bigMode = false;
-            m_floatMode = true;
-            m_currentDouble = ok ? val : 0.0;
+            QString cur = !m_inputString.isEmpty() ? m_inputString : bigToQString(m_bigCurrent);
+            if (cur.contains('.')) return;
             if (m_newInput) {
                 m_inputString = "0.";
-                m_currentDouble = 0.0;
+                m_bigCurrent = BigDecimal(0);
                 m_newInput = false;
             } else {
-                m_inputString = normalizeBig(m_bigCurrent) + ".";
+                m_inputString = cur + ".";
             }
             syncExpressionOperand();
             return;
         }
 
-        QString cur = normalizeBig(m_bigCurrent);
-        if (m_newInput || cur == "0") {
-            cur = digit;
+        if (m_newInput) {
+            m_inputString = digit;
+            m_bigCurrent = qStringToBig(digit);
             m_newInput = false;
         } else {
-            cur += digit;
+            if (m_inputString.isEmpty())
+                m_inputString = bigToQString(m_bigCurrent);
+            if (m_inputString == "0")
+                m_inputString = digit;
+            else
+                m_inputString += digit;
+            m_bigCurrent = qStringToBig(m_inputString);
         }
-        m_bigCurrent = normalizeBig(cur);
         syncExpressionOperand();
         return;
     }
@@ -637,6 +475,7 @@ void CalculatorEngine::pressOperator(const QString& op) {
     m_expression = m_infixTokens.join(" ");
     m_pendingOp.clear();
     m_newInput = true;
+    m_inputString.clear();
 }
 
 void CalculatorEngine::equals() {
@@ -665,13 +504,14 @@ void CalculatorEngine::equals() {
         }
 
         if (m_bigMode && m_base == 10) {
-            QString res;
+            BigDecimal res;
             if (!evalBigRpn(rpn, &res)) {
                 m_expression = "Error";
                 resetExpressionBuilder();
                 return;
             }
-            m_bigCurrent = normalizeBig(res);
+            m_bigCurrent = res;
+            m_inputString.clear();
         } else if (m_floatMode) {
             double res = 0.0;
             if (!evalDoubleRpn(rpn, &res)) {
@@ -701,11 +541,11 @@ void CalculatorEngine::equals() {
     if (m_pendingOp.isEmpty()) return;
 
     if (m_bigMode && m_base == 10) {
-        const QString a = normalizeBig(m_bigAccumulator);
-        const QString b = normalizeBig(m_bigCurrent);
-        const QString res = applyBigBinary(a, b, m_pendingOp);
+        const QString a = bigToQString(m_bigAccumulator);
+        const QString b = bigToQString(m_bigCurrent);
+        m_bigCurrent = applyBigBinary(m_bigAccumulator, m_bigCurrent, m_pendingOp);
         m_expression = a + " " + m_pendingOp + " " + b + " =";
-        m_bigCurrent = normalizeBig(res);
+        m_inputString.clear();
         m_pendingOp.clear();
         m_newInput = true;
         return;
@@ -743,15 +583,17 @@ void CalculatorEngine::clearAll() {
     m_newInput = true;
     m_expression.clear();
     m_memory = 0;
-    m_bigCurrent = "0";
-    m_bigAccumulator = "0";
-    m_bigMemory = "0";
+    m_bigCurrent = BigDecimal(0);
+    m_bigAccumulator = BigDecimal(0);
+    m_bigMemory = BigDecimal(0);
     resetExpressionBuilder();
 }
 
 void CalculatorEngine::clearEntry() {
-    if (m_bigMode && m_base == 10)
-        m_bigCurrent = "0";
+    if (m_bigMode && m_base == 10) {
+        m_bigCurrent = BigDecimal(0);
+        m_inputString.clear();
+    }
     m_current = 0;
     m_newInput = true;
     syncExpressionOperand();
@@ -759,11 +601,13 @@ void CalculatorEngine::clearEntry() {
 
 void CalculatorEngine::backspace() {
     if (m_bigMode && m_base == 10) {
-        QString s = normalizeBig(m_bigCurrent);
+        QString s = !m_inputString.isEmpty() ? m_inputString : bigToQString(m_bigCurrent);
         bool neg = s.startsWith('-');
         if (neg) s.remove(0, 1);
         if (s.length() > 1) s.chop(1); else s = "0";
-        m_bigCurrent = normalizeBig((neg && s != "0") ? ("-" + s) : s);
+        if (neg && s != "0") s.prepend('-');
+        m_inputString = s.contains('.') ? s : QString();
+        m_bigCurrent = qStringToBig(s);
         syncExpressionOperand();
         return;
     }
@@ -790,8 +634,8 @@ void CalculatorEngine::backspace() {
 
 void CalculatorEngine::negate() {
     if (m_bigMode && m_base == 10) {
-        const QString s = normalizeBig(m_bigCurrent);
-        m_bigCurrent = (s == "0") ? "0" : (s.startsWith('-') ? s.mid(1) : ("-" + s));
+        m_bigCurrent = -m_bigCurrent;
+        m_inputString.clear();
         syncExpressionOperand();
         return;
     }
@@ -806,8 +650,12 @@ void CalculatorEngine::negate() {
 }
 
 void CalculatorEngine::setPi() {
-    if (m_bigMode && m_base == 10)
+    if (m_bigMode && m_base == 10) {
+        m_bigCurrent = qStringToBig("3.14159265358979323846264338327950288419716939938");
+        m_inputString.clear();
+        syncExpressionOperand();
         return;
+    }
 
     m_floatMode = true;
     m_currentDouble = 3.14159265359;
@@ -816,8 +664,12 @@ void CalculatorEngine::setPi() {
 }
 
 void CalculatorEngine::setEuler() {
-    if (m_bigMode && m_base == 10)
+    if (m_bigMode && m_base == 10) {
+        m_bigCurrent = qStringToBig("2.71828182845904523536028747135266249775724709370");
+        m_inputString.clear();
+        syncExpressionOperand();
         return;
+    }
 
     m_floatMode = true;
     m_currentDouble = 2.71828182846;
@@ -827,51 +679,50 @@ void CalculatorEngine::setEuler() {
 
 void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
     if (m_bigMode && m_base == 10) {
-        const QString a = normalizeBig(m_bigAccumulator);
-        const QString b = normalizeBig(m_bigCurrent);
-        QString res = b;
+        const QString bStr = bigToQString(m_bigCurrent);
 
         if (op == "AND" || op == "OR" || op == "XOR") {
             if (!m_pendingOp.isEmpty() && (m_pendingOp == "AND" || m_pendingOp == "OR" || m_pendingOp == "XOR")) {
-                res = applyBigBinary(a, b, m_pendingOp);
+                m_bigCurrent = applyBigBinary(m_bigAccumulator, m_bigCurrent, m_pendingOp);
+                m_inputString.clear();
                 m_pendingOp.clear();
                 m_newInput = true;
-                m_bigCurrent = normalizeBig(res);
                 return;
             }
-            m_bigAccumulator = b;
+            m_bigAccumulator = m_bigCurrent;
             m_pendingOp = op;
-            m_expression = b + " " + op;
+            m_expression = bStr + " " + op;
             m_newInput = true;
             return;
         }
 
-        if (op == "NOT") {
-            bool ok = false;
-            const long long v = b.toLongLong(&ok);
-            if (!ok) return;
-            res = QString::number(~v);
-        }
-        else if (op == "LSL") res = mulSignedBig(b, "2");
-        else if (op == "LSR") res = divmodSignedBig(b, "2").first;
-        else if (op == "MS") {
-            m_bigMemory = b;
-            m_expression = "M← " + b;
-            return;
-        } else if (op == "MR") {
-            res = m_bigMemory;
-            m_expression = "M→ " + normalizeBig(m_bigMemory);
-        } else if (op == "MC") {
-            m_bigMemory = "0";
-            m_expression = "M cleared";
-            return;
-        } else {
-            // Unsupported in big-int mode (e.g. sqrt, 1/x, rol/ror)
+        if (op == "SQ" || op == "SQRT" || op == "1/x" || op == "log" || op == "ln" ||
+            op == "NOT" || op == "LSL" || op == "LSR") {
+            m_bigCurrent = applyBigUnary(m_bigCurrent, op);
+            m_inputString.clear();
+            m_newInput = true;
             return;
         }
 
-        m_bigCurrent = normalizeBig(res);
-        m_newInput = true;
+        if (op == "MS") {
+            m_bigMemory = m_bigCurrent;
+            m_expression = "M← " + bStr;
+            return;
+        }
+        if (op == "MR") {
+            m_bigCurrent = m_bigMemory;
+            m_inputString.clear();
+            m_expression = "M→ " + bigToQString(m_bigMemory);
+            m_newInput = true;
+            return;
+        }
+        if (op == "MC") {
+            m_bigMemory = BigDecimal(0);
+            m_expression = "M cleared";
+            return;
+        }
+
+        // Unsupported (ROL, ROR)
         return;
     }
 
