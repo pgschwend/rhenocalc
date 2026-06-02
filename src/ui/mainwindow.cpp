@@ -22,6 +22,7 @@
 #include <QDir>
 #include <QProgressDialog>
 #include <QThread>
+#include <QTabBar>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -173,7 +174,7 @@ void MainWindow::restoreWindowGeometry() {
 }
 
 void MainWindow::setupUI() {
-    m_tabWidget = new QTabWidget(this);
+    m_tabWidget = new FixedTabWidget(this);
 
     m_calcPage = new CalculatorPage(this);
     m_basePage = new BaseConverterPage(this);
@@ -181,11 +182,49 @@ void MainWindow::setupUI() {
     m_networkPage = new NetworkPage(this);
     m_crcHashPage = new CrcHashPage(this);
 
-    m_tabWidget->addTab(m_calcPage, "Calc");
-    m_tabWidget->addTab(m_basePage, "Base");
-    m_tabWidget->addTab(m_unitPage, "Unit");
-    m_tabWidget->addTab(m_networkPage, "Network");
-    m_tabWidget->addTab(m_crcHashPage, "CRC/Hash");
+    // Hide pages not initially in the tab widget so they don't appear as floating children
+    m_networkPage->hide();
+    m_crcHashPage->hide();
+
+    m_tabWidget->addTab(m_calcPage, "Calc");       // index 0 - fixed
+    m_tabWidget->addTab(m_basePage, "Base");       // index 1 - fixed
+    m_tabWidget->addTab(m_unitPage, "Unit");       // index 2 - dynamic slot (default: Unit)
+    m_tabWidget->addTab(new QWidget(this), "▾");   // index 3 - "More" menu trigger
+
+    // Prevent tab bar from stretching tabs to fill the width
+    m_tabWidget->tabBar()->setExpanding(false);
+
+    // Build the list of extra pages available via "More"
+    m_extraPages = {
+        {"Unit",     m_unitPage},
+        {"Network",  m_networkPage},
+        {"CRC/Hash", m_crcHashPage},
+    };
+
+    // Build the "More" popup menu
+    m_moreMenu = new QMenu(this);
+    for (const auto& [name, page] : m_extraPages) {
+        m_moreMenu->addAction(name, this, [this, page, name]() {
+            switchDynamicTab(page, name);
+        });
+    }
+
+    // Intercept click on the "More" tab (index 3): show menu instead of switching
+    connect(m_tabWidget, &QTabWidget::tabBarClicked, this, [this](int index) {
+        if (index == 3) {
+            // Show menu below the "More" tab
+            QRect tabRect = m_tabWidget->tabBar()->tabRect(3);
+            QPoint pos = m_tabWidget->tabBar()->mapToGlobal(tabRect.bottomLeft());
+            m_moreMenu->popup(pos);
+        }
+    });
+
+    // Prevent the "More" tab from actually being selected
+    connect(m_tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
+        if (index == 3) {
+            m_tabWidget->setCurrentIndex(2); // stay on the dynamic tab
+        }
+    });
 
     // Buttons top right in the tab bar
     m_onTopBtn = new QPushButton(this);
@@ -305,3 +344,19 @@ void MainWindow::updateOnTopButton() {
     }
     m_onTopBtn->setStyleSheet(style);
 }
+
+void MainWindow::switchDynamicTab(QWidget* page, const QString& title) {
+    // Replace the widget at index 2 (the dynamic slot)
+    QWidget* current = m_tabWidget->widget(2);
+    if (current == page) {
+        // Already showing this page, just focus it
+        m_tabWidget->setCurrentIndex(2);
+        return;
+    }
+
+    // Remove old dynamic tab and insert new one at same position
+    m_tabWidget->removeTab(2);
+    m_tabWidget->insertTab(2, page, title);
+    m_tabWidget->setCurrentIndex(2);
+}
+
