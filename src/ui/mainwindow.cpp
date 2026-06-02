@@ -23,6 +23,7 @@
 #include <QProgressDialog>
 #include <QThread>
 #include <QTabBar>
+#include <memory>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -210,19 +211,22 @@ void MainWindow::setupUI() {
     }
 
     // Intercept click on the "More" tab (index 3): show menu instead of switching
-    connect(m_tabWidget, &QTabWidget::tabBarClicked, this, [this](int index) {
+    auto previousTab = std::make_shared<int>(0);
+    connect(m_tabWidget, &QTabWidget::tabBarClicked, this, [this, previousTab](int index) {
         if (index == 3) {
             // Show menu below the "More" tab
             QRect tabRect = m_tabWidget->tabBar()->tabRect(3);
             QPoint pos = m_tabWidget->tabBar()->mapToGlobal(tabRect.bottomLeft());
             m_moreMenu->popup(pos);
+        } else {
+            *previousTab = index;
         }
     });
 
-    // Prevent the "More" tab from actually being selected
-    connect(m_tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
+    // Prevent the "More" tab from actually being selected – return to previous tab
+    connect(m_tabWidget, &QTabWidget::currentChanged, this, [this, previousTab](int index) {
         if (index == 3) {
-            m_tabWidget->setCurrentIndex(2); // stay on the dynamic tab
+            m_tabWidget->setCurrentIndex(*previousTab);
         }
     });
 
