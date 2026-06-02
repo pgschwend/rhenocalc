@@ -14,11 +14,12 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QtMath>
+#include <QIntValidator>
 
 // ─── ColorWheel ───────────────────────────────────────────────────────────────
 
 ColorWheel::ColorWheel(QWidget* parent) : QWidget(parent) {
-    setMinimumSize(200, 200);
+    setMinimumSize(100, 100);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setMouseTracking(false);
 }
@@ -157,11 +158,13 @@ void ColorPage::setupUI() {
 
     // Color Wheel
     m_colorWheel = new ColorWheel;
-    m_colorWheel->setFixedSize(220, 220);
+    m_colorWheel->setMinimumSize(150, 150);
+    m_colorWheel->setMaximumSize(220, 220);
     mainLayout->addWidget(m_colorWheel, 0, Qt::AlignHCenter);
 
     m_preview = new QLabel;
-    m_preview->setFixedHeight(80);
+    m_preview->setMinimumHeight(40);
+    m_preview->setMaximumHeight(80);
     m_preview->setAlignment(Qt::AlignCenter);
     mainLayout->addWidget(m_preview);
     m_colorName = new QLabel;
@@ -174,27 +177,32 @@ void ColorPage::setupUI() {
     hexLayout->addWidget(new QLabel("#"));
     hexLayout->addWidget(m_hexEdit);
     m_pickBtn = new QPushButton("\xe2\x8a\x99 Pick");
-    m_pickBtn->setFixedWidth(70);
+    m_pickBtn->setMinimumWidth(60);
     m_pickBtn->setToolTip("Pick a color from screen");
     hexLayout->addWidget(m_pickBtn);
     mainLayout->addWidget(hexGroup);
-    auto mk = [](int max) { auto* s = new QSpinBox; s->setRange(0, max); s->setAlignment(Qt::AlignCenter); return s; };
+    auto mk = [](int max) {
+        auto* e = new QLineEdit("0");
+        e->setAlignment(Qt::AlignCenter);
+        e->setValidator(new QIntValidator(0, max, e));
+        return e;
+    };
     auto lbl = [](const QString& t) { auto* l = new QLabel(t); l->setFixedWidth(l->fontMetrics().horizontalAdvance(t) + 4); return l; };
     auto* rgbGroup = new QGroupBox("RGB");
     auto* rgbL = new QGridLayout(rgbGroup);
-    m_redSpin = mk(255); m_greenSpin = mk(255); m_blueSpin = mk(255); m_alphaSpin = mk(255);
-    m_alphaSpin->setValue(255);
-    rgbL->addWidget(lbl("R"),0,0); rgbL->addWidget(m_redSpin,0,1);
-    rgbL->addWidget(lbl("G"),0,2); rgbL->addWidget(m_greenSpin,0,3);
-    rgbL->addWidget(lbl("B"),1,0); rgbL->addWidget(m_blueSpin,1,1);
-    rgbL->addWidget(lbl("A"),1,2); rgbL->addWidget(m_alphaSpin,1,3);
+    m_redEdit = mk(255); m_greenEdit = mk(255); m_blueEdit = mk(255); m_alphaEdit = mk(255);
+    m_alphaEdit->setText("255");
+    rgbL->addWidget(lbl("R"),0,0); rgbL->addWidget(m_redEdit,0,1);
+    rgbL->addWidget(lbl("G"),0,2); rgbL->addWidget(m_greenEdit,0,3);
+    rgbL->addWidget(lbl("B"),1,0); rgbL->addWidget(m_blueEdit,1,1);
+    rgbL->addWidget(lbl("A"),1,2); rgbL->addWidget(m_alphaEdit,1,3);
     mainLayout->addWidget(rgbGroup);
     auto* hslGroup = new QGroupBox("HSL");
     auto* hslL = new QGridLayout(hslGroup);
-    m_hueSpin = mk(359); m_satSpin = mk(255); m_lightSpin = mk(255);
-    hslL->addWidget(lbl("H"),0,0); hslL->addWidget(m_hueSpin,0,1);
-    hslL->addWidget(lbl("S"),0,2); hslL->addWidget(m_satSpin,0,3);
-    hslL->addWidget(lbl("L"),1,0); hslL->addWidget(m_lightSpin,1,1);
+    m_hueEdit = mk(359); m_satEdit = mk(255); m_lightEdit = mk(255);
+    hslL->addWidget(lbl("H"),0,0); hslL->addWidget(m_hueEdit,0,1);
+    hslL->addWidget(lbl("S"),0,2); hslL->addWidget(m_satEdit,0,3);
+    hslL->addWidget(lbl("L"),1,0); hslL->addWidget(m_lightEdit,1,1);
     mainLayout->addWidget(hslGroup);
     mainLayout->addStretch();
     scroll->setWidget(content);
@@ -202,13 +210,13 @@ void ColorPage::setupUI() {
     outerLayout->setContentsMargins(0, 0, 0, 0);
     outerLayout->addWidget(scroll);
     connect(m_hexEdit, &QLineEdit::textEdited, this, &ColorPage::onHexChanged);
-    connect(m_redSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &ColorPage::onRgbChanged);
-    connect(m_greenSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &ColorPage::onRgbChanged);
-    connect(m_blueSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &ColorPage::onRgbChanged);
-    connect(m_alphaSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &ColorPage::onRgbChanged);
-    connect(m_hueSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &ColorPage::onHslChanged);
-    connect(m_satSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &ColorPage::onHslChanged);
-    connect(m_lightSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &ColorPage::onHslChanged);
+    connect(m_redEdit, &QLineEdit::textEdited, this, &ColorPage::onRgbChanged);
+    connect(m_greenEdit, &QLineEdit::textEdited, this, &ColorPage::onRgbChanged);
+    connect(m_blueEdit, &QLineEdit::textEdited, this, &ColorPage::onRgbChanged);
+    connect(m_alphaEdit, &QLineEdit::textEdited, this, &ColorPage::onRgbChanged);
+    connect(m_hueEdit, &QLineEdit::textEdited, this, &ColorPage::onHslChanged);
+    connect(m_satEdit, &QLineEdit::textEdited, this, &ColorPage::onHslChanged);
+    connect(m_lightEdit, &QLineEdit::textEdited, this, &ColorPage::onHslChanged);
     connect(m_pickBtn, &QPushButton::clicked, this, &ColorPage::onPickColor);
     connect(m_colorWheel, &ColorWheel::colorChanged, this, [this](const QColor& c) {
         setColor(c, m_colorWheel);
@@ -220,13 +228,13 @@ void ColorPage::setColor(const QColor& color, QWidget* skip) {
     m_updating = true;
     m_currentColor = color;
     if (skip != m_hexEdit) m_hexEdit->setText(color.name(QColor::HexRgb).mid(1).toUpper());
-    if (skip != m_redSpin) m_redSpin->setValue(color.red());
-    if (skip != m_greenSpin) m_greenSpin->setValue(color.green());
-    if (skip != m_blueSpin) m_blueSpin->setValue(color.blue());
-    if (skip != m_alphaSpin) m_alphaSpin->setValue(color.alpha());
-    if (skip != m_hueSpin) m_hueSpin->setValue(qMax(0, color.hslHue()));
-    if (skip != m_satSpin) m_satSpin->setValue(color.hslSaturation());
-    if (skip != m_lightSpin) m_lightSpin->setValue(color.lightness());
+    if (skip != m_redEdit) m_redEdit->setText(QString::number(color.red()));
+    if (skip != m_greenEdit) m_greenEdit->setText(QString::number(color.green()));
+    if (skip != m_blueEdit) m_blueEdit->setText(QString::number(color.blue()));
+    if (skip != m_alphaEdit) m_alphaEdit->setText(QString::number(color.alpha()));
+    if (skip != m_hueEdit) m_hueEdit->setText(QString::number(qMax(0, color.hslHue())));
+    if (skip != m_satEdit) m_satEdit->setText(QString::number(color.hslSaturation()));
+    if (skip != m_lightEdit) m_lightEdit->setText(QString::number(color.lightness()));
     if (skip != m_colorWheel) m_colorWheel->setColor(color);
     updatePreview();
     m_updating = false;
@@ -234,8 +242,7 @@ void ColorPage::setColor(const QColor& color, QWidget* skip) {
 void ColorPage::updatePreview() {
     m_preview->setStyleSheet(QString("background-color: %1; border: 1px solid gray; border-radius: 8px;")
         .arg(m_currentColor.name(QColor::HexArgb)));
-    m_colorName->setText(QString("HEX: #%1  |  RGB(%2, %3, %4)  |  HSL(%5, %6%, %7%)")
-        .arg(m_currentColor.name(QColor::HexRgb).mid(1).toUpper())
+    m_colorName->setText(QString("RGB(%1, %2, %3)  |  HSL(%4, %5%, %6%)")
         .arg(m_currentColor.red()).arg(m_currentColor.green()).arg(m_currentColor.blue())
         .arg(qMax(0, m_currentColor.hslHue()))
         .arg(qRound(m_currentColor.hslSaturationF() * 100))
@@ -248,11 +255,13 @@ void ColorPage::onHexChanged() {
     if (c.isValid()) setColor(c, m_hexEdit);
 }
 void ColorPage::onRgbChanged() {
-    setColor(QColor(m_redSpin->value(), m_greenSpin->value(), m_blueSpin->value(), m_alphaSpin->value()),
+    setColor(QColor(m_redEdit->text().toInt(), m_greenEdit->text().toInt(),
+                    m_blueEdit->text().toInt(), m_alphaEdit->text().toInt()),
              qobject_cast<QWidget*>(sender()));
 }
 void ColorPage::onHslChanged() {
-    setColor(QColor::fromHsl(m_hueSpin->value(), m_satSpin->value(), m_lightSpin->value(), m_alphaSpin->value()),
+    setColor(QColor::fromHsl(m_hueEdit->text().toInt(), m_satEdit->text().toInt(),
+                             m_lightEdit->text().toInt(), m_alphaEdit->text().toInt()),
              qobject_cast<QWidget*>(sender()));
 }
 void ColorPage::onPickColor() {

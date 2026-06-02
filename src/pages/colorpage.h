@@ -2,7 +2,6 @@
 #include <QWidget>
 #include <QLineEdit>
 #include <QLabel>
-#include <QSpinBox>
 #include <QPushButton>
 #include <QColor>
 #include <QImage>
@@ -49,13 +48,13 @@ private:
     void updatePreview();
 
     QLineEdit* m_hexEdit;
-    QSpinBox*  m_redSpin;
-    QSpinBox*  m_greenSpin;
-    QSpinBox*  m_blueSpin;
-    QSpinBox*  m_alphaSpin;
-    QSpinBox*  m_hueSpin;
-    QSpinBox*  m_satSpin;
-    QSpinBox*  m_lightSpin;
+    QLineEdit* m_redEdit;
+    QLineEdit* m_greenEdit;
+    QLineEdit* m_blueEdit;
+    QLineEdit* m_alphaEdit;
+    QLineEdit* m_hueEdit;
+    QLineEdit* m_satEdit;
+    QLineEdit* m_lightEdit;
     QLabel*    m_preview;
     QLabel*    m_colorName;
     QPushButton* m_pickBtn;
