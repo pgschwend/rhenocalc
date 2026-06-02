@@ -188,6 +188,15 @@ void MainWindow::saveWindowGeometry() {
     settings.setValue("windowState", saveState());
     settings.setValue("darkTheme", m_isDark);
     settings.setValue("alwaysOnTop", m_alwaysOnTop);
+
+    // Save the name of the currently shown dynamic tab
+    QWidget* dynWidget = m_tabWidget->widget(2);
+    for (const auto& [name, page] : m_extraPages) {
+        if (page == dynWidget) {
+            settings.setValue("dynamicTab", name);
+            break;
+        }
+    }
 }
 
 void MainWindow::restoreWindowGeometry() {
@@ -230,6 +239,19 @@ void MainWindow::setupUI() {
         {"CRC/Hash", m_crcHashPage},
         {"Color",    m_colorPage},
     };
+
+    // Restore last dynamic tab from settings
+    {
+        QSettings settings("RhenoCalc", "RhenoCalc");
+        QString lastDyn = settings.value("dynamicTab", "Unit").toString();
+        for (const auto& [name, page] : m_extraPages) {
+            if (name == lastDyn && page != m_unitPage) {
+                m_tabWidget->removeTab(2);
+                m_tabWidget->insertTab(2, page, name);
+                break;
+            }
+        }
+    }
 
     // Build the "More" popup menu
     m_moreMenu = new QMenu(this);
