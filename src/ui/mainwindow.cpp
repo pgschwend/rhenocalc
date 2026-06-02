@@ -46,19 +46,43 @@ MainWindow::MainWindow(QWidget* parent)
     // Apply after restoreState/restoreGeometry so restored state does not override the hint.
     applyAlwaysOnTop(m_alwaysOnTop, false);
 
-    // Tab navigation with Shift+Left / Shift+Right
+    // Tab navigation with Ctrl+Left / Ctrl+Right
+    // Virtual order: Calc(0), Base(1), then all extra pages on the dynamic tab (index 2)
+    auto currentVirtual = std::make_shared<int>(0);
+
+    auto navigateTab = [this, currentVirtual](int direction) {
+        int totalPages = 2 + m_extraPages.size(); // Calc, Base + extras
+        *currentVirtual = (*currentVirtual + direction + totalPages) % totalPages;
+
+        if (*currentVirtual < 2) {
+            m_tabWidget->setCurrentIndex(*currentVirtual);
+        } else {
+            int extraIdx = *currentVirtual - 2;
+            switchDynamicTab(m_extraPages[extraIdx].second, m_extraPages[extraIdx].first);
+        }
+        m_calcPage->setFocus();
+    };
+
+    // Keep currentVirtual in sync when user clicks tabs manually
+    connect(m_tabWidget, &QTabWidget::currentChanged, this, [this, currentVirtual](int index) {
+        if (index < 2) {
+            *currentVirtual = index;
+        } else if (index == 2) {
+            // Find which extra page is currently shown
+            QWidget* current = m_tabWidget->widget(2);
+            for (int i = 0; i < m_extraPages.size(); ++i) {
+                if (m_extraPages[i].second == current) {
+                    *currentVirtual = 2 + i;
+                    break;
+                }
+            }
+        }
+    });
+
     auto* prevTab = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Left), this);
-    connect(prevTab, &QShortcut::activated, this, [this]() {
-        int idx = m_tabWidget->currentIndex();
-        m_tabWidget->setCurrentIndex((idx - 1 + m_tabWidget->count()) % m_tabWidget->count());
-        m_calcPage->setFocus();
-    });
+    connect(prevTab, &QShortcut::activated, this, [navigateTab]() { navigateTab(-1); });
     auto* nextTab = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Right), this);
-    connect(nextTab, &QShortcut::activated, this, [this]() {
-        int idx = m_tabWidget->currentIndex();
-        m_tabWidget->setCurrentIndex((idx + 1) % m_tabWidget->count());
-        m_calcPage->setFocus();
-    });
+    connect(nextTab, &QShortcut::activated, this, [navigateTab]() { navigateTab(1); });
 
     // Return focus to the calculator when clicking on empty area
     connect(qApp, &QApplication::focusChanged, this, [this](QWidget* /*old*/, QWidget* now) {
