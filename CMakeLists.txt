@@ -42,6 +42,7 @@ set(SOURCES
         src/pages/unitconverterpage.h src/pages/unitconverterpage.cpp
         src/pages/networkpage.cpp
         src/pages/crchashpage.h src/pages/crchashpage.cpp
+        src/pages/colorpage.h src/pages/colorpage.cpp
         src/core/calculatorcore.h src/core/calculatorcore.cpp
         src/core/baseconvertercore.h src/core/baseconvertercore.cpp
         src/core/unitconvertercore.h src/core/unitconvertercore.cpp

@@ -4,6 +4,7 @@
 #include "pages/unitconverterpage.h"
 #include "pages/networkpage.h"
 #include "pages/crchashpage.h"
+#include "pages/colorpage.h"
 #include "themecolors.h"
 #include "info.h"
 #include "core/updater.h"
@@ -32,6 +33,7 @@ MainWindow::MainWindow(QWidget* parent)
     , m_unitPage(nullptr)
     , m_networkPage(nullptr)
     , m_crcHashPage(nullptr)
+    , m_colorPage(nullptr)
 {
     // Load theme from QSettings (default: dark)
     QSettings settings("RhenoCalc", "RhenoCalc");
@@ -45,19 +47,43 @@ MainWindow::MainWindow(QWidget* parent)
     // Apply after restoreState/restoreGeometry so restored state does not override the hint.
     applyAlwaysOnTop(m_alwaysOnTop, false);
 
-    // Tab navigation with Shift+Left / Shift+Right
+    // Tab navigation with Ctrl+Left / Ctrl+Right
+    // Virtual order: Calc(0), Base(1), then all extra pages on the dynamic tab (index 2)
+    auto currentVirtual = std::make_shared<int>(0);
+
+    auto navigateTab = [this, currentVirtual](int direction) {
+        int totalPages = 2 + m_extraPages.size(); // Calc, Base + extras
+        *currentVirtual = (*currentVirtual + direction + totalPages) % totalPages;
+
+        if (*currentVirtual < 2) {
+            m_tabWidget->setCurrentIndex(*currentVirtual);
+        } else {
+            int extraIdx = *currentVirtual - 2;
+            switchDynamicTab(m_extraPages[extraIdx].second, m_extraPages[extraIdx].first);
+        }
+        m_calcPage->setFocus();
+    };
+
+    // Keep currentVirtual in sync when user clicks tabs manually
+    connect(m_tabWidget, &QTabWidget::currentChanged, this, [this, currentVirtual](int index) {
+        if (index < 2) {
+            *currentVirtual = index;
+        } else if (index == 2) {
+            // Find which extra page is currently shown
+            QWidget* current = m_tabWidget->widget(2);
+            for (int i = 0; i < m_extraPages.size(); ++i) {
+                if (m_extraPages[i].second == current) {
+                    *currentVirtual = 2 + i;
+                    break;
+                }
+            }
+        }
+    });
+
     auto* prevTab = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Left), this);
-    connect(prevTab, &QShortcut::activated, this, [this]() {
-        int idx = m_tabWidget->currentIndex();
-        m_tabWidget->setCurrentIndex((idx - 1 + m_tabWidget->count()) % m_tabWidget->count());
-        m_calcPage->setFocus();
-    });
+    connect(prevTab, &QShortcut::activated, this, [navigateTab]() { navigateTab(-1); });
     auto* nextTab = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Right), this);
-    connect(nextTab, &QShortcut::activated, this, [this]() {
-        int idx = m_tabWidget->currentIndex();
-        m_tabWidget->setCurrentIndex((idx + 1) % m_tabWidget->count());
-        m_calcPage->setFocus();
-    });
+    connect(nextTab, &QShortcut::activated, this, [navigateTab]() { navigateTab(1); });
 
     // Return focus to the calculator when clicking on empty area
     connect(qApp, &QApplication::focusChanged, this, [this](QWidget* /*old*/, QWidget* now) {
@@ -161,6 +187,15 @@ void MainWindow::saveWindowGeometry() {
     settings.setValue("windowState", saveState());
     settings.setValue("darkTheme", m_isDark);
     settings.setValue("alwaysOnTop", m_alwaysOnTop);
+
+    // Save the name of the currently shown dynamic tab
+    QWidget* dynWidget = m_tabWidget->widget(2);
+    for (const auto& [name, page] : m_extraPages) {
+        if (page == dynWidget) {
+            settings.setValue("dynamicTab", name);
+            break;
+        }
+    }
 }
 
 void MainWindow::restoreWindowGeometry() {
@@ -174,19 +209,76 @@ void MainWindow::restoreWindowGeometry() {
 }
 
 void MainWindow::setupUI() {
-    m_tabWidget = new QTabWidget(this);
+    m_tabWidget = new FixedTabWidget(this);
 
     m_calcPage = new CalculatorPage(this);
     m_basePage = new BaseConverterPage(this);
     m_unitPage = new UnitConverterPage(this);
     m_networkPage = new NetworkPage(this);
     m_crcHashPage = new CrcHashPage(this);
+    m_colorPage = new ColorPage(this);
 
-    m_tabWidget->addTab(m_calcPage, "Calc");
-    m_tabWidget->addTab(m_basePage, "Base");
-    m_tabWidget->addTab(m_unitPage, "Unit");
-    m_tabWidget->addTab(m_networkPage, "Network");
-    m_tabWidget->addTab(m_crcHashPage, "CRC/Hash");
+    // Hide pages not initially in the tab widget so they don't appear as floating children
+    m_networkPage->hide();
+    m_crcHashPage->hide();
+    m_colorPage->hide();
+
+    m_tabWidget->addTab(m_calcPage, "Calc");       // index 0 - fixed
+    m_tabWidget->addTab(m_basePage, "Base");       // index 1 - fixed
+    m_tabWidget->addTab(m_unitPage, "Unit");       // index 2 - dynamic slot (default: Unit)
+    m_tabWidget->addTab(new QWidget(this), "▾");   // index 3 - "More" menu trigger
+
+    // Prevent tab bar from stretching tabs to fill the width
+    m_tabWidget->tabBar()->setExpanding(false);
+
+    // Build the list of extra pages available via "More"
+    m_extraPages = {
+        {"Unit",     m_unitPage},
+        {"Network",  m_networkPage},
+        {"CRC/Hash", m_crcHashPage},
+        {"Color",    m_colorPage},
+    };
+
+    // Restore last dynamic tab from settings
+    {
+        QSettings settings("RhenoCalc", "RhenoCalc");
+        QString lastDyn = settings.value("dynamicTab", "Unit").toString();
+        for (const auto& [name, page] : m_extraPages) {
+            if (name == lastDyn && page != m_unitPage) {
+                m_tabWidget->removeTab(2);
+                m_tabWidget->insertTab(2, page, name);
+                break;
+            }
+        }
+    }
+
+    // Build the "More" popup menu
+    m_moreMenu = new QMenu(this);
+    for (const auto& [name, page] : m_extraPages) {
+        m_moreMenu->addAction(name, this, [this, page, name]() {
+            switchDynamicTab(page, name);
+        });
+    }
+
+    // Intercept click on the "More" tab (index 3): show menu instead of switching
+    auto previousTab = std::make_shared<int>(0);
+    connect(m_tabWidget, &QTabWidget::tabBarClicked, this, [this, previousTab](int index) {
+        if (index == 3) {
+            // Show menu below the "More" tab
+            QRect tabRect = m_tabWidget->tabBar()->tabRect(3);
+            QPoint pos = m_tabWidget->tabBar()->mapToGlobal(tabRect.bottomLeft());
+            m_moreMenu->popup(pos);
+        } else {
+            *previousTab = index;
+        }
+    });
+
+    // Prevent the "More" tab from actually being selected – return to previous tab
+    connect(m_tabWidget, &QTabWidget::currentChanged, this, [this, previousTab](int index) {
+        if (index == 3) {
+            m_tabWidget->setCurrentIndex(*previousTab);
+        }
+    });
 
     // Buttons top right in the tab bar
     m_onTopBtn = new QPushButton(this);
@@ -243,6 +335,7 @@ void MainWindow::applyTheme(bool dark) {
     m_unitPage->applyTheme(dark);
     m_networkPage->applyTheme(dark);
     m_crcHashPage->applyTheme(dark);
+    m_colorPage->applyTheme(dark);
 
     // ── Status Bar ────────────────────────────────────────────────────────────
     statusBar()->setStyleSheet(ThemeColors::statusBarStyle(dark));
@@ -306,3 +399,19 @@ void MainWindow::updateOnTopButton() {
     }
     m_onTopBtn->setStyleSheet(style);
 }
+
+void MainWindow::switchDynamicTab(QWidget* page, const QString& title) {
+    // Replace the widget at index 2 (the dynamic slot)
+    QWidget* current = m_tabWidget->widget(2);
+    if (current == page) {
+        // Already showing this page, just focus it
+        m_tabWidget->setCurrentIndex(2);
+        return;
+    }
+
+    // Remove old dynamic tab and insert new one at same position
+    m_tabWidget->removeTab(2);
+    m_tabWidget->insertTab(2, page, title);
+    m_tabWidget->setCurrentIndex(2);
+}
+
