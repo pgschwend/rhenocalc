@@ -16,6 +16,7 @@ class BaseConverterPage;
 class UnitConverterPage;
 class NetworkPage;
 class CrcHashPage;
+class ColorPage;
 
 // Custom tab bar with fixed tab widths
 class FixedTabBar : public QTabBar {
@@ -64,6 +65,7 @@ private:
     UnitConverterPage* m_unitPage;
     NetworkPage*       m_networkPage;
     CrcHashPage*       m_crcHashPage;
+    ColorPage*         m_colorPage;
     QPushButton*       m_onTopBtn = nullptr;
     QPushButton*       m_themeBtn = nullptr;
     QMenu*             m_moreMenu = nullptr;

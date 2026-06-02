@@ -4,6 +4,7 @@
 #include "pages/unitconverterpage.h"
 #include "pages/networkpage.h"
 #include "pages/crchashpage.h"
+#include "pages/colorpage.h"
 #include "themecolors.h"
 #include "info.h"
 #include "core/updater.h"
@@ -33,6 +34,7 @@ MainWindow::MainWindow(QWidget* parent)
     , m_unitPage(nullptr)
     , m_networkPage(nullptr)
     , m_crcHashPage(nullptr)
+    , m_colorPage(nullptr)
 {
     // Load theme from QSettings (default: dark)
     QSettings settings("RhenoCalc", "RhenoCalc");
@@ -206,10 +208,12 @@ void MainWindow::setupUI() {
     m_unitPage = new UnitConverterPage(this);
     m_networkPage = new NetworkPage(this);
     m_crcHashPage = new CrcHashPage(this);
+    m_colorPage = new ColorPage(this);
 
     // Hide pages not initially in the tab widget so they don't appear as floating children
     m_networkPage->hide();
     m_crcHashPage->hide();
+    m_colorPage->hide();
 
     m_tabWidget->addTab(m_calcPage, "Calc");       // index 0 - fixed
     m_tabWidget->addTab(m_basePage, "Base");       // index 1 - fixed
@@ -224,6 +228,7 @@ void MainWindow::setupUI() {
         {"Unit",     m_unitPage},
         {"Network",  m_networkPage},
         {"CRC/Hash", m_crcHashPage},
+        {"Color",    m_colorPage},
     };
 
     // Build the "More" popup menu
@@ -309,6 +314,7 @@ void MainWindow::applyTheme(bool dark) {
     m_unitPage->applyTheme(dark);
     m_networkPage->applyTheme(dark);
     m_crcHashPage->applyTheme(dark);
+    m_colorPage->applyTheme(dark);
 
     // ── Status Bar ────────────────────────────────────────────────────────────
     statusBar()->setStyleSheet(ThemeColors::statusBarStyle(dark));
