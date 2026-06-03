@@ -6,6 +6,7 @@
 #include "pages/crchashpage.h"
 #include "pages/colorpage.h"
 #include "pages/financepage.h"
+#include "pages/floatpage.h"
 #include "themecolors.h"
 #include "info.h"
 #include "core/updater.h"
@@ -36,6 +37,7 @@ MainWindow::MainWindow(QWidget* parent)
     , m_crcHashPage(nullptr)
     , m_colorPage(nullptr)
     , m_financePage(nullptr)
+    , m_floatPage(nullptr)
 {
     // Load theme from QSettings (default: dark)
     QSettings settings("RhenoCalc", "RhenoCalc");
@@ -220,12 +222,14 @@ void MainWindow::setupUI() {
     m_crcHashPage = new CrcHashPage(this);
     m_colorPage = new ColorPage(this);
     m_financePage = new FinancePage(this);
+    m_floatPage = new FloatPage(this);
 
     // Hide pages not initially in the tab widget so they don't appear as floating children
     m_networkPage->hide();
     m_crcHashPage->hide();
     m_colorPage->hide();
     m_financePage->hide();
+    m_floatPage->hide();
 
     m_tabWidget->addTab(m_calcPage, "Calc");       // index 0 - fixed
     m_tabWidget->addTab(m_basePage, "Base");       // index 1 - fixed
@@ -242,6 +246,7 @@ void MainWindow::setupUI() {
         {"CRC/Hash", m_crcHashPage},
         {"Color",    m_colorPage},
         {"Finance",  m_financePage},
+        {"Float",    m_floatPage},
     };
 
     // Restore last dynamic tab from settings
@@ -342,6 +347,7 @@ void MainWindow::applyTheme(bool dark) {
     m_crcHashPage->applyTheme(dark);
     m_colorPage->applyTheme(dark);
     m_financePage->applyTheme(dark);
+    m_floatPage->applyTheme(dark);
 
     // ── Status Bar ────────────────────────────────────────────────────────────
     statusBar()->setStyleSheet(ThemeColors::statusBarStyle(dark));
