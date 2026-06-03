@@ -5,6 +5,7 @@
 #include "pages/networkpage.h"
 #include "pages/crchashpage.h"
 #include "pages/colorpage.h"
+#include "pages/financepage.h"
 #include "themecolors.h"
 #include "info.h"
 #include "core/updater.h"
@@ -34,6 +35,7 @@ MainWindow::MainWindow(QWidget* parent)
     , m_networkPage(nullptr)
     , m_crcHashPage(nullptr)
     , m_colorPage(nullptr)
+    , m_financePage(nullptr)
 {
     // Load theme from QSettings (default: dark)
     QSettings settings("RhenoCalc", "RhenoCalc");
@@ -52,7 +54,7 @@ MainWindow::MainWindow(QWidget* parent)
     auto currentVirtual = std::make_shared<int>(0);
 
     auto navigateTab = [this, currentVirtual](int direction) {
-        int totalPages = 2 + m_extraPages.size(); // Calc, Base + extras
+        const int totalPages = 2 + static_cast<int>(m_extraPages.size()); // NOLINT(bugprone-narrowing-conversions)
         *currentVirtual = (*currentVirtual + direction + totalPages) % totalPages;
 
         if (*currentVirtual < 2) {
@@ -169,7 +171,7 @@ MainWindow::MainWindow(QWidget* parent)
     QTimer::singleShot(1500, updater, &Updater::checkForUpdate);
 }
 
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow() = default;
 
 void MainWindow::closeEvent(QCloseEvent* event) {
     saveWindowGeometry();
@@ -217,11 +219,13 @@ void MainWindow::setupUI() {
     m_networkPage = new NetworkPage(this);
     m_crcHashPage = new CrcHashPage(this);
     m_colorPage = new ColorPage(this);
+    m_financePage = new FinancePage(this);
 
     // Hide pages not initially in the tab widget so they don't appear as floating children
     m_networkPage->hide();
     m_crcHashPage->hide();
     m_colorPage->hide();
+    m_financePage->hide();
 
     m_tabWidget->addTab(m_calcPage, "Calc");       // index 0 - fixed
     m_tabWidget->addTab(m_basePage, "Base");       // index 1 - fixed
@@ -237,6 +241,7 @@ void MainWindow::setupUI() {
         {"Network",  m_networkPage},
         {"CRC/Hash", m_crcHashPage},
         {"Color",    m_colorPage},
+        {"Finance",  m_financePage},
     };
 
     // Restore last dynamic tab from settings
@@ -281,7 +286,7 @@ void MainWindow::setupUI() {
     });
 
     // Buttons top right in the tab bar
-    m_onTopBtn = new QPushButton(this);
+    m_onTopBtn = new QPushButton(this); // NOLINT(cppcoreguidelines-owning-memory)
     m_onTopBtn->setCheckable(true);
     m_onTopBtn->setFixedSize(32, 26);
     m_onTopBtn->setCursor(Qt::PointingHandCursor);
@@ -294,7 +299,7 @@ void MainWindow::setupUI() {
     });
 
 
-    m_themeBtn = new QPushButton("☀", this);
+    m_themeBtn = new QPushButton("☀", this); // NOLINT(cppcoreguidelines-owning-memory)
     m_themeBtn->setFixedSize(32, 26);
     m_themeBtn->setCursor(Qt::PointingHandCursor);
     m_themeBtn->setFocusPolicy(Qt::NoFocus);
@@ -336,6 +341,7 @@ void MainWindow::applyTheme(bool dark) {
     m_networkPage->applyTheme(dark);
     m_crcHashPage->applyTheme(dark);
     m_colorPage->applyTheme(dark);
+    m_financePage->applyTheme(dark);
 
     // ── Status Bar ────────────────────────────────────────────────────────────
     statusBar()->setStyleSheet(ThemeColors::statusBarStyle(dark));
@@ -414,4 +420,3 @@ void MainWindow::switchDynamicTab(QWidget* page, const QString& title) {
     m_tabWidget->insertTab(2, page, title);
     m_tabWidget->setCurrentIndex(2);
 }
-

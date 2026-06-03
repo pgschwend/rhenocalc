@@ -17,12 +17,13 @@ class UnitConverterPage;
 class NetworkPage;
 class CrcHashPage;
 class ColorPage;
+class FinancePage;
 
 // Custom tab bar with fixed tab widths
 class FixedTabBar : public QTabBar {
 public:
     using QTabBar::QTabBar;
-    QSize tabSizeHint(int index) const override {
+    [[nodiscard]] QSize tabSizeHint(int index) const override {
         QSize s = QTabBar::tabSizeHint(index);
         if (index <= 1)       s.setWidth(58);   // Calc, Base
         else if (index == 2)  s.setWidth(86);   // dynamic tab (wider)
@@ -43,7 +44,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget* parent = nullptr);
+    MainWindow(QWidget* parent = nullptr); // NOLINT
     ~MainWindow();
 
 protected:
@@ -66,6 +67,7 @@ private:
     NetworkPage*       m_networkPage;
     CrcHashPage*       m_crcHashPage;
     ColorPage*         m_colorPage;
+    FinancePage*       m_financePage;
     QPushButton*       m_onTopBtn = nullptr;
     QPushButton*       m_themeBtn = nullptr;
     QMenu*             m_moreMenu = nullptr;
