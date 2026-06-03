@@ -2,20 +2,15 @@
 ## TODO's
 
 ### Features
-- Float calculation on separate tab
 - Sin/Cos function
-
-- Electronic stuff like ohm calculator voltage divider, RC and LC calculator, etc.
 - Wave length calculator/visualization
 - Internet Speedtest, Ping Tool, Maybe network tools like traceroute, port scanner, etc.
 - Algorithm tester in different languages like C, C++, Python, Java, etc.
-- 
+
 
 
 ### Improvements
 - Add explanations in Unit conversion page
-
-
 
 
 ### Probably not
