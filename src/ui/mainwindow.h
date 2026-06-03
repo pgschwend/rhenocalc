@@ -24,8 +24,8 @@ public:
     using QTabBar::QTabBar;
     QSize tabSizeHint(int index) const override {
         QSize s = QTabBar::tabSizeHint(index);
-        if (index <= 1)       s.setWidth(60);   // Calc, Base
-        else if (index == 2)  s.setWidth(90);   // dynamic tab (wider)
+        if (index <= 1)       s.setWidth(58);   // Calc, Base
+        else if (index == 2)  s.setWidth(86);   // dynamic tab (wider)
         else if (index == 3)  s.setWidth(36);   // "▾" (small)
         return s;
     }
