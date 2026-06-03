@@ -19,6 +19,7 @@ class CrcHashPage;
 class ColorPage;
 class FinancePage;
 class FloatPage;
+class ElectronicsPage;
 
 // Custom tab bar with fixed tab widths
 class FixedTabBar : public QTabBar {
@@ -70,6 +71,7 @@ private:
     ColorPage*         m_colorPage;
     FinancePage*       m_financePage;
     FloatPage*         m_floatPage;
+    ElectronicsPage*   m_electronicsPage;
     QPushButton*       m_onTopBtn = nullptr;
     QPushButton*       m_themeBtn = nullptr;
     QMenu*             m_moreMenu = nullptr;
