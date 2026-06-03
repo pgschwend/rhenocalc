@@ -44,6 +44,7 @@ set(SOURCES
         src/pages/crchashpage.h src/pages/crchashpage.cpp
         src/pages/colorpage.h src/pages/colorpage.cpp
         src/pages/financepage.h src/pages/financepage.cpp
+        src/pages/floatpage.h src/pages/floatpage.cpp
         src/core/calculatorcore.h src/core/calculatorcore.cpp
         src/core/baseconvertercore.h src/core/baseconvertercore.cpp
         src/core/unitconvertercore.h src/core/unitconvertercore.cpp

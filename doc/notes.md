@@ -1,18 +1,24 @@
 
 ## TODO's
 
-- Zinseszins-Rechner
+### Features
 - Float calculation on separate tab
 - Sin/Cos function
-- ASCII/UTF-8/HEX-Converter
-- Ping Tool
+
 - Electronic stuff like ohm calculator voltage divider, RC and LC calculator, etc.
-- Maybe network tools like traceroute, port scanner, etc.
-- REGEX tester
 - Wave length calculator/visualization
-- Internet Speedtest
-- Cronjob calculator
+- Internet Speedtest, Ping Tool, Maybe network tools like traceroute, port scanner, etc.
 - Algorithm tester in different languages like C, C++, Python, Java, etc.
 - 
 
 
+### Improvements
+- Add explanations in Unit conversion page
+
+
+
+
+### Probably not
+- REGEX tester
+- Cronjob calculator
+- ASCII/UTF-8/HEX-Converter (Notpad++ has a good one)
