@@ -104,7 +104,8 @@ void FinancePage::setupUI() {
     simpleGrid->addWidget(m_simplePeriodsEdit, simpleRow, 1);
     simpleRow++;
 
-    simpleGrid->addWidget(new QLabel("Result", this), simpleRow, 0);
+    auto* simpleResultTitle = new QLabel("Result", this);
+    simpleGrid->addWidget(simpleResultTitle, simpleRow, 0);
     m_simpleResultLabel = new QLabel("—", this);
     simpleGrid->addWidget(m_simpleResultLabel, simpleRow, 1);
 
@@ -167,6 +168,12 @@ void FinancePage::setupUI() {
 
     compoundGrid->setColumnStretch(1, 1);
     compoundLayout->addLayout(compoundGrid);
+    compoundLayout->addSpacing(6);
+
+    auto* resultTitle = new QLabel("Result", this);
+    resultTitle->setContentsMargins(10, 4, 0, 0);
+    m_resultTitleLabel = resultTitle;
+    compoundLayout->addWidget(resultTitle);
 
     auto* resultGrid = new QGridLayout();
     resultGrid->setHorizontalSpacing(10);
@@ -333,6 +340,24 @@ void FinancePage::applyTheme(bool dark) {
 
     for (auto* label : findChildren<QLabel*>())
         label->setStyleSheet(frmS);
+
+    if (m_simpleResultLabel)
+        m_simpleResultLabel->setStyleSheet(resS + "font-size:16px;");
+
+    if (m_futureValueLabel)
+        m_futureValueLabel->setStyleSheet(resS + "font-size:13px;");
+
+    if (m_totalContribLabel)
+        m_totalContribLabel->setStyleSheet(resS + "font-size:13px;");
+
+    if (m_totalInterestLabel)
+        m_totalInterestLabel->setStyleSheet(resS + "font-size:13px;");
+
+    if (m_effectiveRateLabel)
+        m_effectiveRateLabel->setStyleSheet(resS + "font-size:13px;");
+
+    if (m_resultTitleLabel)
+        m_resultTitleLabel->setStyleSheet(ThemeColors::unitTitleStyle(dark) + "font-size:13px;");
 
     m_titleLabel->setStyleSheet(ttlS);
 }

@@ -21,6 +21,7 @@ private:
     void setMoneyLabel(QLabel* label, double value) const;
 
     QLabel* m_titleLabel = nullptr;
+    QLabel* m_resultTitleLabel = nullptr;
 
     QLineEdit* m_simplePrincipalEdit = nullptr;
     QLineEdit* m_simpleRateEdit = nullptr;
