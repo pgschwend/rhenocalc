@@ -52,7 +52,7 @@ void NetworkPage::setupUI() {
     root->setSpacing(8);
     root->setContentsMargins(12, 12, 12, 12);
 
-    m_titleLabel = new QLabel("Network Tools", this);
+    m_titleLabel = new QLabel("IP Address Tool", this);
     root->addWidget(m_titleLabel);
 
     m_subnetGroup = new QGroupBox("Subnet Calculator", this);
