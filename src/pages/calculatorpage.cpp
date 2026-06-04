@@ -118,22 +118,22 @@ void CalculatorPage::setupUI() {
     connect(clrBtn, &QPushButton::clicked, this, &CalculatorPage::onClearEntryOrAllClicked);
     grid->addWidget(clrBtn, 1, 6);
 
-    auto* powBtn = makeBtn("x²", ThemeColors::calcFuncButton(true));
-    powBtn->setObjectName("SQ");
-    m_funcBtns << powBtn;
-    connect(powBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
-    grid->addWidget(powBtn, 3, 5);
+    m_sqBtn = makeBtn("x²", ThemeColors::calcFuncButton(true));
+    m_sqBtn->setObjectName("SQ");
+    m_funcBtns << m_sqBtn;
+    connect(m_sqBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
+    grid->addWidget(m_sqBtn, 3, 5);
 
-    auto* sqrtBtn = makeBtn("√x", ThemeColors::calcFuncButton(true));
-    sqrtBtn->setObjectName("SQRT");
-    m_funcBtns << sqrtBtn;
-    connect(sqrtBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
-    grid->addWidget(sqrtBtn, 3, 6);
+    m_sqrtBtn = makeBtn("√x", ThemeColors::calcFuncButton(true));
+    m_sqrtBtn->setObjectName("SQRT");
+    m_funcBtns << m_sqrtBtn;
+    connect(m_sqrtBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
+    grid->addWidget(m_sqrtBtn, 3, 6);
 
-    auto* secondFuncBtn = makeBtn("2nd", ThemeColors::calcSecondFuncButton(true));
-    m_clearBtns << secondFuncBtn;
-    connect(secondFuncBtn, &QPushButton::clicked, this, []{});
-    grid->addWidget(secondFuncBtn, 2, 6);
+    m_secondFuncBtn = makeBtn("2nd", ThemeColors::calcSecondFuncButton(true));
+    m_clearBtns << m_secondFuncBtn;
+    connect(m_secondFuncBtn, &QPushButton::clicked, this, &CalculatorPage::onSecondFuncToggled);
+    grid->addWidget(m_secondFuncBtn, 2, 6);
 
     // Digits + operators (rows 3-6)
     struct BtnDef { QString label; int row, col; QString style; };
@@ -184,11 +184,15 @@ void CalculatorPage::setupUI() {
             m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onPiClicked);
             grid->addWidget(b, d.row, d.col);
+            if (d.label == "π") m_piBtn = b;
+            if (d.label == "e") m_eBtn = b;
         } else if (d.label == "1/x" || d.label == "log" || d.label == "ln") {
             b->setObjectName(d.label);
             m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
             grid->addWidget(b, d.row, d.col);
+            if (d.label == "log") m_logBtn = b;
+            if (d.label == "ln") m_lnBtn = b;
         } else if (d.label == "+/-") {
             m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onNegateClicked);
@@ -198,6 +202,9 @@ void CalculatorPage::setupUI() {
             m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
             grid->addWidget(b, d.row, d.col);
+            if (d.label == "MS") m_msBtn = b;
+            if (d.label == "MR") m_mrBtn = b;
+            if (d.label == "MC") m_mcBtn = b;
         } else if (d.label == "(" || d.label == ")") {
             m_funcBtns << b;
             connect(b, &QPushButton::clicked, this, &CalculatorPage::onDigitClicked);
@@ -332,10 +339,58 @@ void CalculatorPage::onPiClicked() {
     auto* btn = qobject_cast<QPushButton*>(sender());
     QString op = btn->objectName();
 
-    if (op == "π") m_engine.setPi();
-    else if (op == "e") m_engine.setEuler();
+    if (op == "π") {
+        m_engine.setPi();
+    } else if (op == "e") {
+        m_engine.setEuler();
+    } else if (op == "sin" || op == "asin") {
+        // Trig functions - delegate to engine
+        m_engine.applyBitwiseOrFunction(op);
+    }
 
     updateDisplay();
+}
+
+void CalculatorPage::onSecondFuncToggled() {
+    m_secondActive = !m_secondActive;
+    updateSecondFuncButtons();
+}
+
+void CalculatorPage::updateSecondFuncButtons() {
+    // Update 2nd button visual state (pressed look)
+    if (m_secondFuncBtn) {
+        if (m_secondActive) {
+            m_secondFuncBtn->setStyleSheet(ThemeColors::calcSecondFuncButtonActive(m_isDark));
+        } else {
+            m_secondFuncBtn->setStyleSheet(ThemeColors::calcSecondFuncButton(m_isDark));
+        }
+    }
+
+    // Switch button labels and objectNames
+    if (m_secondActive) {
+        // 2nd function mode: trig functions
+        if (m_piBtn) { m_piBtn->setText("sin"); m_piBtn->setObjectName("sin"); }
+        if (m_sqBtn) { m_sqBtn->setText("cos"); m_sqBtn->setObjectName("cos"); }
+        if (m_sqrtBtn) { m_sqrtBtn->setText("tan"); m_sqrtBtn->setObjectName("tan"); }
+        if (m_eBtn) { m_eBtn->setText("asin"); m_eBtn->setObjectName("asin"); }
+        if (m_logBtn) { m_logBtn->setText("acos"); m_logBtn->setObjectName("acos"); }
+        if (m_lnBtn) { m_lnBtn->setText("atan"); m_lnBtn->setObjectName("atan"); }
+        // Empty placeholders (no function)
+        if (m_msBtn) { m_msBtn->setText(""); m_msBtn->setObjectName(""); }
+        if (m_mrBtn) { m_mrBtn->setText(""); m_mrBtn->setObjectName(""); }
+        if (m_mcBtn) { m_mcBtn->setText(""); m_mcBtn->setObjectName(""); }
+    } else {
+        // Normal mode: original functions
+        if (m_piBtn) { m_piBtn->setText("π"); m_piBtn->setObjectName("π"); }
+        if (m_sqBtn) { m_sqBtn->setText("x²"); m_sqBtn->setObjectName("SQ"); }
+        if (m_sqrtBtn) { m_sqrtBtn->setText("√x"); m_sqrtBtn->setObjectName("SQRT"); }
+        if (m_eBtn) { m_eBtn->setText("e"); m_eBtn->setObjectName("e"); }
+        if (m_logBtn) { m_logBtn->setText("log"); m_logBtn->setObjectName("log"); }
+        if (m_lnBtn) { m_lnBtn->setText("ln"); m_lnBtn->setObjectName("ln"); }
+        if (m_msBtn) { m_msBtn->setText("MS"); m_msBtn->setObjectName("MS"); }
+        if (m_mrBtn) { m_mrBtn->setText("MR"); m_mrBtn->setObjectName("MR"); }
+        if (m_mcBtn) { m_mcBtn->setText("MC"); m_mcBtn->setObjectName("MC"); }
+    }
 }
 
 void CalculatorPage::onBitwiseClicked() {
@@ -357,6 +412,8 @@ QString CalculatorPage::formatDouble(double val) {
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 void CalculatorPage::applyTheme(bool dark) {
+    m_isDark = dark;
+
     const QString numS  = ThemeColors::calcNumButton(dark);
     const QString opS   = ThemeColors::calcOpButton(dark);
     const QString bitS  = ThemeColors::calcBitButton(dark);
@@ -364,7 +421,6 @@ void CalculatorPage::applyTheme(bool dark) {
     const QString hexS  = ThemeColors::calcHexButton(dark);
     const QString eqS   = ThemeColors::calcEqButton(dark);
     const QString clrS  = ThemeColors::calcClearButton(dark);
-    const QString secS  = ThemeColors::calcSecondFuncButton(dark);
     const QString dispS = ThemeColors::calcDisplayStyle(dark);
     const QString exprS = ThemeColors::calcExprStyle(dark);
     const QString hintS = ThemeColors::calcHintStyle(dark);
@@ -381,6 +437,9 @@ void CalculatorPage::applyTheme(bool dark) {
     for (auto* b : m_clearBtns)  b->setStyleSheet(clrS);
     for (auto* b : m_hexBtns)    b->setStyleSheet(hexS);
     if (m_eqBtn) m_eqBtn->setStyleSheet(eqS);
+
+    // Update 2nd button style based on active state
+    updateSecondFuncButtons();
 }
 
 // ─── Keyboard support ────────────────────────────────────────────────────────

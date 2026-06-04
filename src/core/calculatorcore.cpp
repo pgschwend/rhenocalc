@@ -224,6 +224,21 @@ BigDecimal applyBigUnary(const BigDecimal& value, const QString& op) {
     }
     if (op == "LSL") return value * 2;
     if (op == "LSR") return boost::multiprecision::trunc(value / 2);
+    // Trigonometric functions (DEGREES) - convert to double for calculation
+    constexpr double degToRad = 3.14159265358979323846 / 180.0;
+    constexpr double radToDeg = 180.0 / 3.14159265358979323846;
+    if (op == "sin") return BigDecimal(std::sin(static_cast<double>(value) * degToRad));
+    if (op == "cos") return BigDecimal(std::cos(static_cast<double>(value) * degToRad));
+    if (op == "tan") return BigDecimal(std::tan(static_cast<double>(value) * degToRad));
+    if (op == "asin") {
+        double d = static_cast<double>(value);
+        return (d >= -1.0 && d <= 1.0) ? BigDecimal(std::asin(d) * radToDeg) : BigDecimal(0);
+    }
+    if (op == "acos") {
+        double d = static_cast<double>(value);
+        return (d >= -1.0 && d <= 1.0) ? BigDecimal(std::acos(d) * radToDeg) : BigDecimal(0);
+    }
+    if (op == "atan") return BigDecimal(std::atan(static_cast<double>(value)) * radToDeg);
     return value;
 }
 
@@ -691,7 +706,9 @@ void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
         }
 
         if (op == "SQ" || op == "SQRT" || op == "1/x" || op == "log" || op == "ln" ||
-            op == "NOT" || op == "LSL" || op == "LSR") {
+            op == "NOT" || op == "LSL" || op == "LSR" ||
+            op == "sin" || op == "cos" || op == "tan" ||
+            op == "asin" || op == "acos" || op == "atan") {
             m_bigCurrent = applyBigUnary(m_bigCurrent, op);
             m_inputString.clear();
             m_newInput = true;
@@ -746,7 +763,10 @@ void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
             return;
         }
         res = applyUnaryInt(b, op, m_wordBits);
-    } else if (op == "log" || op == "ln") {
+    } else if (op == "log" || op == "ln" ||
+               op == "sin" || op == "cos" || op == "tan" ||
+               op == "asin" || op == "acos" || op == "atan" ||
+               op == "sinh" || op == "cosh" || op == "tanh") {
         const double in = m_floatMode ? m_currentDouble : static_cast<double>(b);
         m_currentDouble = applyUnaryDouble(in, op);
         m_floatMode = true;
@@ -836,6 +856,20 @@ double applyUnaryDouble(double value, const QString& op) {
     if (op == "1/x") return value != 0.0 ? 1.0 / value : std::numeric_limits<double>::infinity();
     if (op == "log") return value > 0.0 ? std::log10(value) : std::numeric_limits<double>::quiet_NaN();
     if (op == "ln") return value > 0.0 ? std::log(value) : std::numeric_limits<double>::quiet_NaN();
+    // Trigonometric functions (input in DEGREES)
+    constexpr double degToRad = 3.14159265358979323846 / 180.0;
+    constexpr double radToDeg = 180.0 / 3.14159265358979323846;
+    if (op == "sin") return std::sin(value * degToRad);
+    if (op == "cos") return std::cos(value * degToRad);
+    if (op == "tan") return std::tan(value * degToRad);
+    // Inverse trig functions (output in DEGREES)
+    if (op == "asin") return (value >= -1.0 && value <= 1.0) ? std::asin(value) * radToDeg : std::numeric_limits<double>::quiet_NaN();
+    if (op == "acos") return (value >= -1.0 && value <= 1.0) ? std::acos(value) * radToDeg : std::numeric_limits<double>::quiet_NaN();
+    if (op == "atan") return std::atan(value) * radToDeg;
+    // Hyperbolic functions
+    if (op == "sinh") return std::sinh(value);
+    if (op == "cosh") return std::cosh(value);
+    if (op == "tanh") return std::tanh(value);
     return value;
 }
 

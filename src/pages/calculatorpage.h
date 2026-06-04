@@ -29,6 +29,7 @@ private slots:
     void onWordWidthChanged(int index);
     void onBaseChanged(int index);
     void onNegateClicked();
+    void onSecondFuncToggled();
 
 protected:
     void keyPressEvent(QKeyEvent* event) override;
@@ -39,6 +40,7 @@ private:
     void resetCeClearCycle();
     void pressDigit(const QString& d);
     void pressOperator(const QString& op);
+    void updateSecondFuncButtons();
     QPushButton* makeBtn(const QString& text, const QString& style = "");
     QString toBaseString(long long val);
     long long fromBaseString(const QString& s);
@@ -64,6 +66,20 @@ private:
     QList<QPushButton*> m_clearBtns;
     QPushButton*        m_eqBtn = nullptr;
     bool                m_ceEntryCleared = false;
+
+    // 2nd function toggle
+    bool                m_secondActive = false;
+    QPushButton*        m_secondFuncBtn = nullptr;
+    QPushButton*        m_piBtn = nullptr;      // π ↔ sin
+    QPushButton*        m_sqBtn = nullptr;      // x² ↔ cos
+    QPushButton*        m_sqrtBtn = nullptr;    // √x ↔ tan
+    QPushButton*        m_eBtn = nullptr;       // e ↔ asin
+    QPushButton*        m_logBtn = nullptr;     // log ↔ acos
+    QPushButton*        m_lnBtn = nullptr;      // ln ↔ atan
+    QPushButton*        m_msBtn = nullptr;      // MS ↔ sinh
+    QPushButton*        m_mrBtn = nullptr;      // MR ↔ cosh
+    QPushButton*        m_mcBtn = nullptr;      // MC ↔ tanh
+    bool                m_isDark = true;
 
     CalculatorCore::CalculatorEngine m_engine;
 };

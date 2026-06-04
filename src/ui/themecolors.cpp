@@ -177,6 +177,19 @@ QString calcSecondFuncButton(bool dark) {
         .arg(c(dark, "calc_clear_bg"), c(dark, "calc_clear_fg"), c(dark, "calc_clear_hover"));
 }
 
+QString calcSecondFuncButtonActive(bool dark) {
+    // "Pressed" look: darker background, highlighted border
+    if (dark) {
+        return QString("QPushButton{background:#606060;color:#ffffff;font-size:11px;border-radius:4px;padding:4px;"
+                       "border:2px solid #888888;}"
+                       "QPushButton:hover{background:#707070;}");
+    } else {
+        return QString("QPushButton{background:#3d5aaa;color:#ffffff;font-size:11px;border-radius:4px;padding:4px;"
+                       "border:2px solid #6080cc;}"
+                       "QPushButton:hover{background:#4d6abf;}");
+    }
+}
+
 QString calcDisplayStyle(bool dark) {
     return QString("background:%1;color:%2;font-size:22px;font-family:'Consolas','Courier New',monospace;"
                    "border:1px solid %3;border-radius:4px;padding:4px 8px;")

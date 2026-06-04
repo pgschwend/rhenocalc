@@ -19,6 +19,7 @@ QString calcHexButton(bool dark);
 QString calcEqButton(bool dark);
 QString calcClearButton(bool dark);
 QString calcSecondFuncButton(bool dark);
+QString calcSecondFuncButtonActive(bool dark);
 QString calcDisplayStyle(bool dark);
 QString calcExprStyle(bool dark);
 QString calcHintStyle(bool dark);
