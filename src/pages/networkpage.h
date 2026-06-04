@@ -52,6 +52,7 @@ private:
     QLabel* m_statusLabel = nullptr;
 
     QLineEdit* m_uintEdit = nullptr;
+    QLineEdit* m_converterIpEdit = nullptr;
     QPushButton* m_ipToUintBtn = nullptr;
     QPushButton* m_uintToIpBtn = nullptr;
 };

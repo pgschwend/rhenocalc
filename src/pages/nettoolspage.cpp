@@ -7,7 +7,6 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QScrollArea>
-#include <QSpinBox>
 #include <QTextEdit>
 #include <QProgressBar>
 #include <QVBoxLayout>
@@ -59,10 +58,9 @@ void NetToolsPage::setupUI() {
 
     auto* pingControlLayout = new QHBoxLayout();
     pingControlLayout->addWidget(new QLabel("Count:", this));
-    m_pingCount = new QSpinBox(this);
-    m_pingCount->setRange(1, 100);
-    m_pingCount->setValue(4);
-    m_pingCount->setFixedWidth(60);
+    m_pingCount = new QLineEdit("4", this);
+    m_pingCount->setFixedWidth(50);
+    m_pingCount->setPlaceholderText("1-100");
     pingControlLayout->addWidget(m_pingCount);
     pingControlLayout->addStretch();
 
@@ -215,9 +213,9 @@ void NetToolsPage::startPing() {
             this, &NetToolsPage::onPingFinished);
 
 #ifdef Q_OS_WIN
-    m_pingProcess->start("ping", {"-n", QString::number(m_pingCount->value()), host});
+    m_pingProcess->start("ping", {"-n", m_pingCount->text().trimmed(), host});
 #else
-    m_pingProcess->start("ping", {"-c", QString::number(m_pingCount->value()), host});
+    m_pingProcess->start("ping", {"-c", m_pingCount->text().trimmed(), host});
 #endif
 
     appendOutput(m_pingOutput, QString("Pinging %1...").arg(host), "#888");

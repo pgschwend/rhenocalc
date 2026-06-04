@@ -135,7 +135,7 @@ void BaseConverterPage::setupUI() {
         // Bit index label below button
         auto* idxLbl = new QLabel(QString::number(i), bitArea);
         idxLbl->setAlignment(Qt::AlignCenter);
-        idxLbl->setStyleSheet("font-size:9px;");
+        idxLbl->setStyleSheet("font-size:11px; margin-top:-2px;");
         idxLbl->setFixedWidth(14);
         bitGrid->addWidget(idxLbl, row * 2 + 1, col);
     }

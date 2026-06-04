@@ -72,36 +72,36 @@ void NetworkPage::setupUI() {
     m_ipEdit->setMinimumWidth(0);
     m_ipEdit->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     m_ipEdit->setPlaceholderText("e.g. 192.168.1.34");
-    subnetGrid->addWidget(m_ipEdit, 1, 1);
-
-    subnetGrid->addWidget(new QLabel("Prefix:", this), 1, 2);
-    m_prefixSpin = new QSpinBox(this);
-    m_prefixSpin->setRange(0, 32);
-    m_prefixSpin->setValue(24);
-    m_prefixSpin->setPrefix("/");
-    subnetGrid->addWidget(m_prefixSpin, 1, 3);
+    subnetGrid->addWidget(m_ipEdit, 1, 1, 1, 3);
 
     subnetGrid->addWidget(new QLabel("Subnet mask:", this), 2, 0);
     m_maskEdit = new QLineEdit(this);
     m_maskEdit->setMinimumWidth(0);
     m_maskEdit->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     m_maskEdit->setPlaceholderText("optional if CIDR/prefix is set");
-    subnetGrid->addWidget(m_maskEdit, 2, 1);
+    subnetGrid->addWidget(m_maskEdit, 2, 1, 1, 3);
 
-    subnetGrid->addWidget(new QLabel("Desired devices:", this), 2, 2);
+    subnetGrid->addWidget(new QLabel("Prefix:", this), 3, 0);
+    m_prefixSpin = new QSpinBox(this);
+    m_prefixSpin->setRange(0, 32);
+    m_prefixSpin->setValue(24);
+    m_prefixSpin->setPrefix("/");
+    subnetGrid->addWidget(m_prefixSpin, 3, 1);
+
+    subnetGrid->addWidget(new QLabel("Desired devices:", this), 3, 2);
     m_devicesSpin = new QSpinBox(this);
     m_devicesSpin->setRange(1, 1000000);
     m_devicesSpin->setValue(254);
     m_devicesSpin->setMinimumWidth(0);
-    subnetGrid->addWidget(m_devicesSpin, 2, 3);
+    subnetGrid->addWidget(m_devicesSpin, 3, 3);
 
     subnetGrid->setColumnStretch(1, 2);
     subnetGrid->setColumnStretch(3, 1);
 
-    m_calcBtn = new QPushButton("Calculate subnet", this);
-    m_planBtn = new QPushButton("Plan prefix by devices", this);
-    subnetGrid->addWidget(m_calcBtn, 3, 2);
-    subnetGrid->addWidget(m_planBtn, 3, 3);
+    m_calcBtn = new QPushButton("Calc subnet", this);
+    m_planBtn = new QPushButton("Calc prefix", this);
+    subnetGrid->addWidget(m_calcBtn, 4, 0, 1, 2);
+    subnetGrid->addWidget(m_planBtn, 4, 2, 1, 2);
 
     root->addWidget(m_subnetGroup);
 
@@ -160,19 +160,34 @@ void NetworkPage::setupUI() {
     root->addWidget(m_outputGroup);
 
     m_toolsGroup = new QGroupBox("IP Number Converter", this);
-    auto* toolsLayout = new QHBoxLayout(m_toolsGroup);
-    toolsLayout->addWidget(new QLabel("IPv4 as uint32:", this));
+    auto* toolsLayout = new QVBoxLayout(m_toolsGroup);
+
+    auto* toolsIpLayout = new QHBoxLayout();
+    toolsIpLayout->addWidget(new QLabel("IP address:", this));
+    m_converterIpEdit = new QLineEdit(this);
+    m_converterIpEdit->setMinimumWidth(0);
+    m_converterIpEdit->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
+    m_converterIpEdit->setPlaceholderText("e.g. 192.168.1.1");
+    toolsIpLayout->addWidget(m_converterIpEdit, 1);
+    toolsLayout->addLayout(toolsIpLayout);
+
+    auto* toolsUintLayout = new QHBoxLayout();
+    toolsUintLayout->addWidget(new QLabel("IPv4 as uint32:", this));
     m_uintEdit = new QLineEdit(this);
     m_uintEdit->setMinimumWidth(0);
     m_uintEdit->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     m_uintEdit->setPlaceholderText("e.g. 3232235777");
-    toolsLayout->addWidget(m_uintEdit);
+    toolsUintLayout->addWidget(m_uintEdit, 1);
+    toolsLayout->addLayout(toolsUintLayout);
+
+    auto* toolsBtnLayout = new QHBoxLayout();
     m_ipToUintBtn = new QPushButton("IP -> uint32", this);
     m_uintToIpBtn = new QPushButton("uint32 -> IP", this);
-    toolsLayout->addWidget(m_ipToUintBtn);
-    toolsLayout->addWidget(m_uintToIpBtn);
+    toolsBtnLayout->addWidget(m_ipToUintBtn);
+    toolsBtnLayout->addWidget(m_uintToIpBtn);
+    toolsLayout->addLayout(toolsBtnLayout);
+
     root->addWidget(m_toolsGroup);
-    toolsLayout->setStretch(1, 1);
 
     m_statusLabel = new QLabel("Enter CIDR/IP and click Calculate.", this);
     m_statusLabel->setWordWrap(true);
@@ -281,7 +296,7 @@ void NetworkPage::onPlanHostsClicked() {
 void NetworkPage::onIpToUintClicked() {
     quint32 ip = 0;
     QString err;
-    if (!NetworkCalc::parseIpv4(m_ipEdit->text(), ip, &err)) {
+    if (!NetworkCalc::parseIpv4(m_converterIpEdit->text(), ip, &err)) {
         setStatus(err, true);
         return;
     }
@@ -299,7 +314,7 @@ void NetworkPage::onUintToIpClicked() {
     }
 
     const quint32 ip = static_cast<quint32>(value);
-    m_ipEdit->setText(NetworkCalc::toIpv4(ip));
+    m_converterIpEdit->setText(NetworkCalc::toIpv4(ip));
     setStatus("Converted uint32 to IP.", false);
 }
 
@@ -319,6 +334,7 @@ void NetworkPage::applyTheme(bool dark) {
     m_ipEdit->setStyleSheet(fldS);
     m_maskEdit->setStyleSheet(fldS);
     m_uintEdit->setStyleSheet(fldS);
+    m_converterIpEdit->setStyleSheet(fldS);
 
     m_networkValue->setStyleSheet(resS);
     m_broadcastValue->setStyleSheet(resS);

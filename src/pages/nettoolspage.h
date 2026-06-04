@@ -9,7 +9,6 @@ class QLabel;
 class QLineEdit;
 class QPushButton;
 class QTextEdit;
-class QSpinBox;
 class QProgressBar;
 
 class NetToolsPage : public QWidget {
@@ -45,7 +44,7 @@ private:
 
     // Ping
     QLineEdit* m_pingHost = nullptr;
-    QSpinBox* m_pingCount = nullptr;
+    QLineEdit* m_pingCount = nullptr;
     QPushButton* m_pingStartBtn = nullptr;
     QPushButton* m_pingStopBtn = nullptr;
     QTextEdit* m_pingOutput = nullptr;
