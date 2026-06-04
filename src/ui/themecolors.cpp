@@ -172,9 +172,17 @@ QString calcClearButton(bool dark) {
 }
 
 QString calcSecondFuncButton(bool dark) {
-    return QString("QPushButton{background:%1;color:%2;font-size:11px;border-radius:4px;padding:4px;}"
-                   "QPushButton:hover{background:%3;}")
-        .arg(c(dark, "calc_clear_bg"), c(dark, "calc_clear_fg"), c(dark, "calc_clear_hover"));
+    if (dark) {
+        // Dark theme: keep clear button style
+        return QString("QPushButton{background:%1;color:%2;font-size:11px;border-radius:4px;padding:4px;}"
+                       "QPushButton:hover{background:%3;}")
+            .arg(c(dark, "calc_clear_bg"), c(dark, "calc_clear_fg"), c(dark, "calc_clear_hover"));
+    } else {
+        // Light theme: use bit button style (same as ROL)
+        return QString("QPushButton{background:%1;color:%2;font-size:11px;border-radius:4px;padding:4px;}"
+                       "QPushButton:hover{background:%3;}")
+            .arg(c(dark, "calc_bit_bg"), c(dark, "calc_bit_fg"), c(dark, "calc_bit_hover"));
+    }
 }
 
 QString calcSecondFuncButtonActive(bool dark) {

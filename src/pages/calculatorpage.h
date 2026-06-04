@@ -38,7 +38,7 @@ private:
     void pressDigit(const QString& d);
     void pressOperator(const QString& op);
     void updateSecondFuncButtons();
-    QPushButton* makeBtn(const QString& text, const QString& style = "");
+    QPushButton* makeBtn(const QString& text);
 
     QLineEdit*   m_display = nullptr;
     QLabel*      m_exprLabel = nullptr;

@@ -11,11 +11,10 @@ CalculatorPage::CalculatorPage(QWidget* parent) : QWidget(parent) {
     setupUI();
 }
 
-QPushButton* CalculatorPage::makeBtn(const QString& text, const QString& style) {
+QPushButton* CalculatorPage::makeBtn(const QString& text) {
     auto* btn = new QPushButton(text, this);
     btn->setMinimumSize(34, 28);
     btn->setFocusPolicy(Qt::NoFocus);
-    btn->setStyleSheet(style.isEmpty() ? ThemeColors::calcNumButton(true) : style);
     return btn;
 }
 
@@ -28,13 +27,11 @@ void CalculatorPage::setupUI() {
     // Top controls
     auto* topRow = new QHBoxLayout();
     m_baseLabel = new QLabel("Base:", this);
-    m_baseLabel->setStyleSheet("font-size:13px;");
     m_baseCombo = new QComboBox(this);
     m_baseCombo->addItems({"Dec", "Hex", "Bin", "Oct"});
     m_baseCombo->setMinimumWidth(90);
 
     m_wordLabel = new QLabel("Mode:", this);
-    m_wordLabel->setStyleSheet("font-size:13px;");
     m_widthCombo = new QComboBox(this);
     m_widthCombo->addItems({"8-bit", "16-bit", "32-bit", "64-bit", "Scient"});
     m_widthCombo->setCurrentIndex(4);
@@ -74,11 +71,11 @@ void CalculatorPage::setupUI() {
     // Row 0: Hex letters A-F + Backspace
     const char* hexLetters[] = {"A","B","C","D","E","F"};
     for (int i = 0; i < 6; ++i) {
-        m_hexBtns[i] = makeBtn(hexLetters[i], ThemeColors::calcHexButton(true));
+        m_hexBtns[i] = makeBtn(hexLetters[i]);
         connect(m_hexBtns[i], &QPushButton::clicked, this, &CalculatorPage::onDigitClicked);
         grid->addWidget(m_hexBtns[i], 0, i);
     }
-    auto* bsBtn = makeBtn("⌫", ThemeColors::calcFuncButton(true));
+    auto* bsBtn = makeBtn("⌫");
     m_funcBtns << bsBtn;
     connect(bsBtn, &QPushButton::clicked, this, &CalculatorPage::onBackspaceClicked);
     grid->addWidget(bsBtn, 0, 6);
@@ -87,88 +84,78 @@ void CalculatorPage::setupUI() {
     const char* bitOps[] = {"AND","OR","XOR","NOT","LSL","LSR","ROR","ROL"};
     // Split to 2 rows of 4
     for (int i = 0; i < 4; ++i) {
-        auto* b = makeBtn(bitOps[i], ThemeColors::calcBitButton(true));
+        auto* b = makeBtn(bitOps[i]);
         b->setObjectName(bitOps[i]);
         m_bitOpBtns << b;
         connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
         grid->addWidget(b, 1, i);
     }
     for (int i = 4; i < 8; ++i) {
-        auto* b = makeBtn(bitOps[i], ThemeColors::calcBitButton(true));
+        auto* b = makeBtn(bitOps[i]);
         b->setObjectName(bitOps[i]);
         m_bitOpBtns << b;
         connect(b, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
         grid->addWidget(b, 2, i-4);
     }
     // Row 2 right side: MOD, NEG, CLR, DEL
-    auto* modBtn = makeBtn("MOD", ThemeColors::calcFuncButton(true));
+    auto* modBtn = makeBtn("MOD");
     modBtn->setObjectName("MOD");
     m_funcBtns << modBtn;
     connect(modBtn, &QPushButton::clicked, this, &CalculatorPage::onOperatorClicked);
     grid->addWidget(modBtn, 1, 4);
 
-    auto* invBtn = makeBtn("1/x", ThemeColors::calcFuncButton(true));
+    auto* invBtn = makeBtn("1/x");
     invBtn->setObjectName("1/x");
     m_funcBtns << invBtn;
     connect(invBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
     grid->addWidget(invBtn, 1, 5);
 
-    auto* clrBtn = makeBtn("CE", ThemeColors::calcClearButton(true));
+    auto* clrBtn = makeBtn("CE");
     m_clearBtns << clrBtn;
     connect(clrBtn, &QPushButton::clicked, this, &CalculatorPage::onClearEntryOrAllClicked);
     grid->addWidget(clrBtn, 1, 6);
 
-    m_sqBtn = makeBtn("x²", ThemeColors::calcFuncButton(true));
+    m_sqBtn = makeBtn("x²");
     m_sqBtn->setObjectName("SQ");
     m_funcBtns << m_sqBtn;
     connect(m_sqBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
     grid->addWidget(m_sqBtn, 3, 5);
 
-    m_sqrtBtn = makeBtn("√x", ThemeColors::calcFuncButton(true));
+    m_sqrtBtn = makeBtn("√x");
     m_sqrtBtn->setObjectName("SQRT");
     m_funcBtns << m_sqrtBtn;
     connect(m_sqrtBtn, &QPushButton::clicked, this, &CalculatorPage::onBitwiseClicked);
     grid->addWidget(m_sqrtBtn, 3, 6);
 
-    m_secondFuncBtn = makeBtn("2nd", ThemeColors::calcSecondFuncButton(true));
+    m_secondFuncBtn = makeBtn("2nd");
     m_clearBtns << m_secondFuncBtn;
     connect(m_secondFuncBtn, &QPushButton::clicked, this, &CalculatorPage::onSecondFuncToggled);
     grid->addWidget(m_secondFuncBtn, 2, 6);
 
     // Digits + operators (rows 3-6)
-    struct BtnDef { QString label; int row, col; QString style; };
+    // Button type enum for categorization
+    enum BtnType { Num, Op, Func, Bit, Eq };
+    struct BtnDef { QString label; int row, col; BtnType type; };
     QList<BtnDef> defs = {
-        {"7",3,0,ThemeColors::calcNumButton(true)},
-        {"8",3,1,ThemeColors::calcNumButton(true)},
-        {"9",3,2,ThemeColors::calcNumButton(true)},
-        {"÷",3,3,ThemeColors::calcOpButton(true)},
-        {"(",2,4,ThemeColors::calcFuncButton(true)},
-        {")",2,5,ThemeColors::calcFuncButton(true)},
-        {"π",3,4,ThemeColors::calcBitButton(true)},
-        {"4",4,0,ThemeColors::calcNumButton(true)},
-        {"5",4,1,ThemeColors::calcNumButton(true)},
-        {"6",4,2,ThemeColors::calcNumButton(true)},
-        {"×",4,3,ThemeColors::calcOpButton(true)},
-        {"e",4,4,ThemeColors::calcFuncButton(true)},
-        {"log",4,5,ThemeColors::calcFuncButton(true)},
-        {"ln",4,6,ThemeColors::calcFuncButton(true)},
-        {"1",5,0,ThemeColors::calcNumButton(true)},
-        {"2",5,1,ThemeColors::calcNumButton(true)},
-        {"3",5,2,ThemeColors::calcNumButton(true)},
-        {"-",5,3,ThemeColors::calcOpButton(true)},
-        {"MS",5,4,ThemeColors::calcFuncButton(true)},
-        {"MR",5,5,ThemeColors::calcFuncButton(true)},
-        {"MC",5,6,ThemeColors::calcFuncButton(true)},
-        {"+/-",6,0,ThemeColors::calcFuncButton(true)},
-        {"0",6,1,ThemeColors::calcNumButton(true)},
-        {".",6,2,ThemeColors::calcNumButton(true)},
-        {"+",6,3,ThemeColors::calcOpButton(true)},
-        {"=",6,4,ThemeColors::calcEqButton(true)},
+        {"7",3,0,Num}, {"8",3,1,Num}, {"9",3,2,Num},
+        {"÷",3,3,Op},
+        {"(",2,4,Func}, {")",2,5,Func},
+        {"π",3,4,Bit},
+        {"4",4,0,Num}, {"5",4,1,Num}, {"6",4,2,Num},
+        {"×",4,3,Op},
+        {"e",4,4,Func}, {"log",4,5,Func}, {"ln",4,6,Func},
+        {"1",5,0,Num}, {"2",5,1,Num}, {"3",5,2,Num},
+        {"-",5,3,Op},
+        {"MS",5,4,Func}, {"MR",5,5,Func}, {"MC",5,6,Func},
+        {"+/-",6,0,Func},
+        {"0",6,1,Num}, {".",6,2,Num},
+        {"+",6,3,Op},
+        {"=",6,4,Eq},
     };
 
     // Make = button span 3 cols
     for (auto& d : defs) {
-        auto* b = makeBtn(d.label, d.style);
+        auto* b = makeBtn(d.label);
         if (d.label == "=") {
             b->setObjectName("=");
             m_eqBtn = b;
