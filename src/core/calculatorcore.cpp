@@ -549,6 +549,47 @@ void CalculatorEngine::equals() {
 
     if (m_pendingOp.isEmpty()) return;
 
+    // Handle special binary operations (POW, NROOT, LOGXY)
+    if (m_pendingOp == "POW" || m_pendingOp == "NROOT" || m_pendingOp == "LOGXY") {
+        double aVal, bVal;
+        if (m_bigMode && m_base == 10) {
+            aVal = static_cast<double>(m_bigAccumulator);
+            bVal = static_cast<double>(m_bigCurrent);
+        } else if (m_floatMode) {
+            aVal = m_accumulatorDouble;
+            bVal = m_currentDouble;
+        } else {
+            aVal = static_cast<double>(m_accumulator);
+            bVal = static_cast<double>(m_current);
+        }
+
+        double result = 0.0;
+        QString opSymbol;
+        if (m_pendingOp == "POW") {
+            result = std::pow(aVal, bVal);
+            opSymbol = "^";
+        } else if (m_pendingOp == "NROOT") {
+            result = bVal != 0.0 ? std::pow(aVal, 1.0 / bVal) : 0.0;
+            opSymbol = "ʸ√";
+        } else if (m_pendingOp == "LOGXY") {
+            result = (bVal > 0 && bVal != 1.0 && aVal > 0) ? std::log(aVal) / std::log(bVal) : 0.0;
+            opSymbol = "log";
+        }
+
+        if (m_bigMode && m_base == 10) {
+            m_expression = bigToQString(m_bigAccumulator) + " " + opSymbol + " " + bigToQString(m_bigCurrent) + " =";
+            m_bigCurrent = BigDecimal(result);
+        } else {
+            m_expression = formatDouble(aVal) + " " + opSymbol + " " + formatDouble(bVal) + " =";
+            m_currentDouble = result;
+            m_floatMode = true;
+        }
+        m_inputString.clear();
+        m_pendingOp.clear();
+        m_newInput = true;
+        return;
+    }
+
     if (m_bigMode && m_base == 10) {
         const QString a = bigToQString(m_bigAccumulator);
         const QString b = bigToQString(m_bigCurrent);
@@ -690,9 +731,27 @@ void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
     if (m_bigMode && m_base == 10) {
         const QString bStr = bigToQString(m_bigCurrent);
 
-        if (op == "AND" || op == "OR" || op == "XOR") {
-            if (!m_pendingOp.isEmpty() && (m_pendingOp == "AND" || m_pendingOp == "OR" || m_pendingOp == "XOR")) {
-                m_bigCurrent = applyBigBinary(m_bigAccumulator, m_bigCurrent, m_pendingOp);
+        if (op == "AND" || op == "OR" || op == "XOR" || op == "POW" || op == "NROOT" || op == "LOGXY") {
+            if (!m_pendingOp.isEmpty() && (m_pendingOp == "AND" || m_pendingOp == "OR" || m_pendingOp == "XOR" ||
+                                            m_pendingOp == "POW" || m_pendingOp == "NROOT" || m_pendingOp == "LOGXY")) {
+                if (m_pendingOp == "POW") {
+                    // x^y using double
+                    double base = static_cast<double>(m_bigAccumulator);
+                    double exp = static_cast<double>(m_bigCurrent);
+                    m_bigCurrent = BigDecimal(std::pow(base, exp));
+                } else if (m_pendingOp == "NROOT") {
+                    // y-th root of x = x^(1/y)
+                    double x = static_cast<double>(m_bigAccumulator);
+                    double y = static_cast<double>(m_bigCurrent);
+                    m_bigCurrent = y != 0.0 ? BigDecimal(std::pow(x, 1.0 / y)) : BigDecimal(0);
+                } else if (m_pendingOp == "LOGXY") {
+                    // log_y(x) = ln(x) / ln(y), where accumulator=x (argument), current=y (base)
+                    double x = static_cast<double>(m_bigAccumulator);
+                    double y = static_cast<double>(m_bigCurrent);
+                    m_bigCurrent = (y > 0 && y != 1.0 && x > 0) ? BigDecimal(std::log(x) / std::log(y)) : BigDecimal(0);
+                } else {
+                    m_bigCurrent = applyBigBinary(m_bigAccumulator, m_bigCurrent, m_pendingOp);
+                }
                 m_inputString.clear();
                 m_pendingOp.clear();
                 m_newInput = true;
@@ -700,7 +759,11 @@ void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
             }
             m_bigAccumulator = m_bigCurrent;
             m_pendingOp = op;
-            m_expression = bStr + " " + op;
+            QString opSymbol = op;
+            if (op == "POW") opSymbol = "^";
+            if (op == "NROOT") opSymbol = "ʸ√";
+            if (op == "LOGXY") opSymbol = "log";
+            m_expression = bStr + " " + opSymbol;
             m_newInput = true;
             return;
         }
@@ -741,17 +804,42 @@ void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
     const long long b = m_current;
     long long res = m_current;
 
-    if (op == "AND" || op == "OR" || op == "XOR") {
-        if (!m_pendingOp.isEmpty() && (m_pendingOp == "AND" || m_pendingOp == "OR" || m_pendingOp == "XOR")) {
-            res = applyBinary(a, b, m_pendingOp);
+    if (op == "AND" || op == "OR" || op == "XOR" || op == "POW" || op == "NROOT" || op == "LOGXY") {
+        if (!m_pendingOp.isEmpty() && (m_pendingOp == "AND" || m_pendingOp == "OR" || m_pendingOp == "XOR" ||
+                                        m_pendingOp == "POW" || m_pendingOp == "NROOT" || m_pendingOp == "LOGXY")) {
+            if (m_floatMode || m_pendingOp == "POW" || m_pendingOp == "NROOT" || m_pendingOp == "LOGXY") {
+                // For POW/NROOT/LOGXY, use floating point
+                double aVal = (m_pendingOp == "POW" || m_pendingOp == "NROOT" || m_pendingOp == "LOGXY")
+                    ? (m_floatMode ? m_accumulatorDouble : static_cast<double>(a))
+                    : static_cast<double>(a);
+                double bVal = m_floatMode ? m_currentDouble : static_cast<double>(b);
+                if (m_pendingOp == "POW") {
+                    m_currentDouble = std::pow(aVal, bVal);
+                } else if (m_pendingOp == "NROOT") {
+                    // y-th root of x = x^(1/y), where a=x, b=y
+                    m_currentDouble = bVal != 0.0 ? std::pow(aVal, 1.0 / bVal) : 0.0;
+                } else if (m_pendingOp == "LOGXY") {
+                    // log_y(x) = ln(x) / ln(y), where a=x (argument), b=y (base)
+                    m_currentDouble = (bVal > 0 && bVal != 1.0 && aVal > 0) ? std::log(aVal) / std::log(bVal) : 0.0;
+                }
+                m_floatMode = true;
+                m_inputString.clear();
+            } else {
+                res = applyBinary(a, b, m_pendingOp);
+                m_current = maskToWidth(res, m_wordBits);
+            }
             m_pendingOp.clear();
             m_newInput = true;
-            m_current = maskToWidth(res, m_wordBits);
             return;
         }
         m_accumulator = b;
+        m_accumulatorDouble = m_floatMode ? m_currentDouble : static_cast<double>(b);
         m_pendingOp = op;
-        m_expression = toBaseString(b, m_base, m_wordBits) + " " + op;
+        QString opSymbol = op;
+        if (op == "POW") opSymbol = "^";
+        if (op == "NROOT") opSymbol = "ʸ√";
+        if (op == "LOGXY") opSymbol = "log";
+        m_expression = (m_floatMode ? formatDouble(m_currentDouble) : toBaseString(b, m_base, m_wordBits)) + " " + opSymbol;
         m_newInput = true;
         return;
     }

@@ -343,8 +343,8 @@ void CalculatorPage::onPiClicked() {
         m_engine.setPi();
     } else if (op == "e") {
         m_engine.setEuler();
-    } else if (op == "sin" || op == "asin") {
-        // Trig functions - delegate to engine
+    } else if (op == "sin" || op == "asin" || op == "LOGXY") {
+        // Trig functions and LOGXY - delegate to engine
         m_engine.applyBitwiseOrFunction(op);
     }
 
@@ -369,16 +369,15 @@ void CalculatorPage::updateSecondFuncButtons() {
     // Switch button labels and objectNames
     if (m_secondActive) {
         // 2nd function mode: trig functions
-        if (m_piBtn) { m_piBtn->setText("sin"); m_piBtn->setObjectName("sin"); }
-        if (m_sqBtn) { m_sqBtn->setText("cos"); m_sqBtn->setObjectName("cos"); }
-        if (m_sqrtBtn) { m_sqrtBtn->setText("tan"); m_sqrtBtn->setObjectName("tan"); }
-        if (m_eBtn) { m_eBtn->setText("sin⁻¹"); m_eBtn->setObjectName("asin"); }
-        if (m_logBtn) { m_logBtn->setText("cos⁻¹"); m_logBtn->setObjectName("acos"); }
-        if (m_lnBtn) { m_lnBtn->setText("tan⁻¹"); m_lnBtn->setObjectName("atan"); }
-        // Empty placeholders (no function)
-        if (m_msBtn) { m_msBtn->setText(""); m_msBtn->setObjectName(""); }
-        if (m_mrBtn) { m_mrBtn->setText(""); m_mrBtn->setObjectName(""); }
-        if (m_mcBtn) { m_mcBtn->setText(""); m_mcBtn->setObjectName(""); }
+        if (m_piBtn) { m_piBtn->setText("logᵧx"); m_piBtn->setObjectName("LOGXY"); }
+        if (m_sqBtn) { m_sqBtn->setText("xʸ"); m_sqBtn->setObjectName("POW"); }
+        if (m_sqrtBtn) { m_sqrtBtn->setText("ʸ√x"); m_sqrtBtn->setObjectName("NROOT"); }
+        if (m_eBtn) { m_eBtn->setText("sin"); m_eBtn->setObjectName("sin"); }
+        if (m_logBtn) { m_logBtn->setText("cos"); m_logBtn->setObjectName("cos"); }
+        if (m_lnBtn) { m_lnBtn->setText("tan"); m_lnBtn->setObjectName("tan"); }
+        if (m_msBtn) { m_msBtn->setText("sin⁻¹"); m_msBtn->setObjectName("asin"); }
+        if (m_mrBtn) { m_mrBtn->setText("cos⁻¹"); m_mrBtn->setObjectName("acos"); }
+        if (m_mcBtn) { m_mcBtn->setText("tan⁻¹"); m_mcBtn->setObjectName("atan"); }
     } else {
         // Normal mode: original functions
         if (m_piBtn) { m_piBtn->setText("π"); m_piBtn->setObjectName("π"); }
