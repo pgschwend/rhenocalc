@@ -37,6 +37,7 @@ QTabWidget::pane {
 }
 QTabBar {
     background: transparent;
+    qproperty-drawBase: false;
 }
 QTabBar::tab {
     background-color: @L21@;

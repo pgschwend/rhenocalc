@@ -372,9 +372,9 @@ void CalculatorPage::updateSecondFuncButtons() {
         if (m_piBtn) { m_piBtn->setText("sin"); m_piBtn->setObjectName("sin"); }
         if (m_sqBtn) { m_sqBtn->setText("cos"); m_sqBtn->setObjectName("cos"); }
         if (m_sqrtBtn) { m_sqrtBtn->setText("tan"); m_sqrtBtn->setObjectName("tan"); }
-        if (m_eBtn) { m_eBtn->setText("asin"); m_eBtn->setObjectName("asin"); }
-        if (m_logBtn) { m_logBtn->setText("acos"); m_logBtn->setObjectName("acos"); }
-        if (m_lnBtn) { m_lnBtn->setText("atan"); m_lnBtn->setObjectName("atan"); }
+        if (m_eBtn) { m_eBtn->setText("sin⁻¹"); m_eBtn->setObjectName("asin"); }
+        if (m_logBtn) { m_logBtn->setText("cos⁻¹"); m_logBtn->setObjectName("acos"); }
+        if (m_lnBtn) { m_lnBtn->setText("tan⁻¹"); m_lnBtn->setObjectName("atan"); }
         // Empty placeholders (no function)
         if (m_msBtn) { m_msBtn->setText(""); m_msBtn->setObjectName(""); }
         if (m_mrBtn) { m_mrBtn->setText(""); m_mrBtn->setObjectName(""); }

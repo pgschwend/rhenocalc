@@ -218,6 +218,7 @@ void MainWindow::restoreWindowGeometry() {
 
 void MainWindow::setupUI() {
     m_tabWidget = new FixedTabWidget(this);
+    m_tabWidget->setDocumentMode(true);  // Remove extra frame around tabs
 
     m_calcPage = new CalculatorPage(this);
     m_basePage = new BaseConverterPage(this);
