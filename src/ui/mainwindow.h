@@ -29,7 +29,7 @@ public:
         QSize s = QTabBar::tabSizeHint(index);
         if (index <= 1)       s.setWidth(58);   // Calc, Base
         else if (index == 2)  s.setWidth(86);   // dynamic tab
-        else if (index == 3)  s.setWidth(36);   // "▾"
+        else if (index == 3)  s.setWidth(34);   // "▾"
         return s;
     }
 };

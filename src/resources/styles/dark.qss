@@ -9,7 +9,7 @@ QMainWindow, QDialog {
     background-color: @D01@;
 }
 
-/* === Popup-Fallback: QAbstractItemView wird als Top-Level-Fenster gerendert === */
+/* === Popup-Fallback: QAbstractItemView rendered as top-level window === */
 QAbstractItemView {
     background-color: @D04@;
     color: @D22@;
@@ -395,22 +395,22 @@ QProgressBar::chunk {
 }
 
 /* ============================================================
-   Widget-spezifische Stile (via ObjectName)
+   Widget-specific styles (via ObjectName)
    ============================================================ */
 
-/* Settings – Theme-Hinweis */
+/* Settings – Theme hint */
 QLabel#themeHintLabel {
     color: @D19@;
     font-size: 11px;
 }
 
-/* Info-Seite – App-Icon */
+/* Info page – App icon */
 QLabel#appIconLabel {
     font-size: 24px;
     font-weight: bold;
 }
 
-/* Beschreibungs-Labels mit Zeilenabstand */
+/* Description labels with line spacing */
 QLabel#settingsInfoLabel,
 QLabel#nmapInfoLabel,
 QLabel#appDescriptionLabel {
@@ -420,20 +420,20 @@ QLabel#appFeaturesLabel {
     line-height: 1.6;
 }
 
-/* Status-Labels – gedimmt/kursiv */
+/* Status labels – dimmed/italic */
 QLabel#wifiStatusLabel,
 QLabel#btScanStatusLabel {
     color: @D19@;
     font-style: italic;
 }
 
-/* Nmap-Status */
+/* Nmap status */
 QLabel#nmapStatusLabel {
     color: @D19@;
     font-weight: bold;
 }
 
-/* Modbus – dynamischer Verbindungsstatus (via Property "status") */
+/* Modbus – dynamic connection status (via property "status") */
 QLabel#rtuStatusLabel[status="disconnected"],
 QLabel#tcpStatusLabel[status="disconnected"] {
     color: @D17@;
@@ -445,7 +445,7 @@ QLabel#tcpStatusLabel[status="connected"] {
     font-weight: bold;
 }
 
-/* REST API – Send-Button (Akzentfarbe) */
+/* REST API – Send button (accent color) */
 QPushButton#sendRequestButton {
     background-color: @D12@;
 }
@@ -456,13 +456,13 @@ QPushButton#sendRequestButton:pressed {
     background-color: @D10@;
 }
 
-/* REST API – HTTP-Status-Code */
+/* REST API – HTTP status code */
 QLabel#httpStatusCodeLabel {
     font-weight: bold;
     font-size: 12px;
 }
 
-/* REST API – Anfrage-Status */
+/* REST API – Request status */
 QLabel#requestStatusLabel {
     color: @D19@;
 }

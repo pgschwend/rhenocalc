@@ -30,13 +30,13 @@ void CalculatorPage::setupUI() {
     m_baseLabel = new QLabel("Base:", this);
     m_baseLabel->setStyleSheet("font-size:13px;");
     m_baseCombo = new QComboBox(this);
-    m_baseCombo->addItems({"Decimal (10)", "Hexadecimal (16)", "Binary (2)", "Octal (8)"});
+    m_baseCombo->addItems({"Dec", "Hex", "Bin", "Oct"});
     m_baseCombo->setMinimumWidth(90);
 
     m_wordLabel = new QLabel("Mode:", this);
     m_wordLabel->setStyleSheet("font-size:13px;");
     m_widthCombo = new QComboBox(this);
-    m_widthCombo->addItems({"8-bit", "16-bit", "32-bit", "64-bit", "Scientific"});
+    m_widthCombo->addItems({"8-bit", "16-bit", "32-bit", "64-bit", "Scient"});
     m_widthCombo->setCurrentIndex(4);
 
     topRow->addWidget(m_baseLabel);

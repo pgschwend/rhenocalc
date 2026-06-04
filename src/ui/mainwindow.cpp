@@ -206,6 +206,8 @@ void MainWindow::restoreWindowGeometry() {
 }
 
 void MainWindow::setupUI() {
+    setMinimumWidth(310);  // Minimum window width
+
     m_tabWidget = new FixedTabWidget(this);
     m_tabWidget->setDocumentMode(true);  // Remove extra frame around tabs
 
