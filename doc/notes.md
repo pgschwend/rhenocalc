@@ -3,7 +3,7 @@
 
 ### TODO's
 - Traceroute fix
-
+- Ping native, not Windows command
 
 ### Features
 - Wave length calculator/visualization

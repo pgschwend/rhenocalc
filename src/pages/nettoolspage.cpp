@@ -78,7 +78,7 @@ void NetToolsPage::setupUI() {
     m_pingOutput = new QTextEdit(this);
     m_pingOutput->setReadOnly(true);
     m_pingOutput->setMinimumHeight(80);
-    m_pingOutput->setMaximumHeight(120);
+    m_pingOutput->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     m_pingOutput->setFont(QFont("Consolas", 9));
     pingLayout->addWidget(m_pingOutput);
 
@@ -122,7 +122,7 @@ void NetToolsPage::setupUI() {
     m_scanOutput = new QTextEdit(this);
     m_scanOutput->setReadOnly(true);
     m_scanOutput->setMinimumHeight(80);
-    m_scanOutput->setMaximumHeight(120);
+    m_scanOutput->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     m_scanOutput->setFont(QFont("Consolas", 9));
     scanLayout->addWidget(m_scanOutput);
 
@@ -153,14 +153,13 @@ void NetToolsPage::setupUI() {
 
     m_traceOutput = new QTextEdit(this);
     m_traceOutput->setReadOnly(true);
-    m_traceOutput->setMinimumHeight(100);
-    m_traceOutput->setMaximumHeight(150);
+    m_traceOutput->setMinimumHeight(80);
+    m_traceOutput->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     m_traceOutput->setFont(QFont("Consolas", 9));
     traceLayout->addWidget(m_traceOutput);
 
     contentLayout->addWidget(traceGroup);
 
-    contentLayout->addStretch();
     scroll->setWidget(content);
     root->addWidget(scroll);
 
@@ -309,7 +308,10 @@ void NetToolsPage::startPortScan() {
 
 void NetToolsPage::stopPortScan() {
     m_scanTimer->stop();
-    m_scanSocket->abort();
+    if (m_scanSocket) {
+        m_scanSocket->disconnect();
+        m_scanSocket->abort();
+    }
     m_portsToScan.clear();
     m_currentPortIndex = 0;
 
@@ -328,8 +330,17 @@ void NetToolsPage::scanNextPort() {
     int port = m_portsToScan[m_currentPortIndex];
     m_scanProgress->setValue(m_currentPortIndex + 1);
 
-    m_scanSocket->abort();
-    m_scanSocket->connectToHost(m_scanTargetHost, port);
+    // Create a new socket for each port to avoid state issues
+    if (m_scanSocket) {
+        m_scanSocket->disconnect();
+        m_scanSocket->deleteLater();
+    }
+
+    m_scanSocket = new QTcpSocket(this);
+    connect(m_scanSocket, &QTcpSocket::connected, this, &NetToolsPage::onPortConnected);
+    connect(m_scanSocket, &QAbstractSocket::errorOccurred, this, &NetToolsPage::onPortError);
+
+    m_scanSocket->connectToHost(m_scanTargetHost, static_cast<quint16>(port));
     m_scanTimer->start();
 }
 
