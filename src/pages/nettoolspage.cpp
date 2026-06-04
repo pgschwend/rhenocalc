@@ -50,29 +50,31 @@ void NetToolsPage::setupUI() {
     auto* pingGroup = new QGroupBox("Ping", this);
     auto* pingLayout = new QVBoxLayout(pingGroup);
 
-    auto* pingInputLayout = new QHBoxLayout();
-    pingInputLayout->addWidget(new QLabel("Host:", this));
+    auto* pingHostLayout = new QHBoxLayout();
+    pingHostLayout->addWidget(new QLabel("Host:", this));
     m_pingHost = new QLineEdit("8.8.8.8", this);
     m_pingHost->setPlaceholderText("IP or hostname");
-    pingInputLayout->addWidget(m_pingHost, 1);
+    pingHostLayout->addWidget(m_pingHost, 1);
+    pingLayout->addLayout(pingHostLayout);
 
-    pingInputLayout->addWidget(new QLabel("Count:", this));
+    auto* pingControlLayout = new QHBoxLayout();
+    pingControlLayout->addWidget(new QLabel("Count:", this));
     m_pingCount = new QSpinBox(this);
     m_pingCount->setRange(1, 100);
     m_pingCount->setValue(4);
     m_pingCount->setFixedWidth(60);
-    pingInputLayout->addWidget(m_pingCount);
+    pingControlLayout->addWidget(m_pingCount);
+    pingControlLayout->addStretch();
 
     m_pingStartBtn = new QPushButton("Start", this);
     m_pingStartBtn->setFixedWidth(60);
-    pingInputLayout->addWidget(m_pingStartBtn);
+    pingControlLayout->addWidget(m_pingStartBtn);
 
     m_pingStopBtn = new QPushButton("Stop", this);
     m_pingStopBtn->setFixedWidth(60);
     m_pingStopBtn->setEnabled(false);
-    pingInputLayout->addWidget(m_pingStopBtn);
-
-    pingLayout->addLayout(pingInputLayout);
+    pingControlLayout->addWidget(m_pingStopBtn);
+    pingLayout->addLayout(pingControlLayout);
 
     m_pingOutput = new QTextEdit(this);
     m_pingOutput->setReadOnly(true);
@@ -89,27 +91,28 @@ void NetToolsPage::setupUI() {
     auto* scanGroup = new QGroupBox("Port Scanner", this);
     auto* scanLayout = new QVBoxLayout(scanGroup);
 
-    auto* scanInputLayout = new QHBoxLayout();
-    scanInputLayout->addWidget(new QLabel("Host:", this));
+    auto* scanHostLayout = new QHBoxLayout();
+    scanHostLayout->addWidget(new QLabel("Host:", this));
     m_scanHost = new QLineEdit("127.0.0.1", this);
     m_scanHost->setPlaceholderText("IP or hostname");
-    scanInputLayout->addWidget(m_scanHost, 1);
+    scanHostLayout->addWidget(m_scanHost, 1);
+    scanLayout->addLayout(scanHostLayout);
 
-    scanInputLayout->addWidget(new QLabel("Ports:", this));
+    auto* scanControlLayout = new QHBoxLayout();
+    scanControlLayout->addWidget(new QLabel("Ports:", this));
     m_scanPorts = new QLineEdit("21-25,80,443,3389,8080", this);
     m_scanPorts->setPlaceholderText("e.g. 80,443 or 1-1000");
-    scanInputLayout->addWidget(m_scanPorts, 1);
+    scanControlLayout->addWidget(m_scanPorts, 1);
 
     m_scanStartBtn = new QPushButton("Scan", this);
     m_scanStartBtn->setFixedWidth(60);
-    scanInputLayout->addWidget(m_scanStartBtn);
+    scanControlLayout->addWidget(m_scanStartBtn);
 
     m_scanStopBtn = new QPushButton("Stop", this);
     m_scanStopBtn->setFixedWidth(60);
     m_scanStopBtn->setEnabled(false);
-    scanInputLayout->addWidget(m_scanStopBtn);
-
-    scanLayout->addLayout(scanInputLayout);
+    scanControlLayout->addWidget(m_scanStopBtn);
+    scanLayout->addLayout(scanControlLayout);
 
     m_scanProgress = new QProgressBar(this);
     m_scanProgress->setRange(0, 100);

@@ -5,11 +5,8 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QComboBox>
-#include <QButtonGroup>
 #include <QKeyEvent>
 #include <QList>
-#include <cmath>
-#include <limits>
 
 class CalculatorPage : public QWidget {
     Q_OBJECT
@@ -42,21 +39,16 @@ private:
     void pressOperator(const QString& op);
     void updateSecondFuncButtons();
     QPushButton* makeBtn(const QString& text, const QString& style = "");
-    QString toBaseString(long long val);
-    long long fromBaseString(const QString& s);
-    long long maskToWidth(long long val);
-    QString formatDouble(double val);
 
-    QLineEdit*   m_display;
-    QLabel*      m_exprLabel;
-    QLabel*      m_hintLabel;
-    QLabel*      m_baseLabel;
-    QLabel*      m_wordLabel;
-    QComboBox*   m_baseCombo;
-    QComboBox*   m_widthCombo;
+    QLineEdit*   m_display = nullptr;
+    QLabel*      m_exprLabel = nullptr;
+    QLabel*      m_hintLabel = nullptr;
+    QLabel*      m_baseLabel = nullptr;
+    QLabel*      m_wordLabel = nullptr;
+    QComboBox*   m_baseCombo = nullptr;
+    QComboBox*   m_widthCombo = nullptr;
 
-    // Hex digit buttons
-    QPushButton* m_hexBtns[6]; // A-F
+    QPushButton* m_hexBtns[6]{}; // A-F
 
     // Button groups for theming
     QList<QPushButton*> m_numBtns;
@@ -67,18 +59,18 @@ private:
     QPushButton*        m_eqBtn = nullptr;
     bool                m_ceEntryCleared = false;
 
-    // 2nd function toggle
+    // 2nd function toggle buttons
     bool                m_secondActive = false;
     QPushButton*        m_secondFuncBtn = nullptr;
-    QPushButton*        m_piBtn = nullptr;      // π ↔ sin
-    QPushButton*        m_sqBtn = nullptr;      // x² ↔ cos
-    QPushButton*        m_sqrtBtn = nullptr;    // √x ↔ tan
-    QPushButton*        m_eBtn = nullptr;       // e ↔ asin
-    QPushButton*        m_logBtn = nullptr;     // log ↔ acos
-    QPushButton*        m_lnBtn = nullptr;      // ln ↔ atan
-    QPushButton*        m_msBtn = nullptr;      // MS ↔ sinh
-    QPushButton*        m_mrBtn = nullptr;      // MR ↔ cosh
-    QPushButton*        m_mcBtn = nullptr;      // MC ↔ tanh
+    QPushButton*        m_piBtn = nullptr;
+    QPushButton*        m_sqBtn = nullptr;
+    QPushButton*        m_sqrtBtn = nullptr;
+    QPushButton*        m_eBtn = nullptr;
+    QPushButton*        m_logBtn = nullptr;
+    QPushButton*        m_lnBtn = nullptr;
+    QPushButton*        m_msBtn = nullptr;
+    QPushButton*        m_mrBtn = nullptr;
+    QPushButton*        m_mcBtn = nullptr;
     bool                m_isDark = true;
 
     CalculatorCore::CalculatorEngine m_engine;

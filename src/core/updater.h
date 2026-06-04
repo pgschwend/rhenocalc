@@ -1,5 +1,4 @@
-#ifndef UPDATER_H
-#define UPDATER_H
+#pragma once
 
 #include <QObject>
 #include <QString>
@@ -17,7 +16,7 @@ public:
     void downloadUpdate(const QString& url);
     void cleanup();
 
-    QString zipPath() const { return m_zipPath; }
+    [[nodiscard]] QString zipPath() const { return m_zipPath; }
 
     static constexpr const char* GITHUB_OWNER = "pgschwend";
     static constexpr const char* GITHUB_REPO  = "rhenocalc";
@@ -37,11 +36,10 @@ private slots:
     void onDownloadFinished();
 
 private:
-    QNetworkAccessManager* m_nam;
+    QNetworkAccessManager* m_nam = nullptr;
     QNetworkReply* m_downloadReply = nullptr;
     QFile* m_downloadFile = nullptr;
     QString m_zipPath;
 };
 
-#endif // UPDATER_H
 

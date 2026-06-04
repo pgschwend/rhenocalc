@@ -232,17 +232,6 @@ void CalculatorPage::setupUI() {
     setFocusPolicy(Qt::StrongFocus);
 }
 
-long long CalculatorPage::maskToWidth(long long val) {
-    return CalculatorCore::maskToWidth(val, m_engine.wordBits());
-}
-
-QString CalculatorPage::toBaseString(long long val) {
-    return CalculatorCore::toBaseString(val, m_engine.base(), m_engine.wordBits());
-}
-
-long long CalculatorPage::fromBaseString(const QString& s) {
-    return CalculatorCore::fromBaseString(s, m_engine.base());
-}
 
 void CalculatorPage::updateDisplay() {
     m_display->setText(m_engine.displayText());
@@ -404,10 +393,6 @@ void CalculatorPage::resetCeClearCycle() {
     m_ceEntryCleared = false;
 }
 
-// ─── Float formatting ─────────────────────────────────────────────────────────
-QString CalculatorPage::formatDouble(double val) {
-    return CalculatorCore::formatDouble(val);
-}
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 void CalculatorPage::applyTheme(bool dark) {

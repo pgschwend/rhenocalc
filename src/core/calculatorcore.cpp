@@ -2,8 +2,6 @@
 
 #include <cmath>
 #include <limits>
-#include <sstream>
-#include <iomanip>
 #include <QVector>
 
 #include <boost/multiprecision/cpp_dec_float.hpp>

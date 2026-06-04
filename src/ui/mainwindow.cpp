@@ -31,17 +31,6 @@
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
-    , m_tabWidget(nullptr)
-    , m_calcPage(nullptr)
-    , m_basePage(nullptr)
-    , m_unitPage(nullptr)
-    , m_networkPage(nullptr)
-    , m_crcHashPage(nullptr)
-    , m_colorPage(nullptr)
-    , m_financePage(nullptr)
-    , m_floatPage(nullptr)
-    , m_electronicsPage(nullptr)
-    , m_netToolsPage(nullptr)
 {
     // Load theme from QSettings (default: dark)
     QSettings settings("RhenoCalc", "RhenoCalc");
@@ -251,13 +240,13 @@ void MainWindow::setupUI() {
     // Build the list of extra pages available via "More"
     m_extraPages = {
         {"Unit",     m_unitPage},
-        {"Network",  m_networkPage},
-        {"CRC/Hash", m_crcHashPage},
-        {"Color",    m_colorPage},
-        {"Finance",  m_financePage},
         {"Float",    m_floatPage},
-        {"Electronics", m_electronicsPage},
+        {"CRC/Hash", m_crcHashPage},
+        {"Finance",  m_financePage},
+        {"Color",    m_colorPage},
+        {"NetAddr",  m_networkPage},
         {"NetTools", m_netToolsPage},
+        {"Electronics", m_electronicsPage},
     };
 
     // Restore last dynamic tab from settings

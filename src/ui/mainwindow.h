@@ -1,5 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
 #include <QTabWidget>
@@ -29,8 +28,8 @@ public:
     [[nodiscard]] QSize tabSizeHint(int index) const override {
         QSize s = QTabBar::tabSizeHint(index);
         if (index <= 1)       s.setWidth(58);   // Calc, Base
-        else if (index == 2)  s.setWidth(86);   // dynamic tab (wider)
-        else if (index == 3)  s.setWidth(36);   // "▾" (small)
+        else if (index == 2)  s.setWidth(86);   // dynamic tab
+        else if (index == 3)  s.setWidth(36);   // "▾"
         return s;
     }
 };
@@ -39,7 +38,7 @@ public:
 class FixedTabWidget : public QTabWidget {
 public:
     explicit FixedTabWidget(QWidget* parent = nullptr) : QTabWidget(parent) {
-        setTabBar(new FixedTabBar(this));
+        setTabBar(new FixedTabBar(this)); // NOLINT
     }
 };
 
@@ -47,8 +46,8 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget* parent = nullptr); // NOLINT
-    ~MainWindow();
+    explicit MainWindow(QWidget* parent = nullptr);
+    ~MainWindow() override;
 
 protected:
     void closeEvent(QCloseEvent* event) override;
@@ -63,26 +62,24 @@ private:
     void saveWindowGeometry();
     void restoreWindowGeometry();
 
-    QTabWidget*        m_tabWidget;
-    CalculatorPage*    m_calcPage;
-    BaseConverterPage* m_basePage;
-    UnitConverterPage* m_unitPage;
-    NetworkPage*       m_networkPage;
-    CrcHashPage*       m_crcHashPage;
-    ColorPage*         m_colorPage;
-    FinancePage*       m_financePage;
-    FloatPage*         m_floatPage;
-    ElectronicsPage*   m_electronicsPage;
-    NetToolsPage*      m_netToolsPage;
+    QTabWidget*        m_tabWidget = nullptr;
+    CalculatorPage*    m_calcPage = nullptr;
+    BaseConverterPage* m_basePage = nullptr;
+    UnitConverterPage* m_unitPage = nullptr;
+    NetworkPage*       m_networkPage = nullptr;
+    CrcHashPage*       m_crcHashPage = nullptr;
+    ColorPage*         m_colorPage = nullptr;
+    FinancePage*       m_financePage = nullptr;
+    FloatPage*         m_floatPage = nullptr;
+    ElectronicsPage*   m_electronicsPage = nullptr;
+    NetToolsPage*      m_netToolsPage = nullptr;
     QPushButton*       m_onTopBtn = nullptr;
     QPushButton*       m_themeBtn = nullptr;
     QMenu*             m_moreMenu = nullptr;
 
-    // Extra pages available via "More" tab
     QVector<QPair<QString, QWidget*>> m_extraPages;
 
-    bool               m_isDark   = true;
-    bool               m_alwaysOnTop = false;
+    bool m_isDark = true;
+    bool m_alwaysOnTop = false;
 };
 
-#endif // MAINWINDOW_H
