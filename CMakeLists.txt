@@ -46,6 +46,7 @@ set(SOURCES
         src/pages/financepage.h src/pages/financepage.cpp
         src/pages/floatpage.h src/pages/floatpage.cpp
         src/pages/electronicspage.h src/pages/electronicspage.cpp
+        src/pages/nettoolspage.h src/pages/nettoolspage.cpp
         src/core/calculatorcore.h src/core/calculatorcore.cpp
         src/core/baseconvertercore.h src/core/baseconvertercore.cpp
         src/core/unitconvertercore.h src/core/unitconvertercore.cpp
