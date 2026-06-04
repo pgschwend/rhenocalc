@@ -1,4 +1,5 @@
 #include "nettoolspage.h"
+#include "core/traceroute.h"
 #include "ui/themecolors.h"
 
 #include <QGridLayout>
@@ -385,54 +386,44 @@ void NetToolsPage::startTraceroute() {
     m_traceStartBtn->setEnabled(false);
     m_traceStopBtn->setEnabled(true);
 
-    m_traceProcess = new QProcess(this);
-    connect(m_traceProcess, &QProcess::readyReadStandardOutput, this, &NetToolsPage::onTracerouteOutput);
-    connect(m_traceProcess, &QProcess::readyReadStandardError, this, &NetToolsPage::onTracerouteOutput);
-    connect(m_traceProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, &NetToolsPage::onTracerouteFinished);
-
-#ifdef Q_OS_WIN
-    m_traceProcess->start("tracert", {"-d", "-h", "20", host});
-#else
-    m_traceProcess->start("traceroute", {"-n", "-m", "20", host});
-#endif
+    if (!m_traceroute) {
+        m_traceroute = new Traceroute(this);
+        connect(m_traceroute, &Traceroute::hopResult, this, &NetToolsPage::onTraceHop);
+        connect(m_traceroute, &Traceroute::finished, this, &NetToolsPage::onTraceFinished);
+        connect(m_traceroute, &Traceroute::error, this, &NetToolsPage::onTraceError);
+    }
 
     appendOutput(m_traceOutput, QString("Tracing route to %1...").arg(host), "#888");
+    m_traceroute->start(host, 30, 3000);
 }
 
 void NetToolsPage::stopTraceroute() {
-    if (m_traceProcess) {
-        m_traceProcess->kill();
-        m_traceProcess->deleteLater();
-        m_traceProcess = nullptr;
+    if (m_traceroute) {
+        m_traceroute->stop();
     }
     m_traceStartBtn->setEnabled(true);
     m_traceStopBtn->setEnabled(false);
 }
 
-void NetToolsPage::onTracerouteOutput() {
-    if (!m_traceProcess) return;
-    QString output = QString::fromLocal8Bit(m_traceProcess->readAllStandardOutput());
-    output += QString::fromLocal8Bit(m_traceProcess->readAllStandardError());
-
-    for (const QString& line : output.split('\n', Qt::SkipEmptyParts)) {
-        QString trimmed = line.trimmed();
-        if (trimmed.isEmpty()) continue;
-
-        // Color hops with IPs green, timeouts red
-        if (trimmed.contains('*') || trimmed.contains("Request timed out")) {
-            appendOutput(m_traceOutput, trimmed, "#e74c3c");
-        } else if (QRegularExpression("\\d+\\.\\d+\\.\\d+\\.\\d+").match(trimmed).hasMatch()) {
-            appendOutput(m_traceOutput, trimmed, "#2ecc71");
-        } else {
-            appendOutput(m_traceOutput, trimmed);
-        }
+void NetToolsPage::onTraceHop(const TraceHop& hop) {
+    QString line;
+    if (hop.rtt < 0) {
+        line = QString("%1    *    Request timed out").arg(hop.hop, 2);
+        appendOutput(m_traceOutput, line, "#e74c3c");
+    } else {
+        line = QString("%1    %2 ms    %3").arg(hop.hop, 2).arg(hop.rtt, 4).arg(hop.address);
+        appendOutput(m_traceOutput, line, "#2ecc71");
     }
 }
 
-void NetToolsPage::onTracerouteFinished(int exitCode, QProcess::ExitStatus /*status*/) {
-    appendOutput(m_traceOutput, QString("\nTrace complete (exit code: %1)").arg(exitCode), "#888");
+void NetToolsPage::onTraceFinished(bool success, const QString& message) {
+    Q_UNUSED(success)
+    appendOutput(m_traceOutput, QString("\n%1").arg(message), "#888");
     stopTraceroute();
+}
+
+void NetToolsPage::onTraceError(const QString& message) {
+    appendOutput(m_traceOutput, message, "#e74c3c");
 }
 
 void NetToolsPage::applyTheme(bool dark) {

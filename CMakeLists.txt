@@ -52,6 +52,7 @@ set(SOURCES
         src/core/unitconvertercore.h src/core/unitconvertercore.cpp
         src/core/networkcalc.h src/core/networkcalc.cpp
         src/core/crchashcore.h src/core/crchashcore.cpp
+        src/core/traceroute.h src/core/traceroute.cpp
         src/core/updater.h src/core/updater.cpp
         src/info.h
 )
@@ -94,6 +95,10 @@ target_link_libraries(RhenoCalc
         Qt::Network
         Boost::multiprecision
 )
+
+if(WIN32)
+    target_link_libraries(RhenoCalc iphlpapi ws2_32)
+endif()
 
 # Deploy updater script next to executable
 if(WIN32)

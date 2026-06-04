@@ -1,15 +1,12 @@
 
-## TODO's
+## Notes
 
+### TODO's
 - Traceroute fix
-- Quick reference
+
 
 ### Features
-- Sin/Cos function
 - Wave length calculator/visualization
-- Internet Speedtest, Ping Tool, Maybe network tools like traceroute, port scanner, etc.
-- Algorithm tester in different languages like C, C++, Python, Java, etc.
-
 
 
 ### Improvements
@@ -20,3 +17,5 @@
 - REGEX tester
 - Cronjob calculator
 - ASCII/UTF-8/HEX-Converter (Notpad++ has a good one)
+- Internet Speedtest, Ping Tool, Maybe network tools like traceroute, port scanner, etc.
+- Algorithm tester in different languages like C, C++, Python, Java, etc.
