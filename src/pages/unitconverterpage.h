@@ -22,6 +22,7 @@ private:
     void setupUI();
     void populate(int category);
     void convert();
+    void updateQuickReference(int category);
 
     QComboBox* m_categoryCombo;
     QLineEdit* m_fromEdit;

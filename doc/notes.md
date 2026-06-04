@@ -1,6 +1,9 @@
 
 ## TODO's
 
+- Traceroute fix
+- Quick reference
+
 ### Features
 - Sin/Cos function
 - Wave length calculator/visualization

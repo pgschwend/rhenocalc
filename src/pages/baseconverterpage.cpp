@@ -142,20 +142,25 @@ void BaseConverterPage::setupUI() {
 
     regLayout->addWidget(bitArea);
 
-    // Byte values row
-    auto* byteRow = new QHBoxLayout();
-    byteRow->addWidget(new QLabel("Bytes:", this));
+    // Byte values - labels above, values below
+    auto* byteGrid = new QGridLayout();
+    byteGrid->setSpacing(4);
     for (int i = 7; i >= 0; --i) {
+        int col = 7 - i;  // B7 at left (col 0), B0 at right (col 7)
+
+        auto* label = new QLabel(QString("B%1").arg(i), this);
+        label->setAlignment(Qt::AlignCenter);
+        label->setStyleSheet("font-size:11px;");
+        byteGrid->addWidget(label, 0, col);
+
         auto* bl = new QLabel("00", this);
         bl->setAlignment(Qt::AlignCenter);
         bl->setFixedWidth(32);
         bl->setToolTip(QString("Byte %1").arg(i));
         m_byteLabels[i] = bl;
-        byteRow->addWidget(new QLabel(QString("B%1:").arg(i), this));
-        byteRow->addWidget(bl);
+        byteGrid->addWidget(bl, 1, col);
     }
-    byteRow->addStretch();
-    regLayout->addLayout(byteRow);
+    regLayout->addLayout(byteGrid);
     root->addWidget(m_regGroup);
 
     // ── Info section ─────────────────────────────────────────────────────────
