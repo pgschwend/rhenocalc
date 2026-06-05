@@ -246,7 +246,7 @@ void MainWindow::setupUI() {
         {"CRC/Hash", m_crcHashPage},
         {"Finance",  m_financePage},
         {"Color",    m_colorPage},
-        {"NetAddr",  m_networkPage},
+        {"IP-Address",  m_networkPage},
         {"NetTools", m_netToolsPage},
         {"Electronics", m_electronicsPage},
     };

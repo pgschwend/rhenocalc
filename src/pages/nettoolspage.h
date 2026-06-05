@@ -4,6 +4,8 @@
 #include <QProcess>
 #include <QTcpSocket>
 #include <QTimer>
+#include <QHostAddress>
+#include <QHostInfo>
 
 class QLabel;
 class QLineEdit;
@@ -32,6 +34,7 @@ private slots:
     void scanNextPort();
     void onPortConnected();
     void onPortError(QAbstractSocket::SocketError error);
+    void onPortTimeout();
 
     void startTraceroute();
     void stopTraceroute();
@@ -65,7 +68,8 @@ private:
     QList<int> m_portsToScan;
     int m_currentPortIndex = 0;
     int m_openPorts = 0;
-    QString m_scanTargetHost;
+    QHostAddress m_resolvedScanAddress;
+    bool m_scanActive = false;
 
     // Traceroute
     QLineEdit* m_traceHost = nullptr;

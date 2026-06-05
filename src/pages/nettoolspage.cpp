@@ -173,18 +173,12 @@ void NetToolsPage::setupUI() {
     connect(m_traceStartBtn, &QPushButton::clicked, this, &NetToolsPage::startTraceroute);
     connect(m_traceStopBtn, &QPushButton::clicked, this, &NetToolsPage::stopTraceroute);
 
-    // Initialize socket and timer for port scanning
-    m_scanSocket = new QTcpSocket(this);
+    // Initialize timer for port scanning
     m_scanTimer = new QTimer(this);
     m_scanTimer->setSingleShot(true);
-    m_scanTimer->setInterval(500); // 500ms timeout per port
+    m_scanTimer->setInterval(500); // timeout per port
 
-    connect(m_scanSocket, &QTcpSocket::connected, this, &NetToolsPage::onPortConnected);
-    connect(m_scanSocket, &QAbstractSocket::errorOccurred, this, &NetToolsPage::onPortError);
-    connect(m_scanTimer, &QTimer::timeout, this, [this]() {
-        m_scanSocket->abort();
-        scanNextPort();
-    });
+    connect(m_scanTimer, &QTimer::timeout, this, &NetToolsPage::onPortTimeout);
 }
 
 void NetToolsPage::appendOutput(QTextEdit* output, const QString& text, const QString& color) {
@@ -291,26 +285,45 @@ void NetToolsPage::startPortScan() {
     }
 
     m_scanOutput->clear();
-    m_scanTargetHost = host;
-    m_currentPortIndex = 0;
-    m_openPorts = 0;
-
-    m_scanProgress->setRange(0, m_portsToScan.size());
-    m_scanProgress->setValue(0);
-
     m_scanStartBtn->setEnabled(false);
     m_scanStopBtn->setEnabled(true);
 
-    appendOutput(m_scanOutput, QString("Scanning %1 (%2 ports)...").arg(host).arg(m_portsToScan.size()), "#888");
+    appendOutput(m_scanOutput, QString("Resolving %1...").arg(host), "#888");
 
-    scanNextPort();
+    // Resolve hostname first
+    QHostInfo::lookupHost(host, this, [this, host](const QHostInfo& info) {
+        if (info.error() != QHostInfo::NoError || info.addresses().isEmpty()) {
+            appendOutput(m_scanOutput, QString("Failed to resolve host: %1").arg(info.errorString()), "#e74c3c");
+            m_scanStartBtn->setEnabled(true);
+            m_scanStopBtn->setEnabled(false);
+            return;
+        }
+
+        m_resolvedScanAddress = info.addresses().first();
+        m_currentPortIndex = 0;
+        m_openPorts = 0;
+        m_scanActive = true;
+
+        m_scanProgress->setRange(0, m_portsToScan.size());
+        m_scanProgress->setValue(0);
+
+        appendOutput(m_scanOutput, QString("Scanning %1 (%2) - %3 ports...")
+            .arg(host)
+            .arg(m_resolvedScanAddress.toString())
+            .arg(m_portsToScan.size()), "#888");
+
+        scanNextPort();
+    });
 }
 
 void NetToolsPage::stopPortScan() {
+    m_scanActive = false;
     m_scanTimer->stop();
     if (m_scanSocket) {
         m_scanSocket->disconnect();
         m_scanSocket->abort();
+        m_scanSocket->deleteLater();
+        m_scanSocket = nullptr;
     }
     m_portsToScan.clear();
     m_currentPortIndex = 0;
@@ -320,6 +333,8 @@ void NetToolsPage::stopPortScan() {
 }
 
 void NetToolsPage::scanNextPort() {
+    if (!m_scanActive) return;
+
     if (m_currentPortIndex >= m_portsToScan.size()) {
         // Scan complete
         appendOutput(m_scanOutput, QString("\nScan complete. %1 open port(s) found.").arg(m_openPorts), "#888");
@@ -330,22 +345,29 @@ void NetToolsPage::scanNextPort() {
     int port = m_portsToScan[m_currentPortIndex];
     m_scanProgress->setValue(m_currentPortIndex + 1);
 
-    // Create a new socket for each port to avoid state issues
+    // Clean up previous socket
     if (m_scanSocket) {
         m_scanSocket->disconnect();
+        m_scanSocket->abort();
         m_scanSocket->deleteLater();
+        m_scanSocket = nullptr;
     }
 
+    // Create a new socket for each port to avoid state issues
     m_scanSocket = new QTcpSocket(this);
     connect(m_scanSocket, &QTcpSocket::connected, this, &NetToolsPage::onPortConnected);
     connect(m_scanSocket, &QAbstractSocket::errorOccurred, this, &NetToolsPage::onPortError);
 
-    m_scanSocket->connectToHost(m_scanTargetHost, static_cast<quint16>(port));
+    m_scanSocket->connectToHost(m_resolvedScanAddress, static_cast<quint16>(port));
     m_scanTimer->start();
 }
 
 void NetToolsPage::onPortConnected() {
+    if (!m_scanActive) return;
     m_scanTimer->stop();
+
+    if (m_currentPortIndex >= m_portsToScan.size()) return;
+
     int port = m_portsToScan[m_currentPortIndex];
     m_openPorts++;
 
@@ -374,16 +396,39 @@ void NetToolsPage::onPortConnected() {
 
     appendOutput(m_scanOutput, QString("  Port %1 - OPEN").arg(portInfo), "#2ecc71");
 
-    m_scanSocket->abort();
+    if (m_scanSocket) {
+        m_scanSocket->abort();
+    }
     m_currentPortIndex++;
-    scanNextPort();
+
+    // Use single-shot timer to avoid deep recursion
+    QTimer::singleShot(0, this, &NetToolsPage::scanNextPort);
 }
 
 void NetToolsPage::onPortError(QAbstractSocket::SocketError /*error*/) {
+    if (!m_scanActive) return;
     m_scanTimer->stop();
-    m_scanSocket->abort();
+
+    if (m_scanSocket) {
+        m_scanSocket->abort();
+    }
     m_currentPortIndex++;
-    scanNextPort();
+
+    // Use single-shot timer to avoid deep recursion
+    QTimer::singleShot(0, this, &NetToolsPage::scanNextPort);
+}
+
+void NetToolsPage::onPortTimeout() {
+    if (!m_scanActive) return;
+
+    if (m_scanSocket) {
+        m_scanSocket->disconnect();
+        m_scanSocket->abort();
+    }
+    m_currentPortIndex++;
+
+    // Use single-shot timer to avoid deep recursion
+    QTimer::singleShot(0, this, &NetToolsPage::scanNextPort);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
