@@ -152,7 +152,7 @@ jobs:
             build/RhenoCalc.app
           if-no-files-found: ignore
 
-  # --- NEW JOB: UPLOAD TO GITHUB RELEASE ---
+  # --- UPLOAD TO GITHUB RELEASE ---
   deploy:
     name: Upload Assets to Release
     needs: build
@@ -164,16 +164,14 @@ jobs:
 
     steps:
       - name: Download all build artifacts
-        uses: actions/upload-artifact@v7
-        if: github.event_name == 'release'
+        uses: actions/download-artifact@v7
         with:
           path: ./artifacts
-          merge-multiple: true # Downloads all files from different OS jobs into one folder
 
       - name: Upload Binaries to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           # Grabs the files we just downloaded and attaches them to the release
-          files: ./artifacts/rhenocalc-*
+          files: ./artifacts/**/rhenocalc-*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
