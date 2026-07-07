@@ -71,6 +71,9 @@ endif()
 
 # ── PROPERTIES & POST-BUILD TASKS (Now safe to call) ──────────────────────────
 if(WIN32)
+    # Enable POSIX math constants like M_PI for MSVC
+    target_compile_definitions(RhenoCalc PRIVATE _USE_MATH_DEFINES)
+
     set_target_properties(RhenoCalc PROPERTIES WIN32_EXECUTABLE ON)
 
     # Ensure Qt runtime DLLs/plugins are deployed next to the executable in build trees.
