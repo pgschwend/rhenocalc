@@ -15,7 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-24.04
+          # Changed to 22.04 for maximum backward compatibility
+          - os: ubuntu-22.04
             qt-arch: gcc_64
           - os: windows-latest
             qt-arch: win64_msvc2022
@@ -28,10 +29,11 @@ jobs:
 
       # --- INSTALL DEPENDENCIES ---
       - name: Install Linux Dependencies
-        if: matrix.os == 'ubuntu-24.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libgl1-mesa-dev libxcb-xinerama0-dev file wget
+          # Added libxkbcommon-x11-0 for Qt6 XCB platform plugin
+          sudo apt-get install -y build-essential libgl1-mesa-dev libxcb-xinerama0-dev libxkbcommon-x11-0 file wget
 
       - name: Set up MSVC (Windows)
         if: matrix.os == 'windows-latest'
@@ -48,7 +50,7 @@ jobs:
           pip install aqtinstall
 
       - name: Install Qt (Linux)
-        if: matrix.os == 'ubuntu-24.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
           mkdir -p ${{ github.workspace }}/qt
           cd ${{ github.workspace }}/qt
@@ -62,7 +64,6 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/qt
           cd ${{ github.workspace }}/qt
-          # Install using the exact architecture name found in the logs
           aqt install-qt windows desktop 6.9.3 win64_msvc2022_64
           # Set paths (aqt typically creates the folder name as msvc2022_64)
           echo "QT_DIR=${{ github.workspace }}/qt/6.9.3/msvc2022_64" >> $env:GITHUB_ENV
@@ -94,40 +95,32 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           cd build/Release
-          # Deploy Qt dependencies next to the executable
           windeployqt --qmldir ../../ RhenoCalc.exe
-          # Package everything into a clean ZIP archive
           Compress-Archive -Path * -DestinationPath ../../RhenoCalc-Windows.zip
 
       # --- MACOS DEPLOYMENT ---
       - name: macOS Deployment
         if: matrix.os == 'macos-latest'
         run: |
-          # Bundle dependencies into the .app bundle and generate a DMG
           macdeployqt build/RhenoCalc.app -dmg
           mv build/RhenoCalc.dmg ./RhenoCalc-macOS.dmg
 
       # --- LINUX DEPLOYMENT ---
       - name: Linux Deployment
-        if: matrix.os == 'ubuntu-24.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
-          # Download linuxdeploy and its Qt plugin
           wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
           chmod +x linuxdeploy-x86_64.AppImage linuxdeploy-plugin-qt-x86_64.AppImage
           
-          # Use the Qt path provided by aqtinstall
           export PATH="$QT_DIR/bin:$PATH"
           
-          # Create standard AppDir structure for linuxdeploy
           mkdir -p AppDir/usr/bin
           cp build/RhenoCalc AppDir/usr/bin/
           
-          # Create a basic desktop entry and dummy icon (required for AppImage creation)
           echo -e "[Desktop Entry]\nType=Application\nName=RhenoCalc\nExec=RhenoCalc\nIcon=RhenoCalc\nCategories=Utility;" > AppDir/RhenoCalc.desktop
           touch AppDir/RhenoCalc.png
           
-          # Build the portable AppImage
           ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
           mv RhenoCalc-x86_64.AppImage RhenoCalc-Linux.AppImage
 
