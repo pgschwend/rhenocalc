@@ -22,7 +22,7 @@ if(WIN32)
 elseif(UNIX AND NOT APPLE)
     set(CMAKE_PREFIX_PATH "/opt/qt/6.9.3/gcc_64")
 elseif(APPLE)
-    set(CMAKE_PREFIX_PATH "/usr/local/opt/qt")
+    set(CMAKE_PREFIX_PATH "/Users/patrick/Qt/6.9.3/macos/")
 endif()
 
 find_package(Qt6 COMPONENTS
@@ -59,11 +59,7 @@ set(SOURCES
 
 if(WIN32)
     list(APPEND SOURCES src/resources/rhenocalc.rc)
-endif()
 
-add_executable(RhenoCalc ${SOURCES})
-
-if(WIN32)
     # Ensure Qt runtime DLLs/plugins are deployed next to the executable in build trees.
     get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
     get_filename_component(QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
@@ -79,6 +75,13 @@ if(WIN32)
     else()
         message(WARNING "windeployqt not found. RhenoCalc.exe may fail at runtime with missing Qt DLLs.")
     endif()
+endif()
+
+if(APPLE)
+    set(CMAKE_xcode_attribute_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
+    add_executable(RhenoCalc MACOSX_BUNDLE ${SOURCES})
+else()
+    add_executable(RhenoCalc ${SOURCES})
 endif()
 
 target_include_directories(RhenoCalc PRIVATE

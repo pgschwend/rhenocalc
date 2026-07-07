@@ -45,6 +45,67 @@ TracerouteWorker::~TracerouteWorker() {
 #endif
 }
 
+bool TracerouteWorker::runSystemTraceroute() {
+    QProcess process;
+    process.start("traceroute", QStringList() << "-n" << "-m" << QString::number(m_maxHops)
+                  << "-w" << QString::number((m_timeout / 1000) > 0 ? (m_timeout / 1000) : 1)
+                  << m_targetAddress.toString());
+
+    if (!process.waitForStarted(3000)) {
+        emit finished(false, "Could not start system traceroute command");
+        return false;
+    }
+
+    while (process.waitForReadyRead(m_timeout * 2) && m_running) {
+        while (process.canReadLine() && m_running) {
+            QString line = QString::fromUtf8(process.readLine()).trimmed();
+            if (line.isEmpty() || line.startsWith("traceroute")) {
+                continue;
+            }
+
+            // Parse lines like: "1  192.168.1.1  1.234 ms  1.456 ms  1.789 ms"
+            QStringList parts = line.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
+            if (parts.size() < 2) {
+                continue;
+            }
+
+            TraceHop hop;
+            hop.hop = parts[0].toInt();
+            if (hop.hop == 0) {
+                continue;
+            }
+
+            if (parts[1] == "*") {
+                hop.address = "*";
+                hop.rtt = -1;
+            } else {
+                hop.address = parts[1];
+                if (parts.size() >= 3) {
+                    hop.rtt = static_cast<int>(parts[2].toDouble());
+                }
+                if (hop.address == m_targetAddress.toString()) {
+                    hop.isDestination = true;
+                }
+            }
+
+            emit hopResult(hop);
+
+            if (hop.isDestination) {
+                process.terminate();
+                break;
+            }
+        }
+    }
+
+    if (m_running && process.state() != QProcess::NotRunning) {
+        process.waitForFinished(1000);
+    }
+
+    emit finished(true, "Trace complete (via system command)");
+    m_running = false;
+    return true;
+}
+
 bool TracerouteWorker::resolveHost() {
     // First try to parse as IP address directly
     if (m_targetAddress.setAddress(m_host)) {
@@ -155,8 +216,9 @@ void TracerouteWorker::start() {
     m_icmpHandle = nullptr;
 
     emit finished(true, "Trace complete");
+#endif
 
-#else
+#ifdef Q_OS_LINUX
     // Linux: Use UDP with ICMP error receiving
     // This approach uses UDP packets and listens for ICMP TTL exceeded messages
 
@@ -171,59 +233,10 @@ void TracerouteWorker::start() {
     int recvSock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (recvSock < 0) {
         close(sendSock);
-        // If we can't create raw socket, try fallback to system traceroute
+        // Raw ICMP usually requires elevated privileges; fallback to system traceroute.
         emit error("Native traceroute requires root privileges or CAP_NET_RAW capability.");
         emit error("Attempting to use system traceroute command...");
-
-        // Use QProcess to run system traceroute
-        QProcess process;
-        process.start("traceroute", QStringList() << "-n" << "-m" << QString::number(m_maxHops)
-                      << "-w" << QString::number(m_timeout / 1000) << m_targetAddress.toString());
-
-        if (!process.waitForStarted(3000)) {
-            emit finished(false, "Could not start system traceroute. Install with: sudo apt install traceroute");
-            return;
-        }
-
-        int hopNum = 0;
-        while (process.waitForReadyRead(m_timeout * 2) && m_running) {
-            while (process.canReadLine() && m_running) {
-                QString line = QString::fromUtf8(process.readLine()).trimmed();
-                if (line.isEmpty() || line.startsWith("traceroute")) continue;
-
-                // Parse traceroute output: "1  192.168.1.1  1.234 ms  1.456 ms  1.789 ms"
-                QStringList parts = line.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
-                if (parts.size() >= 2) {
-                    TraceHop hop;
-                    hop.hop = parts[0].toInt();
-                    if (hop.hop == 0) continue;
-
-                    if (parts[1] == "*") {
-                        hop.address = "*";
-                        hop.rtt = -1;
-                    } else {
-                        hop.address = parts[1];
-                        // Try to parse RTT
-                        if (parts.size() >= 3) {
-                            hop.rtt = static_cast<int>(parts[2].toDouble());
-                        }
-                        if (hop.address == m_targetAddress.toString()) {
-                            hop.isDestination = true;
-                        }
-                    }
-                    emit hopResult(hop);
-
-                    if (hop.isDestination) {
-                        process.terminate();
-                        break;
-                    }
-                }
-            }
-        }
-
-        process.waitForFinished(1000);
-        emit finished(true, "Trace complete (via system command)");
-        m_running = false;
+        runSystemTraceroute();
         return;
     }
 
@@ -316,6 +329,15 @@ void TracerouteWorker::start() {
     close(recvSock);
 
     emit finished(true, "Trace complete");
+#endif
+
+#ifdef Q_OS_MACOS
+    // macOS uses the system traceroute command to avoid raw-socket permission issues.
+    runSystemTraceroute();
+#endif
+
+#if !defined(Q_OS_WIN) && !defined(Q_OS_LINUX) && !defined(Q_OS_MACOS)
+    emit finished(false, "Traceroute is not supported on this platform");
 #endif
 
     m_running = false;

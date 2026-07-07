@@ -247,7 +247,7 @@ void MainWindow::setupUI() {
         {"Finance",  m_financePage},
         {"Color",    m_colorPage},
         {"IP-Address",  m_networkPage},
-        {"NetTools", m_netToolsPage},
+        {"Net-Tools", m_netToolsPage},
         {"Electronics", m_electronicsPage},
     };
 

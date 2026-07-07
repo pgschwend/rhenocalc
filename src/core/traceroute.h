@@ -30,6 +30,7 @@ signals:
 private:
     bool resolveHost();
     void traceHop(int ttl);
+    bool runSystemTraceroute();
 
     QString m_host;
     QHostAddress m_targetAddress;
