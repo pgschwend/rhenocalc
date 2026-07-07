@@ -125,9 +125,11 @@ jobs:
           mkdir -p AppDir/usr/bin
           cp build/RhenoCalc AppDir/usr/bin/
           
-          echo -e "[Desktop Entry]\nType=Application\nName=RhenoCalc\nExec=RhenoCalc\nIcon=utilities-terminal\nCategories=Utility;\nTerminal=false;" > RhenoCalc.desktop
-          ./linuxdeploy-x86_64.AppImage --appdir AppDir --desktop-file RhenoCalc.desktop --plugin qt --output appimage
+          mkdir -p AppDir/usr/share/icons/hicolor/scalable/apps
+          cp resources/icons/calculator.svg AppDir/usr/share/icons/hicolor/scalable/apps/RhenoCalc.svg
+          echo -e "[Desktop Entry]\nType=Application\nName=RhenoCalc\nExec=RhenoCalc\nIcon=RhenoCalc\nCategories=Utility;\nTerminal=false;" > RhenoCalc.desktop
           
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir --desktop-file RhenoCalc.desktop --plugin qt --output appimage
           VERSION="${{ github.event.release.tag_name }}"
           VERSION=${VERSION:-latest}
           mv RhenoCalc-x86_64.AppImage rhenocalc-linux-x86_64_$VERSION.AppImage
