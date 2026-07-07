@@ -25,17 +25,17 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # --- INSTALL DEPENDENCIES ---
       - name: Install Linux Dependencies
         if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          # Install a comprehensive set of XCB/X11 libraries required by the Qt6 GUI platform plugin
+          # Install complete set of XCB dependencies including shape and xfixes
           sudo apt-get install -y build-essential libgl1-mesa-dev libxcb-xinerama0-dev \
           libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 \
-          file wget
+          libxcb-shape0 libxcb-xfixes0 file wget
 
       - name: Set up MSVC (Windows)
         if: matrix.os == 'windows-latest'
@@ -43,7 +43,7 @@ jobs:
 
       # --- QT INSTALLATION VIA AQTINSTALL ---
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.x'
 
@@ -128,7 +128,7 @@ jobs:
 
       # --- UPLOAD ARTIFACTS ---
       - name: Upload Finished Packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: RhenoCalc-${{ matrix.os }}-package
           path: |
