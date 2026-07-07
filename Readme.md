@@ -18,7 +18,6 @@ It combines a calculator, converters, network tools, and CRC/hash functions in o
 - Finance calculator (interest, loan payments)
 - Electronics helpers (LED resistor, Ohm's law)
 - Dark and light theme with keyboard shortcuts
-- Auto-update mechanism
 
 ## Requirements
 
@@ -47,29 +46,22 @@ On Windows, the output is `RhenoCalc.exe`. If Qt is detected correctly,
 
 ## Deployment Helpers
 
-- Windows script: `scripts/deploy_windows.ps1`
-- Linux script: `scripts/deploy_ubuntu.sh`
+- Windows: `scripts/deploy_windows.ps1`
+- Linux: `scripts/deploy_ubuntu.sh`
+- macOS: `scripts/deploy_macos.sh`
 
 These scripts help package the app with Qt runtime dependencies.
 On Linux, the script can create an AppImage when `linuxdeploy` is installed.
+On macOS, the script creates a `.app` bundle and optionally a DMG.
 
-## Installation
+## Updates
 
-### Windows
+RhenoCalc checks for updates on startup. When a new version is available,
+a notification appears in the status bar with a link to the GitHub releases page.
+Download the latest release manually from:
+https://github.com/pgschwend/rhenocalc/releases
 
-Place the application folder in a user-writable location such as
-`%LOCALAPPDATA%\RhenoCalc` or any directory inside your user profile.
-Avoid installing it under `C:\Program Files` or other system-protected paths,
-because the built-in auto-update mechanism needs write access to replace files
-and will fail without administrator privileges.
-
-### Linux
-
-Place the application folder in a user-writable location such as
-`~/.local/share/RhenoCalc` or `~/RhenoCalc`.
-Avoid installing it under `/usr/local` or `/opt` unless you want to run
-updates with `sudo`. The auto-update mechanism requires write access to the
-application directory.
+## Linux Notes
 
 For traceroute functionality, install the `traceroute` package:
 ```bash
