@@ -1,0 +1,68 @@
+name: Build RhenoCalc
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            qt-arch: gcc_64
+            artifact-name: linux-build
+          - os: windows-latest
+            qt-arch: win64_msvc2022
+            artifact-name: windows-build
+          - os: macos-latest
+            qt-arch: clang_64
+            artifact-name: macos-build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --- BEZUGSQUELLEN & DEPENDENCIES INSTALLIEREN ---
+      - name: Install Linux Dependencies
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libgl1-mesa-dev libxcb-xinerama0-dev
+
+      - name: Set up MSVC (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # --- QT INSTALLATION ---
+      - name: Install Qt
+        uses: jurplel/install-qt@v3
+        with:
+          version: '6.7.2' # Hier deine gewünschte Qt-Version eintragen
+          arch: ${{ matrix.qt-arch }}
+          # modules: 'qtcharts qtconnectivity' # Falls du zusätzliche Module brauchst
+
+      # --- BUILD PROZESS (Beispiel mit CMake) ---
+      # Falls du qmake nutzt, siehst du unten die Alternative
+      - name: Configure CMake
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build Project
+        run: |
+          cmake --build build --config Release
+
+      # --- ARTEFAKTE SPEICHERN ---
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: |
+            build/RhenoCalc*
+            build/Release/RhenoCalc*
