@@ -76,7 +76,7 @@ function Resolve-WindeployqtExe {
         $qtVersions = Get-ChildItem -Path $qtRoot -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending
         foreach ($ver in $qtVersions) {
             $mingwDirs = Get-ChildItem -Path $ver.FullName -Directory -ErrorAction SilentlyContinue |
-                Where-Object { $_.Name -like "mingw*" }
+                    Where-Object { $_.Name -like "mingw*" }
             foreach ($mingw in $mingwDirs) {
                 $candidate = Join-Path $mingw.FullName "bin\windeployqt.exe"
                 if (Test-Path $candidate) {
@@ -113,8 +113,8 @@ function Resolve-QtMingwCompilers {
     $toolsDir = Join-Path $qtRoot "Tools"
     if (Test-Path $toolsDir) {
         $mingwDirs = Get-ChildItem -Path $toolsDir -Directory -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -like "mingw*_64" } |
-            Sort-Object Name -Descending
+                Where-Object { $_.Name -like "mingw*_64" } |
+                Sort-Object Name -Descending
 
         foreach ($mingwDir in $mingwDirs) {
             $gcc = Join-Path $mingwDir.FullName "bin\gcc.exe"
@@ -582,14 +582,6 @@ New-Item -ItemType Directory -Force -Path $distAppDir | Out-Null
 
 Copy-Item -Path $builtExe -Destination (Join-Path $distAppDir "$AppName.exe") -Force
 
-# Copy update script
-$updateBat = Join-Path $SourceDir "scripts\update.bat"
-if (Test-Path $updateBat) {
-    Copy-Item -Path $updateBat -Destination (Join-Path $distAppDir "update.bat") -Force
-    Write-Output "Copied update.bat to deployment directory."
-} else {
-    Write-Warning "update.bat not found at '$updateBat' - skipping."
-}
 
 $modeArg = Get-WindeployqtModeArg -Mode $DeployMode
 $deployArgs = @()
