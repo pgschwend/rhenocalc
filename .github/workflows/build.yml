@@ -134,11 +134,23 @@ jobs:
           mv RhenoCalc-x86_64.AppImage rhenocalc-linux-x86_64_$VERSION.AppImage
 
       # --- UPLOAD ARTIFACTS ---
-      - name: Upload Finished Packages
+      - name: Upload Release Packages
+        if: github.event_name == 'release'
         uses: actions/upload-artifact@v7
         with:
-          name: RhenoCalc-${{ matrix.os }}-package
-          path: rhenocalc-*
+          name: RhenoCalc-${{ matrix.os }}-release-package
+          path: ${{ github.workspace }}/rhenocalc-*
+
+      - name: Upload Test Binary (CI)
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v7
+        with:
+          name: RhenoCalc-${{ matrix.os }}-test-binary
+          path: |
+            build/Release/RhenoCalc.exe
+            build/RhenoCalc
+            build/RhenoCalc.app
+          if-no-files-found: ignore
 
   # --- NEW JOB: UPLOAD TO GITHUB RELEASE ---
   deploy:
