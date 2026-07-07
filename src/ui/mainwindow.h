@@ -20,6 +20,7 @@ class FinancePage;
 class FloatPage;
 class ElectronicsPage;
 class NetToolsPage;
+class QLabel;
 
 // Custom tab bar with fixed tab widths
 class FixedTabBar : public QTabBar {
@@ -58,6 +59,7 @@ private:
     void applyTheme(bool dark);
     void applyAlwaysOnTop(bool enabled, bool persist);
     void updateOnTopButton();
+    void updateStatusBar(const QString& updateVersion = QString(), const QString& releaseUrl = QString());
     void switchDynamicTab(QWidget* page, const QString& title);
     void saveWindowGeometry();
     void restoreWindowGeometry();
@@ -76,10 +78,13 @@ private:
     QPushButton*       m_onTopBtn = nullptr;
     QPushButton*       m_themeBtn = nullptr;
     QMenu*             m_moreMenu = nullptr;
+    QLabel*            m_statusLabel = nullptr;
 
     QVector<QPair<QString, QWidget*>> m_extraPages;
 
     bool m_isDark = true;
     bool m_alwaysOnTop = false;
+    QString m_updateVersion;
+    QString m_updateUrl;
 };
 

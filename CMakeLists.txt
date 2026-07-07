@@ -103,8 +103,3 @@ if(WIN32)
     target_link_libraries(RhenoCalc iphlpapi ws2_32)
 endif()
 
-# Deploy updater script next to executable
-if(WIN32)
-    configure_file(${CMAKE_SOURCE_DIR}/scripts/update.bat
-                   ${CMAKE_BINARY_DIR}/update.bat COPYONLY)
-endif()

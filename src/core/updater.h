@@ -2,7 +2,6 @@
 
 #include <QObject>
 #include <QString>
-#include <QFile>
 
 class QNetworkAccessManager;
 class QNetworkReply;
@@ -13,33 +12,21 @@ public:
     explicit Updater(QObject* parent = nullptr);
 
     void checkForUpdate();
-    void downloadUpdate(const QString& url);
-    void cleanup();
-
-    [[nodiscard]] QString zipPath() const { return m_zipPath; }
 
     static constexpr const char* GITHUB_OWNER = "pgschwend";
     static constexpr const char* GITHUB_REPO  = "rhenocalc";
 
+    // Returns the GitHub releases page URL
+    static QString releasesPageUrl();
+
 signals:
-    void updateAvailable(const QString& newVersion, const QString& downloadUrl);
+    void updateAvailable(const QString& newVersion, const QString& releaseUrl);
     void noUpdateAvailable();
     void checkFailed(const QString& errorMsg);
 
-    void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
-    void downloadFinished(const QString& zipPath);
-    void updateError(const QString& errorMsg);
-
 private slots:
     void onReleaseFetched(QNetworkReply* reply);
-    void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
-    void onDownloadFinished();
 
 private:
     QNetworkAccessManager* m_nam = nullptr;
-    QNetworkReply* m_downloadReply = nullptr;
-    QFile* m_downloadFile = nullptr;
-    QString m_zipPath;
 };
-
-

@@ -22,11 +22,9 @@
 #include <QWidget>
 #include <QGuiApplication>
 #include <QIcon>
-#include <QMessageBox>
-#include <QProcess>
-#include <QDir>
-#include <QProgressDialog>
-#include <QThread>
+#include <QLabel>
+#include <QDesktopServices>
+#include <QUrl>
 #include <QTimer>
 
 MainWindow::MainWindow(QWidget* parent)
@@ -90,78 +88,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Auto-update check
     auto* updater = new Updater(this);
-    connect(updater, &Updater::updateAvailable, this, [this, updater](const QString& version, const QString& url) {
-        QMessageBox msgBox(QMessageBox::Question, "Update Available",
-            QString("A new version %1 is available.\nDo you want to update now?").arg(version),
-            QMessageBox::Yes | QMessageBox::No, this);
-        msgBox.setFixedWidth(this->width());
-        auto result = msgBox.exec();
-
-        if (result == QMessageBox::Yes) {
-            // Create progress dialog for download
-            auto* progress = new QProgressDialog("Downloading update...", "Cancel", 0, 100, this);
-            progress->setWindowModality(Qt::WindowModal);
-            progress->setMinimumDuration(0);
-            progress->setFixedWidth(this->width());
-            progress->setValue(0);
-            progress->show();
-
-            connect(updater, &Updater::downloadProgress, this, [progress](qint64 received, qint64 total) {
-                if (total > 0) {
-                    progress->setMaximum(static_cast<int>(total));
-                    progress->setValue(static_cast<int>(received));
-                    progress->setLabelText(QString("Downloading... %1 / %2 KB")
-                        .arg(received / 1024).arg(total / 1024));
-                } else {
-                    progress->setMaximum(0); // Indeterminate
-                    progress->setLabelText("Downloading...");
-                }
-            });
-
-            connect(updater, &Updater::downloadFinished, this, [this, updater, progress](const QString& zipPath) {
-                progress->close();
-                delete progress;
-
-                // Cleanup updater resources BEFORE starting batch
-                updater->cleanup();
-
-                // Start batch script - it will extract, copy, and restart
-                QString appDir = QDir::toNativeSeparators(QApplication::applicationDirPath());
-                QString script = QDir::toNativeSeparators(appDir + "\\update.bat");
-                QString appExe = QDir::toNativeSeparators(QApplication::applicationFilePath());
-                QString nativeZipPath = QDir::toNativeSeparators(zipPath);
-
-                bool started = QProcess::startDetached("cmd.exe",
-                    QStringList{"/c", "call", script, nativeZipPath, appDir, appExe}, appDir);
-
-                if (!started) {
-                    QMessageBox errorBox(QMessageBox::Warning, "Update Error",
-                        "Could not start the update script.\nPlease update manually.",
-                        QMessageBox::Ok, this);
-                    errorBox.setFixedWidth(this->width());
-                    errorBox.exec();
-                    return;
-                }
-
-                // Give batch time to start, then quit
-                QThread::msleep(200);
-                QApplication::quit();
-            });
-
-            connect(updater, &Updater::updateError, this, [this, progress](const QString& error) {
-                progress->close();
-                delete progress;
-                QMessageBox errorBox(QMessageBox::Warning, "Update Error", error, QMessageBox::Ok, this);
-                errorBox.setFixedWidth(this->width());
-                errorBox.exec();
-            });
-
-            connect(progress, &QProgressDialog::canceled, this, [updater]() {
-                updater->cleanup();
-            });
-
-            updater->downloadUpdate(url);
-        }
+    connect(updater, &Updater::updateAvailable, this, [this](const QString& version, const QString& releaseUrl) {
+        updateStatusBar(version, releaseUrl);
     });
     QTimer::singleShot(1500, updater, &Updater::checkForUpdate);
 }
@@ -326,7 +254,13 @@ void MainWindow::setupUI() {
     m_tabWidget->setCornerWidget(corner, Qt::TopRightCorner);
 
     setCentralWidget(m_tabWidget);
-    statusBar()->showMessage(QString("RhenoCalc  |  Embedded Engineering Toolbox  |  ") + APP_VERSION_STRING);
+
+    // Create status bar with clickable label
+    m_statusLabel = new QLabel(this);
+    m_statusLabel->setOpenExternalLinks(true);
+    m_statusLabel->setTextFormat(Qt::RichText);
+    statusBar()->addWidget(m_statusLabel, 1);
+    updateStatusBar();
 }
 
 void MainWindow::applyTheme(bool dark) {
@@ -357,6 +291,7 @@ void MainWindow::applyTheme(bool dark) {
 
     // Status Bar
     statusBar()->setStyleSheet(ThemeColors::statusBarStyle(dark));
+    updateStatusBar(); // Refresh link color for current theme
 
     // Update theme button label
     if (m_themeBtn) {
@@ -432,3 +367,26 @@ void MainWindow::switchDynamicTab(QWidget* page, const QString& title) {
     m_tabWidget->insertTab(2, page, title);
     m_tabWidget->setCurrentIndex(2);
 }
+
+void MainWindow::updateStatusBar(const QString& updateVersion, const QString& releaseUrl) {
+    if (!m_statusLabel) return;
+
+    // Store values if provided (for theme refresh)
+    if (!updateVersion.isEmpty()) {
+        m_updateVersion = updateVersion;
+        m_updateUrl = releaseUrl;
+    }
+
+    QString linkColor = m_isDark ? "#6eb5ff" : "#0066cc";
+
+    if (m_updateVersion.isEmpty()) {
+        // Normal status - no update available
+        m_statusLabel->setText(QString("RhenoCalc  |  Embedded Engineering Toolbox  |  %1")
+            .arg(APP_VERSION_STRING));
+    } else {
+        // Update available - show clickable link
+        m_statusLabel->setText(QString("RhenoCalc  |  <a href=\"%2\" style=\"color:%3;\">Update %1 available</a>  |  %4")
+            .arg(m_updateVersion, m_updateUrl, linkColor, APP_VERSION_STRING));
+    }
+}
+
