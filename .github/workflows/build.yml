@@ -5,6 +5,8 @@ on:
     branches: [ "main", "pipeline" ]
   pull_request:
     branches: [ "main" ]
+  release:
+    types: [ published ]
 
 jobs:
   build:
@@ -94,22 +96,25 @@ jobs:
 
       # --- WINDOWS DEPLOYMENT ---
       - name: Windows Deployment
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && github.event_name == 'release'
         run: |
           cd build/Release
           windeployqt --qmldir ../../ RhenoCalc.exe
-          Compress-Archive -Path * -DestinationPath ../../RhenoCalc-Windows.zip
+          $VERSION = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "latest" }
+          Compress-Archive -Path * -DestinationPath ../../rhenocalc-win-x86_64_$VERSION.zip
 
       # --- MACOS DEPLOYMENT ---
       - name: macOS Deployment
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' && github.event_name == 'release'
         run: |
           macdeployqt build/RhenoCalc.app -dmg
-          mv build/RhenoCalc.dmg ./RhenoCalc-macOS.dmg
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION=${VERSION:-latest}
+          mv build/RhenoCalc.dmg ./rhenocalc-mac-arm_$VERSION.dmg
 
       # --- LINUX DEPLOYMENT ---
       - name: Linux Deployment
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.os == 'ubuntu-22.04' && github.event_name == 'release'
         run: |
           wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
@@ -124,14 +129,39 @@ jobs:
           touch AppDir/RhenoCalc.png
           
           ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
-          mv RhenoCalc-x86_64.AppImage RhenoCalc-Linux.AppImage
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION=${VERSION:-latest}
+          mv RhenoCalc-x86_64.AppImage rhenocalc-linux-x86_64_$VERSION.AppImage
 
       # --- UPLOAD ARTIFACTS ---
       - name: Upload Finished Packages
         uses: actions/upload-artifact@v7
         with:
           name: RhenoCalc-${{ matrix.os }}-package
-          path: |
-            RhenoCalc-Windows.zip
-            RhenoCalc-macOS.dmg
-            RhenoCalc-Linux.AppImage
+          path: rhenocalc-*
+
+  # --- NEW JOB: UPLOAD TO GITHUB RELEASE ---
+  deploy:
+    name: Upload Assets to Release
+    needs: build
+    # Only run this job if the workflow was actually triggered by a published release
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Crucial permission to allow uploading assets to a release
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/upload-artifact@v7
+        if: github.event_name == 'release'
+        with:
+          path: ./artifacts
+          merge-multiple: true # Downloads all files from different OS jobs into one folder
+
+      - name: Upload Binaries to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # Grabs the files we just downloaded and attaches them to the release
+          files: ./artifacts/rhenocalc-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
