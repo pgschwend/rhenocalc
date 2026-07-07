@@ -264,16 +264,18 @@ void MainWindow::setupUI() {
         }
     }
 
+    auto previousTab = std::make_shared<int>(0);
+
     // Build the "More" popup menu
     m_moreMenu = new QMenu(this);
     for (const auto& [name, page] : m_extraPages) {
-        m_moreMenu->addAction(name, this, [this, page, name]() {
+        m_moreMenu->addAction(name, this, [this, page, name, previousTab]() {
             switchDynamicTab(page, name);
+            *previousTab = 2;
         });
     }
 
     // Intercept click on the "More" tab (index 3): show menu instead of switching
-    auto previousTab = std::make_shared<int>(0);
     connect(m_tabWidget, &QTabWidget::tabBarClicked, this, [this, previousTab](int index) {
         if (index == 3) {
             // Show menu below the "More" tab
