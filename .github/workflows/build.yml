@@ -1,14 +1,14 @@
-name: Build RhenoCalc
+name: Build and Deploy RhenoCalc
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "pipeline" ]
   pull_request:
     branches: [ "main" ]
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
+    name: Package on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -17,39 +17,58 @@ jobs:
         include:
           - os: ubuntu-24.04
             qt-arch: gcc_64
-            artifact-name: linux-build
           - os: windows-latest
             qt-arch: win64_msvc2022
-            artifact-name: windows-build
           - os: macos-latest
             qt-arch: clang_64
-            artifact-name: macos-build
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- BEZUGSQUELLEN & DEPENDENCIES INSTALLIEREN ---
+      # --- INSTALL DEPENDENCIES ---
       - name: Install Linux Dependencies
         if: matrix.os == 'ubuntu-24.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libgl1-mesa-dev libxcb-xinerama0-dev
+          sudo apt-get install -y build-essential libgl1-mesa-dev libxcb-xinerama0-dev file wget
 
       - name: Set up MSVC (Windows)
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
 
-      # --- QT INSTALLATION ---
-      - name: Install Qt
-        id: install-qt
-        uses: miurahr/install-qt@v3
+      # --- QT INSTALLATION VIA AQTINSTALL ---
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          version: '6.7.2'
-          arch: ${{ matrix.qt-arch }}
+          python-version: '3.x'
 
-      # --- BUILD PROZESS (Beispiel mit CMake) ---
-      # Falls du qmake nutzt, siehst du unten die Alternative
+      - name: Install aqtinstall
+        run: |
+          pip install aqtinstall
+
+      - name: Install Qt (Linux)
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          aqt install-qt linux desktop 6.7.2 gcc_64 -o ${{ github.workspace }}/qt
+          echo "QT_DIR=${{ github.workspace }}/qt/6.7.2/gcc_64" >> $GITHUB_ENV
+          echo "${{ github.workspace }}/qt/6.7.2/gcc_64/bin" >> $GITHUB_PATH
+
+      - name: Install Qt (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          aqt install-qt windows desktop 6.7.2 win64_msvc2022 -o ${{ github.workspace }}/qt
+          echo "QT_DIR=${{ github.workspace }}/qt/6.7.2/msvc2022_64" >> $env:GITHUB_ENV
+          echo "${{ github.workspace }}/qt/6.7.2/msvc2022_64/bin" >> $env:GITHUB_PATH
+
+      - name: Install Qt (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          aqt install-qt mac desktop 6.7.2 clang_64 -o ${{ github.workspace }}/qt
+          echo "QT_DIR=${{ github.workspace }}/qt/6.7.2/macos" >> $GITHUB_ENV
+          echo "${{ github.workspace }}/qt/6.7.2/macos/bin" >> $GITHUB_PATH
+
+      # --- BUILD PROCESS (CMake) ---
       - name: Configure CMake
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release
@@ -58,11 +77,56 @@ jobs:
         run: |
           cmake --build build --config Release
 
-      # --- ARTEFAKTE SPEICHERN ---
-      - name: Upload Build Artifacts
+      # --- DEPLOYMENT PHASE PER OPERATING SYSTEM ---
+
+      # --- WINDOWS DEPLOYMENT ---
+      - name: Windows Deployment
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd build/Release
+          # Deploy Qt dependencies next to the executable
+          windeployqt --qmldir ../../ RhenoCalc.exe
+          # Package everything into a clean ZIP archive
+          Compress-Archive -Path * -DestinationPath ../../RhenoCalc-Windows.zip
+
+      # --- MACOS DEPLOYMENT ---
+      - name: macOS Deployment
+        if: matrix.os == 'macos-latest'
+        run: |
+          # Bundle dependencies into the .app bundle and generate a DMG
+          macdeployqt build/RhenoCalc.app -dmg
+          mv build/RhenoCalc.dmg ./RhenoCalc-macOS.dmg
+
+      # --- LINUX DEPLOYMENT ---
+      - name: Linux Deployment
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          # Download linuxdeploy and its Qt plugin
+          wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage linuxdeploy-plugin-qt-x86_64.AppImage
+          
+          # Use the Qt path provided by aqtinstall
+          export PATH="$QT_DIR/bin:$PATH"
+          
+          # Create standard AppDir structure for linuxdeploy
+          mkdir -p AppDir/usr/bin
+          cp build/RhenoCalc AppDir/usr/bin/
+          
+          # Create a basic desktop entry and dummy icon (required for AppImage creation)
+          echo -e "[Desktop Entry]\nType=Application\nName=RhenoCalc\nExec=RhenoCalc\nIcon=RhenoCalc\nCategories=Utility;" > AppDir/RhenoCalc.desktop
+          touch AppDir/RhenoCalc.png
+          
+          # Build the portable AppImage
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
+          mv RhenoCalc-x86_64.AppImage RhenoCalc-Linux.AppImage
+
+      # --- UPLOAD ARTIFACTS ---
+      - name: Upload Finished Packages
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact-name }}
+          name: RhenoCalc-${{ matrix.os }}-package
           path: |
-            build/RhenoCalc*
-            build/Release/RhenoCalc*
+            RhenoCalc-Windows.zip
+            RhenoCalc-macOS.dmg
+            RhenoCalc-Linux.AppImage
