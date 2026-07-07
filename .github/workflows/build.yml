@@ -52,18 +52,26 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/qt
           cd ${{ github.workspace }}/qt
-          aqt install-qt linux desktop 6.9.3 gcc_64
-          echo "QT_DIR=${{ github.workspace }}/qt/6.9.3/gcc_64" >> $GITHUB_ENV
-          echo "${{ github.workspace }}/qt/6.9.3/gcc_64/bin" >> $GITHUB_PATH
+          # Print available architectures to the log just in case
+          aqt list-qt linux desktop --arch 6.9.3 || true
+          # Install using the updated architecture name for newer Qt6 versions
+          aqt install-qt linux desktop 6.9.3 linux_gcc_64
+          echo "QT_DIR=${{ github.workspace }}/qt/6.9.3/linux_gcc_64" >> $GITHUB_ENV
+          echo "${{ github.workspace }}/qt/6.9.3/linux_gcc_64/bin" >> $GITHUB_PATH
 
       - name: Install Qt (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           mkdir -p ${{ github.workspace }}/qt
           cd ${{ github.workspace }}/qt
-          aqt install-qt windows desktop 6.9.3 win64_msvc2022
-          echo "QT_DIR=${{ github.workspace }}/qt/6.9.3/msvc2022_64" >> $env:GITHUB_ENV
-          echo "${{ github.workspace }}/qt/6.9.3/msvc2022_64/bin" >> $env:GITHUB_PATH
+          # Print available architectures to the log for debugging
+          aqt list-qt windows desktop --arch 6.9.3 || true
+          # Install using the updated architecture name for Qt 6.8+
+          aqt install-qt windows desktop 6.9.3 windows_msvc2022_64
+          # Set paths (aqt unpacks windows_msvc2022_64 usually into msvc2022_64 or windows_msvc2022_64)
+          # To be completely safe, we add the base bin directory to path:
+          echo "QT_DIR=${{ github.workspace }}/qt/6.9.3/windows_msvc2022_64" >> $env:GITHUB_ENV
+          echo "${{ github.workspace }}/qt/6.9.3/windows_msvc2022_64/bin" >> $env:GITHUB_PATH
 
       - name: Install Qt (macOS)
         if: matrix.os == 'macos-latest'
