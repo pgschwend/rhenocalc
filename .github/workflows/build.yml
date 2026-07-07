@@ -126,7 +126,7 @@ jobs:
           cp build/RhenoCalc AppDir/usr/bin/
           
           echo -e "[Desktop Entry]\nType=Application\nName=RhenoCalc\nExec=RhenoCalc\nIcon=RhenoCalc\nCategories=Utility;" > AppDir/RhenoCalc.desktop
-          touch AppDir/RhenoCalc.png
+          printf '\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x44\x52\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1F\x15\xC4\x89\x00\x00\x00\x0B\x49\x44\x41\x54\x78\xDA\x63\x60\x00\x01\x00\x00\x05\x00\x01\x0D\x0A\x2D\xB4\x00\x00\x00\x00\x49\x45\x4E\x44\xAE\x42\x60\x82' > RhenoCalc.png
           
           ./linuxdeploy-x86_64.AppImage --appdir AppDir --desktop-file RhenoCalc.desktop --icon-file RhenoCalc.png --plugin qt --output appimage
           VERSION="${{ github.event.release.tag_name }}"
