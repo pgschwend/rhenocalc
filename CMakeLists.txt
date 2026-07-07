@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 project(RhenoCalc)
 
-
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -10,19 +9,20 @@ set(CMAKE_AUTOUIC ON)
 # ── Boost.Multiprecision via FetchContent ──────────────────────────────────────
 include(FetchContent)
 FetchContent_Declare(
-    Boost
-    URL https://github.com/boostorg/boost/releases/download/boost-1.87.0/boost-1.87.0-cmake.tar.gz
-    DOWNLOAD_EXTRACT_TIMESTAMP ON
+        Boost
+        URL https://github.com/boostorg/boost/releases/download/boost-1.87.0/boost-1.87.0-cmake.tar.gz
+        DOWNLOAD_EXTRACT_TIMESTAMP ON
 )
 set(BOOST_INCLUDE_LIBRARIES multiprecision math)
 FetchContent_MakeAvailable(Boost)
 
+# Appends local paths only if they are not already set by environments like CI
 if(WIN32)
-    set(CMAKE_PREFIX_PATH "C:/Qt/6.9.3/mingw_64")
+    list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.9.3/mingw_64")
 elseif(UNIX AND NOT APPLE)
-    set(CMAKE_PREFIX_PATH "/opt/qt/6.9.3/gcc_64")
+    list(APPEND CMAKE_PREFIX_PATH "/opt/qt/6.9.3/gcc_64")
 elseif(APPLE)
-    set(CMAKE_PREFIX_PATH "/Users/patrick/Qt/6.9.3/macos/")
+    list(APPEND CMAKE_PREFIX_PATH "/Users/patrick/Qt/6.9.3/macos/")
 endif()
 
 find_package(Qt6 COMPONENTS
@@ -59,13 +59,24 @@ set(SOURCES
 
 if(WIN32)
     list(APPEND SOURCES src/resources/rhenocalc.rc)
+endif()
+
+# ── CREATE TARGET FIRST ────────────────────────────────────────────────────────
+if(APPLE)
+    set(CMAKE_xcode_attribute_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
+    add_executable(RhenoCalc MACOSX_BUNDLE ${SOURCES})
+else()
+    add_executable(RhenoCalc ${SOURCES})
+endif()
+
+# ── PROPERTIES & POST-BUILD TASKS (Now safe to call) ──────────────────────────
+if(WIN32)
+    set_target_properties(RhenoCalc PROPERTIES WIN32_EXECUTABLE ON)
 
     # Ensure Qt runtime DLLs/plugins are deployed next to the executable in build trees.
     get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
     get_filename_component(QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
-
-    set_target_properties(RhenoCalc PROPERTIES WIN32_EXECUTABLE ON)
 
     if(WINDEPLOYQT_EXECUTABLE)
         add_custom_command(TARGET RhenoCalc POST_BUILD
@@ -75,13 +86,6 @@ if(WIN32)
     else()
         message(WARNING "windeployqt not found. RhenoCalc.exe may fail at runtime with missing Qt DLLs.")
     endif()
-endif()
-
-if(APPLE)
-    set(CMAKE_xcode_attribute_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
-    add_executable(RhenoCalc MACOSX_BUNDLE ${SOURCES})
-else()
-    add_executable(RhenoCalc ${SOURCES})
 endif()
 
 target_include_directories(RhenoCalc PRIVATE
@@ -102,4 +106,3 @@ target_link_libraries(RhenoCalc
 if(WIN32)
     target_link_libraries(RhenoCalc iphlpapi ws2_32)
 endif()
-
