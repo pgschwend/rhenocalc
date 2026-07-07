@@ -206,10 +206,10 @@ void MainWindow::restoreWindowGeometry() {
 }
 
 void MainWindow::setupUI() {
-    setMinimumWidth(310);  // Minimum window width
+    setMinimumWidth(310);
 
     m_tabWidget = new FixedTabWidget(this);
-    m_tabWidget->setDocumentMode(true);  // Remove extra frame around tabs
+    m_tabWidget->setDocumentMode(true);
 
     m_calcPage = new CalculatorPage(this);
     m_basePage = new BaseConverterPage(this);
@@ -355,10 +355,10 @@ void MainWindow::applyTheme(bool dark) {
     m_electronicsPage->applyTheme(dark);
     m_netToolsPage->applyTheme(dark);
 
-    // ── Status Bar ────────────────────────────────────────────────────────────
+    // Status Bar
     statusBar()->setStyleSheet(ThemeColors::statusBarStyle(dark));
 
-    // ── Update theme button label ─────────────────────────────────────────────
+    // Update theme button label
     if (m_themeBtn) {
         m_themeBtn->setText(dark ? "☀" : "🌙");
         m_themeBtn->setStyleSheet(ThemeColors::themeToggleButtonStyle(dark));
