@@ -1,68 +1,179 @@
-name: Build RhenoCalc
+name: Build and Deploy RhenoCalc
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "pipeline" ]
   pull_request:
     branches: [ "main" ]
+  release:
+    types: [ published ]
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
+    name: Package on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-24.04
+          # Changed to 22.04 for maximum backward compatibility
+          - os: ubuntu-22.04
             qt-arch: gcc_64
-            artifact-name: linux-build
           - os: windows-latest
             qt-arch: win64_msvc2022
-            artifact-name: windows-build
           - os: macos-latest
             qt-arch: clang_64
-            artifact-name: macos-build
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      # --- BEZUGSQUELLEN & DEPENDENCIES INSTALLIEREN ---
+      # --- INSTALL DEPENDENCIES ---
       - name: Install Linux Dependencies
-        if: matrix.os == 'ubuntu-24.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libgl1-mesa-dev libxcb-xinerama0-dev
+          # Install complete set of XCB dependencies including shape and xfixes
+          sudo apt-get install -y build-essential libgl1-mesa-dev libxcb-xinerama0-dev \
+          libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 \
+          libxcb-shape0 libxcb-xfixes0 file wget
 
       - name: Set up MSVC (Windows)
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
 
-      # --- QT INSTALLATION ---
-      - name: Install Qt
-        id: install-qt
-        uses: miurahr/install-qt@v3
+      # --- QT INSTALLATION VIA AQTINSTALL ---
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          version: '6.7.2'
-          arch: ${{ matrix.qt-arch }}
+          python-version: '3.x'
 
-      # --- BUILD PROZESS (Beispiel mit CMake) ---
-      # Falls du qmake nutzt, siehst du unten die Alternative
+      - name: Install aqtinstall
+        run: |
+          pip install aqtinstall
+
+      - name: Install Qt (Linux)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          mkdir -p ${{ github.workspace }}/qt
+          cd ${{ github.workspace }}/qt
+          aqt install-qt linux desktop 6.9.3 linux_gcc_64
+          # Set the correct path since aqt names the folder 'gcc_64'
+          echo "QT_DIR=${{ github.workspace }}/qt/6.9.3/gcc_64" >> $GITHUB_ENV
+          echo "${{ github.workspace }}/qt/6.9.3/gcc_64/bin" >> $GITHUB_PATH
+
+      - name: Install Qt (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          mkdir -p ${{ github.workspace }}/qt
+          cd ${{ github.workspace }}/qt
+          aqt install-qt windows desktop 6.9.3 win64_msvc2022_64
+          # Set paths (aqt typically creates the folder name as msvc2022_64)
+          echo "QT_DIR=${{ github.workspace }}/qt/6.9.3/msvc2022_64" >> $env:GITHUB_ENV
+          echo "${{ github.workspace }}/qt/6.9.3/msvc2022_64/bin" >> $env:GITHUB_PATH
+
+      - name: Install Qt (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          mkdir -p ${{ github.workspace }}/qt
+          cd ${{ github.workspace }}/qt
+          aqt install-qt mac desktop 6.9.3 clang_64
+          echo "QT_DIR=${{ github.workspace }}/qt/6.9.3/macos" >> $GITHUB_ENV
+          echo "${{ github.workspace }}/qt/6.9.3/macos/bin" >> $GITHUB_PATH
+
+      # --- BUILD PROCESS (CMake) ---
       - name: Configure CMake
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          # Pass the Qt installation directory directly to CMake
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ env.QT_DIR }}"
 
       - name: Build Project
         run: |
           cmake --build build --config Release
 
-      # --- ARTEFAKTE SPEICHERN ---
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
+      # --- DEPLOYMENT PHASE PER OPERATING SYSTEM ---
+
+      # --- WINDOWS DEPLOYMENT ---
+      - name: Windows Deployment
+        if: matrix.os == 'windows-latest' && github.event_name == 'release'
+        run: |
+          cd build/Release
+          windeployqt --qmldir ../../ RhenoCalc.exe
+          $VERSION = if ("${{ github.event.release.tag_name }}") { "${{ github.event.release.tag_name }}" } else { "latest" }
+          Compress-Archive -Path * -DestinationPath ../../rhenocalc-win-x86_64_$VERSION.zip
+
+      # --- MACOS DEPLOYMENT ---
+      - name: macOS Deployment
+        if: matrix.os == 'macos-latest' && github.event_name == 'release'
+        run: |
+          macdeployqt build/RhenoCalc.app -dmg
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION=${VERSION:-latest}
+          mv build/RhenoCalc.dmg ./rhenocalc-mac-arm_$VERSION.dmg
+
+      # --- LINUX DEPLOYMENT ---
+      - name: Linux Deployment
+        if: matrix.os == 'ubuntu-22.04' && github.event_name == 'release'
+        run: |
+          wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage linuxdeploy-plugin-qt-x86_64.AppImage
+          
+          export PATH="$QT_DIR/bin:$PATH"
+          
+          mkdir -p AppDir/usr/bin
+          cp build/RhenoCalc AppDir/usr/bin/
+          
+          echo -e "[Desktop Entry]\nType=Application\nName=RhenoCalc\nExec=RhenoCalc\nIcon=RhenoCalc\nCategories=Utility;" > AppDir/RhenoCalc.desktop
+          touch AppDir/RhenoCalc.png
+          
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION=${VERSION:-latest}
+          mv RhenoCalc-x86_64.AppImage rhenocalc-linux-x86_64_$VERSION.AppImage
+
+      # --- UPLOAD ARTIFACTS ---
+      - name: Upload Release Packages
+        if: github.event_name == 'release'
+        uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact-name }}
+          name: RhenoCalc-${{ matrix.os }}-release-package
+          path: ${{ github.workspace }}/rhenocalc-*
+
+      - name: Upload Test Binary (CI)
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v7
+        with:
+          name: RhenoCalc-${{ matrix.os }}-test-binary
           path: |
-            build/RhenoCalc*
-            build/Release/RhenoCalc*
+            build/Release/RhenoCalc.exe
+            build/RhenoCalc
+            build/RhenoCalc.app
+          if-no-files-found: ignore
+
+  # --- NEW JOB: UPLOAD TO GITHUB RELEASE ---
+  deploy:
+    name: Upload Assets to Release
+    needs: build
+    # Only run this job if the workflow was actually triggered by a published release
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Crucial permission to allow uploading assets to a release
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/upload-artifact@v7
+        if: github.event_name == 'release'
+        with:
+          path: ./artifacts
+          merge-multiple: true # Downloads all files from different OS jobs into one folder
+
+      - name: Upload Binaries to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # Grabs the files we just downloaded and attaches them to the release
+          files: ./artifacts/rhenocalc-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
