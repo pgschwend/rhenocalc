@@ -259,6 +259,7 @@ void MainWindow::setupUI() {
     m_statusLabel = new QLabel(this);
     m_statusLabel->setOpenExternalLinks(true);
     m_statusLabel->setTextFormat(Qt::RichText);
+    m_statusLabel->setContentsMargins(6, 0, 0, 0);
     statusBar()->addWidget(m_statusLabel, 1);
     updateStatusBar();
 }
@@ -378,15 +379,29 @@ void MainWindow::updateStatusBar(const QString& updateVersion, const QString& re
     }
 
     QString linkColor = m_isDark ? "#6eb5ff" : "#0066cc";
+    QString statusText;
 
     if (m_updateVersion.isEmpty()) {
         // Normal status - no update available
-        m_statusLabel->setText(QString("RhenoCalc  |  Embedded Engineering Toolbox  |  %1")
-            .arg(APP_VERSION_STRING));
+        statusText = QString(
+        "<table width=\"100%\" style=\"border-collapse: collapse;\">"
+            "  <tr>"
+            "    <td style=\"text-align: left; width: 33%;\"> RhenoCalc  |  Embedded Engineering Toolbox</td>"
+            "    <td style=\"text-align: right; width: 33%;\"> | %1</td>"
+            "  </tr>"
+            "</table>"
+            )
+            .arg(APP_VERSION_STRING);
     } else {
         // Update available - show clickable link
-        m_statusLabel->setText(QString("RhenoCalc  |  <a href=\"%2\" style=\"color:%3;\">Update %1 available</a>  |  %4")
-            .arg(m_updateVersion, m_updateUrl, linkColor, APP_VERSION_STRING));
+        statusText = QString(
+            "<table width=\"100%\" style=\"border-collapse: collapse;\">"
+            "  <tr>"
+            "    <td style=\"text-align: left; width: 33%;\"> RhenoCalc  |  <a href=\"%2\" style=\"color:%3;\">Update %1 available</a></td>"
+            "    <td style=\"text-align: right; width: 33%;\"> | %4</td>"
+            "  </tr>"
+            "</table>"
+        ).arg(m_updateVersion, m_updateUrl, linkColor, APP_VERSION_STRING);
     }
+    m_statusLabel->setText(statusText);
 }
-
