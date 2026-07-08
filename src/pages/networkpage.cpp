@@ -1,6 +1,6 @@
 #include "networkpage.h"
 
-#include "core/networkcalc.h"
+#include "core/network.h"
 #include "ui/themecolors.h"
 
 #include <QGridLayout>
@@ -12,7 +12,6 @@
 #include <QScrollArea>
 #include <QSizePolicy>
 #include <QSpinBox>
-#include <QVBoxLayout>
 
 namespace {
 
@@ -232,15 +231,15 @@ void NetworkPage::calculateAndRender() {
 
     const QString cidrText = m_cidrEdit->text().trimmed();
     if (!cidrText.isEmpty()) {
-        if (!NetworkCalc::parseCidr(cidrText, ip, prefix, &err)) {
+        if (!Rheno::Core::parseCidr(cidrText, ip, prefix, &err)) {
             setStatus(err, true);
             return;
         }
-        m_ipEdit->setText(NetworkCalc::toIpv4(ip));
+        m_ipEdit->setText(Rheno::Core::toIpv4(ip));
         m_prefixSpin->setValue(prefix);
-        m_maskEdit->setText(NetworkCalc::toIpv4(NetworkCalc::prefixToMask(prefix)));
+        m_maskEdit->setText(Rheno::Core::toIpv4(Rheno::Core::prefixToMask(prefix)));
     } else {
-        if (!NetworkCalc::parseIpv4(m_ipEdit->text(), ip, &err)) {
+        if (!Rheno::Core::parseIpv4(m_ipEdit->text(), ip, &err)) {
             setStatus(err, true);
             return;
         }
@@ -248,7 +247,7 @@ void NetworkPage::calculateAndRender() {
         const QString maskText = m_maskEdit->text().trimmed();
         if (!maskText.isEmpty()) {
             quint32 mask = 0;
-            if (!NetworkCalc::parseIpv4(maskText, mask, &err) || !NetworkCalc::maskToPrefix(mask, prefix, &err)) {
+            if (!Rheno::Core::parseIpv4(maskText, mask, &err) || !Rheno::Core::maskToPrefix(mask, prefix, &err)) {
                 setStatus(err, true);
                 return;
             }
@@ -256,22 +255,22 @@ void NetworkPage::calculateAndRender() {
         }
     }
 
-    const NetworkCalc::SubnetResult r = NetworkCalc::calculateSubnet(ip, prefix);
+    const Rheno::Core::SubnetResult r = Rheno::Core::calculateSubnet(ip, prefix);
     if (!r.valid) {
         setStatus(r.error, true);
         return;
     }
 
-    m_maskEdit->setText(NetworkCalc::toIpv4(r.mask));
-    m_cidrValue->setText(QString("%1/%2").arg(NetworkCalc::toIpv4(r.ip)).arg(r.prefix));
-    m_networkValue->setText(NetworkCalc::toIpv4(r.network));
-    m_broadcastValue->setText(NetworkCalc::toIpv4(r.broadcast));
-    m_firstHostValue->setText(NetworkCalc::toIpv4(r.firstHost));
-    m_lastHostValue->setText(NetworkCalc::toIpv4(r.lastHost));
-    m_wildcardValue->setText(NetworkCalc::toIpv4(r.wildcard));
+    m_maskEdit->setText(Rheno::Core::toIpv4(r.mask));
+    m_cidrValue->setText(QString("%1/%2").arg(Rheno::Core::toIpv4(r.ip)).arg(r.prefix));
+    m_networkValue->setText(Rheno::Core::toIpv4(r.network));
+    m_broadcastValue->setText(Rheno::Core::toIpv4(r.broadcast));
+    m_firstHostValue->setText(Rheno::Core::toIpv4(r.firstHost));
+    m_lastHostValue->setText(Rheno::Core::toIpv4(r.lastHost));
+    m_wildcardValue->setText(Rheno::Core::toIpv4(r.wildcard));
     m_hostsValue->setText(QString::number(r.usableHosts));
 
-    const NetworkCalc::IpInfo info = NetworkCalc::classifyIp(r.ip);
+    const Rheno::Core::IpInfo info = Rheno::Core::classifyIp(r.ip);
     m_ipClassValue->setText(info.ipClass);
     m_scopeValue->setText(info.scope);
 
@@ -295,13 +294,13 @@ void NetworkPage::onPlanHostsClicked() {
     QString err;
     int prefix = 24;
     const quint64 devices = static_cast<quint64>(m_devicesSpin->value());
-    if (!NetworkCalc::minimalPrefixForHosts(devices, prefix, &err)) {
+    if (!Rheno::Core::minimalPrefixForHosts(devices, prefix, &err)) {
         setStatus(err, true);
         return;
     }
 
     m_prefixSpin->setValue(prefix);
-    m_maskEdit->setText(NetworkCalc::toIpv4(NetworkCalc::prefixToMask(prefix)));
+    m_maskEdit->setText(Rheno::Core::toIpv4(Rheno::Core::prefixToMask(prefix)));
     setStatus(QString("Planned prefix /%1 for %2 devices.").arg(prefix).arg(devices), false);
 
     if (!m_ipEdit->text().trimmed().isEmpty() || !m_cidrEdit->text().trimmed().isEmpty())
@@ -311,7 +310,7 @@ void NetworkPage::onPlanHostsClicked() {
 void NetworkPage::onIpToUintClicked() {
     quint32 ip = 0;
     QString err;
-    if (!NetworkCalc::parseIpv4(m_converterIpEdit->text(), ip, &err)) {
+    if (!Rheno::Core::parseIpv4(m_converterIpEdit->text(), ip, &err)) {
         setStatus(err, true);
         return;
     }
@@ -329,16 +328,16 @@ void NetworkPage::onUintToIpClicked() {
     }
 
     const quint32 ip = static_cast<quint32>(value);
-    m_converterIpEdit->setText(NetworkCalc::toIpv4(ip));
+    m_converterIpEdit->setText(Rheno::Core::toIpv4(ip));
     setStatus("Converted uint32 to IP.", false);
 }
 
 void NetworkPage::applyTheme(bool dark) {
-    const QString grpS = ThemeColors::unitGroupStyle(dark);
-    const QString fldS = ThemeColors::unitFieldStyle(dark);
-    const QString resS = ThemeColors::unitResultStyle(dark);
-    const QString ttlS = ThemeColors::unitTitleStyle(dark);
-    const QString frmS = ThemeColors::unitFormulaStyle(dark);
+    const QString grpS = Rheno::UI::unitGroupStyle(dark);
+    const QString fldS = Rheno::UI::unitFieldStyle(dark);
+    const QString resS = Rheno::UI::unitResultStyle(dark);
+    const QString ttlS = Rheno::UI::unitTitleStyle(dark);
+    const QString frmS = Rheno::UI::unitFormulaStyle(dark);
 
     m_titleLabel->setStyleSheet(ttlS);
     m_subnetGroup->setStyleSheet(grpS);

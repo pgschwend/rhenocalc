@@ -1,6 +1,5 @@
 #include "colorpage.h"
-#include "ui/themecolors.h"
-#include <QVBoxLayout>
+#include "core/color.h"
 #include <QHBoxLayout>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -8,7 +7,6 @@
 #include <QSizePolicy>
 #include <QClipboard>
 #include <QApplication>
-#include <QScreen>
 #include <QTimer>
 #include <QPixmap>
 #include <QMouseEvent>
@@ -242,26 +240,19 @@ void ColorPage::setColor(const QColor& color, QWidget* skip) {
 void ColorPage::updatePreview() {
     m_preview->setStyleSheet(QString("background-color: %1; border: 1px solid gray; border-radius: 8px;")
         .arg(m_currentColor.name(QColor::HexArgb)));
-    m_colorName->setText(QString("RGB(%1, %2, %3)  |  HSL(%4, %5%, %6%)")
-        .arg(m_currentColor.red()).arg(m_currentColor.green()).arg(m_currentColor.blue())
-        .arg(qMax(0, m_currentColor.hslHue()))
-        .arg(qRound(m_currentColor.hslSaturationF() * 100))
-        .arg(qRound(m_currentColor.lightnessF() * 100)));
+    m_colorName->setText(Rheno::Core::previewText(m_currentColor));
 }
 void ColorPage::onHexChanged() {
-    QString hex = m_hexEdit->text().trimmed();
-    if (!hex.startsWith('#')) hex.prepend('#');
-    QColor c(hex);
-    if (c.isValid()) setColor(c, m_hexEdit);
+    QColor c;
+    if (Rheno::Core::parseHexColor(m_hexEdit->text(), &c))
+        setColor(c, m_hexEdit);
 }
 void ColorPage::onRgbChanged() {
-    setColor(QColor(m_redEdit->text().toInt(), m_greenEdit->text().toInt(),
-                    m_blueEdit->text().toInt(), m_alphaEdit->text().toInt()),
+    setColor(Rheno::Core::fromRgbText(m_redEdit->text(), m_greenEdit->text(), m_blueEdit->text(), m_alphaEdit->text()),
              qobject_cast<QWidget*>(sender()));
 }
 void ColorPage::onHslChanged() {
-    setColor(QColor::fromHsl(m_hueEdit->text().toInt(), m_satEdit->text().toInt(),
-                             m_lightEdit->text().toInt(), m_alphaEdit->text().toInt()),
+    setColor(Rheno::Core::fromHslText(m_hueEdit->text(), m_satEdit->text(), m_lightEdit->text(), m_alphaEdit->text()),
              qobject_cast<QWidget*>(sender()));
 }
 void ColorPage::onPickColor() {

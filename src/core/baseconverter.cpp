@@ -1,11 +1,9 @@
-#include "baseconvertercore.h"
-
-#include <QChar>
+#include "baseconverter.h"
 
 #include <cmath>
 #include <cstring>
 
-namespace BaseConverterCore {
+namespace Rheno::Core {
 
 unsigned long long applyMask(unsigned long long value, int bits) {
     if (bits == 64) return value;
@@ -82,5 +80,5 @@ QString byteTooltip(unsigned long long value, int byteIndex) {
         .arg(byte);
 }
 
-} // namespace BaseConverterCore
+} // namespace Rheno::Core
 

@@ -237,7 +237,7 @@ void MainWindow::setupUI() {
     m_onTopBtn->setFixedSize(32, 26);
     m_onTopBtn->setCursor(Qt::PointingHandCursor);
     m_onTopBtn->setFocusPolicy(Qt::NoFocus);
-    m_onTopBtn->setIcon(QIcon(":/icons/pin_gray.svg"));
+    m_onTopBtn->setIcon(QIcon(":/symbols/pin_gray.svg"));
     m_onTopBtn->setIconSize(QSize(14, 14));
     connect(m_onTopBtn, &QPushButton::clicked, this, [this]() {
         applyAlwaysOnTop(!m_alwaysOnTop, true);
@@ -279,13 +279,13 @@ void MainWindow::applyTheme(bool dark) {
     // ── Load global stylesheet from QSS file ─────────────────────────────────
     QFile qss(dark ? ":/styles/dark.qss" : ":/styles/light.qss");
     if (qss.open(QFile::ReadOnly)) {
-        qApp->setStyleSheet(ThemeColors::applyQssColors(QString::fromUtf8(qss.readAll()), dark));
+        qApp->setStyleSheet(Rheno::UI::applyQssColors(QString::fromUtf8(qss.readAll()), dark));
         qss.close();
     }
 
     // ── Fusion palette (fallback for native elements) ─────────────────────────
     qApp->setStyle(QStyleFactory::create("Fusion"));
-    qApp->setPalette(ThemeColors::applicationPalette(dark));
+    qApp->setPalette(Rheno::UI::applicationPalette(dark));
 
     // ── Update page-specific styles ────────────────────────────────────────────
     m_calcPage->applyTheme(dark);
@@ -300,13 +300,13 @@ void MainWindow::applyTheme(bool dark) {
     m_netToolsPage->applyTheme(dark);
 
     // Status Bar
-    statusBar()->setStyleSheet(ThemeColors::statusBarStyle(dark));
+    statusBar()->setStyleSheet(Rheno::UI::statusBarStyle(dark));
     updateStatusBar(); // Refresh link color for current theme
 
     // Update theme button label
     if (m_themeBtn) {
         m_themeBtn->setText(dark ? "☀" : "🌙");
-        m_themeBtn->setStyleSheet(ThemeColors::themeToggleButtonStyle(dark));
+        m_themeBtn->setStyleSheet(Rheno::UI::themeToggleButtonStyle(dark));
     }
 
     updateOnTopButton();
@@ -351,7 +351,7 @@ void MainWindow::updateOnTopButton() {
     m_onTopBtn->setChecked(m_alwaysOnTop);
     m_onTopBtn->setToolTip(m_alwaysOnTop ? "Always on top: ON" : "Always on top: OFF");
 
-    QString style = ThemeColors::themeToggleButtonStyle(m_isDark);
+    QString style = Rheno::UI::themeToggleButtonStyle(m_isDark);
     if (m_alwaysOnTop) {
         if (m_isDark) {
             style += "QPushButton{border:2px solid #dfdfdf;}";

@@ -12,7 +12,7 @@ VERSION=$(grep -oE 'APP_VERSION_STRING\s+"V?[^"]+' "${SOURCE_DIR}/src/info.h" | 
 DMG_NAME="rhenocalc-macos-${VERSION}.dmg"
 
 # Icon path
-ICON_PATH="${SOURCE_DIR}/src/resources/icons/calculator.svg"
+ICON_PATH="${SOURCE_DIR}/src/resources/icons/rhenocalc.svg"
 
 # Qt prefix (auto-detect from CMakeCache or use env)
 if [[ -z "${CMAKE_PREFIX_PATH:-}" && -f "${BUILD_DIR}/CMakeCache.txt" ]]; then

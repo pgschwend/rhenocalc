@@ -1,10 +1,9 @@
 #pragma once
 
-#include <QList>
 #include <QString>
 #include <QStringList>
 
-namespace UnitConverterCore {
+namespace Rheno::Core {
 
 struct UnitDef {
     QString name;
@@ -27,5 +26,5 @@ ConversionResult convert(
     const QList<QList<UnitDef>>& categories,
     const QStringList& categoryNames);
 
-} // namespace UnitConverterCore
+} // namespace Rheno::Core
 

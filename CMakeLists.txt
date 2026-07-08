@@ -6,7 +6,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# ── Boost.Multiprecision via FetchContent ──────────────────────────────────────
+# -- Boost.Multiprecision via FetchContent -------------------------------------
 include(FetchContent)
 FetchContent_Declare(
         Boost
@@ -16,7 +16,6 @@ FetchContent_Declare(
 set(BOOST_INCLUDE_LIBRARIES multiprecision math)
 FetchContent_MakeAvailable(Boost)
 
-# Appends local paths only if they are not already set by environments like CI
 if(WIN32)
     list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.9.3/mingw_64")
 elseif(UNIX AND NOT APPLE)
@@ -25,19 +24,14 @@ elseif(APPLE)
     list(APPEND CMAKE_PREFIX_PATH "/Users/patrick/Qt/6.9.3/macos/")
 endif()
 
-find_package(Qt6 COMPONENTS
-        Core
-        Gui
-        Widgets
-        Network
-        REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets Network REQUIRED)
 
 set(SOURCES
         src/resources/resources.qrc
         src/main.cpp
         src/ui/themecolors.h src/ui/themecolors.cpp
         src/ui/mainwindow.h src/ui/mainwindow.cpp
-        src/pages/calculatorpage.h   src/pages/calculatorpage.cpp
+        src/pages/calculatorpage.h src/pages/calculatorpage.cpp
         src/pages/baseconverterpage.h src/pages/baseconverterpage.cpp
         src/pages/unitconverterpage.h src/pages/unitconverterpage.cpp
         src/pages/networkpage.cpp
@@ -47,11 +41,18 @@ set(SOURCES
         src/pages/floatpage.h src/pages/floatpage.cpp
         src/pages/electronicspage.h src/pages/electronicspage.cpp
         src/pages/nettoolspage.h src/pages/nettoolspage.cpp
-        src/core/calculatorcore.h src/core/calculatorcore.cpp
-        src/core/baseconvertercore.h src/core/baseconvertercore.cpp
-        src/core/unitconvertercore.h src/core/unitconvertercore.cpp
-        src/core/networkcalc.h src/core/networkcalc.cpp
-        src/core/crchashcore.h src/core/crchashcore.cpp
+        src/core/calc/operations.h src/core/calc/operations.cpp
+        src/core/calc/calcparser.h src/core/calc/calcparser.cpp
+        src/core/calculator.h src/core/calculator.cpp
+        src/core/baseconverter.h src/core/baseconverter.cpp
+        src/core/unitconverter.h src/core/unitconverter.cpp
+        src/core/network.h src/core/network.cpp
+        src/core/crchash.h src/core/crchash.cpp
+        src/core/color.h src/core/color.cpp
+        src/core/finance.h src/core/finance.cpp
+        src/core/floathandler.h src/core/floathandler.cpp
+        src/core/electronics.h src/core/electronics.cpp
+        src/core/nettools.h src/core/nettools.cpp
         src/core/traceroute.h src/core/traceroute.cpp
         src/core/updater.h src/core/updater.cpp
         src/info.h
@@ -61,7 +62,14 @@ if(WIN32)
     list(APPEND SOURCES src/resources/rhenocalc.rc)
 endif()
 
-# ── CREATE TARGET FIRST ────────────────────────────────────────────────────────
+# macOS specific icon setup
+if(APPLE)
+    set(MACOSX_BUNDLE_ICON_FILE rhenocalc.icns)
+    set(MAC_ICON src/resources/icons/rhenocalc.icns)
+    set_source_files_properties(${MAC_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+    list(APPEND SOURCES ${MAC_ICON})
+endif()
+
 if(APPLE)
     set(CMAKE_xcode_attribute_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
     add_executable(RhenoCalc MACOSX_BUNDLE ${SOURCES})
@@ -69,14 +77,10 @@ else()
     add_executable(RhenoCalc ${SOURCES})
 endif()
 
-# ── PROPERTIES & POST-BUILD TASKS (Now safe to call) ──────────────────────────
 if(WIN32)
-    # Enable POSIX math constants like M_PI for MSVC
     target_compile_definitions(RhenoCalc PRIVATE _USE_MATH_DEFINES)
-
     set_target_properties(RhenoCalc PROPERTIES WIN32_EXECUTABLE ON)
 
-    # Ensure Qt runtime DLLs/plugins are deployed next to the executable in build trees.
     get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
     get_filename_component(QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
@@ -95,6 +99,7 @@ target_include_directories(RhenoCalc PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
         ${CMAKE_CURRENT_SOURCE_DIR}/src/pages
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/core/calc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/resources
 )
 

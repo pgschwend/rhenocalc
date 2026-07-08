@@ -1,4 +1,4 @@
-#include "crchashcore.h"
+#include "crchash.h"
 
 #include <QCryptographicHash>
 
@@ -200,31 +200,31 @@ QString hashHex(const QByteArray& data, QCryptographicHash::Algorithm alg) {
     return QCryptographicHash::hash(data, alg).toHex().toUpper();
 }
 
-QString algorithmFormula(CrcHashCore::Algorithm alg) {
+QString algorithmFormula(Rheno::Core::Algorithm alg) {
     switch (alg) {
-    case CrcHashCore::Algorithm::Crc8Maxim:
+    case Rheno::Core::Algorithm::Crc8Maxim:
         return "CRC-8/MAXIM: G(x)=x^8+x^5+x^4+1, init=0x00, xorOut=0x00, refin/refout=true.";
-    case CrcHashCore::Algorithm::Crc8J1850:
+    case Rheno::Core::Algorithm::Crc8J1850:
         return "CRC-8/J1850: G(x)=x^8+x^4+x^3+x^2+1, init=0xFF, xorOut=0xFF, refin/refout=false.";
-    case CrcHashCore::Algorithm::Crc16Modbus:
+    case Rheno::Core::Algorithm::Crc16Modbus:
         return "CRC-16/MODBUS: G(x)=x^16+x^15+x^2+1, init=0xFFFF, xorOut=0x0000, refin/refout=true.";
-    case CrcHashCore::Algorithm::CrcCcitt:
+    case Rheno::Core::Algorithm::CrcCcitt:
         return "CRC-CCITT: G(x)=x^16+x^12+x^5+1, init=0xFFFF, xorOut=0x0000, refin/refout=false.";
-    case CrcHashCore::Algorithm::Crc32Iso3309:
+    case Rheno::Core::Algorithm::Crc32Iso3309:
         return "CRC-32/ISO 3309: G(x)=0x04C11DB7, init=0xFFFFFFFF, xorOut=0xFFFFFFFF, refin/refout=true.";
-    case CrcHashCore::Algorithm::Crc32C:
+    case Rheno::Core::Algorithm::Crc32C:
         return "CRC-32C/Castagnoli: G(x)=0x1EDC6F41, init=0xFFFFFFFF, xorOut=0xFFFFFFFF, refin/refout=true.";
-    case CrcHashCore::Algorithm::MurmurHash3:
+    case Rheno::Core::Algorithm::MurmurHash3:
         return "MurmurHash3 x86_32: k*=c1; k=ROTL32(k,15); k*=c2; h^=k; h=ROTL32(h,13)*5+0xe6546b64; h=fmix32(h^len).";
-    case CrcHashCore::Algorithm::XxHash32:
+    case Rheno::Core::Algorithm::XxHash32:
         return "xxHash32: block mixing with primes p1..p5, avalanche steps h^=h>>15; h*=p2; h^=h>>13; h*=p3; h^=h>>16.";
-    case CrcHashCore::Algorithm::Md5:
+    case Rheno::Core::Algorithm::Md5:
         return "MD5: digest = MD5(m), 128-bit Merkle-Damgard hash over 512-bit blocks.";
-    case CrcHashCore::Algorithm::Sha1:
+    case Rheno::Core::Algorithm::Sha1:
         return "SHA-1: digest = SHA1(m), 160-bit Merkle-Damgard hash over 512-bit blocks.";
-    case CrcHashCore::Algorithm::Sha256:
+    case Rheno::Core::Algorithm::Sha256:
         return "SHA-256: digest = SHA256(m), 256-bit SHA-2 compression over 512-bit blocks.";
-    case CrcHashCore::Algorithm::Sha512:
+    case Rheno::Core::Algorithm::Sha512:
         return "SHA-512: digest = SHA512(m), 512-bit SHA-2 compression over 1024-bit blocks.";
     }
 
@@ -233,7 +233,7 @@ QString algorithmFormula(CrcHashCore::Algorithm alg) {
 
 } // namespace
 
-namespace CrcHashCore {
+namespace Rheno::Core {
 
 QVector<AlgorithmEntry> algorithms() {
     return {
@@ -257,46 +257,46 @@ ComputeResult compute(Algorithm algorithm, const QByteArray& input) {
     out.formula = algorithmFormula(algorithm);
 
     switch (algorithm) {
-    case Algorithm::Crc8Maxim:
-        out.value = crcHex(input, {8, 0x31, 0x00, 0x00, true, true});
-        break;
-    case Algorithm::Crc8J1850:
-        out.value = crcHex(input, {8, 0x1D, 0xFF, 0xFF, false, false});
-        break;
-    case Algorithm::Crc16Modbus:
-        out.value = crcHex(input, {16, 0x8005, 0xFFFF, 0x0000, true, true});
-        break;
-    case Algorithm::CrcCcitt:
-        out.value = crcHex(input, {16, 0x1021, 0xFFFF, 0x0000, false, false});
-        break;
-    case Algorithm::Crc32Iso3309:
-        out.value = crcHex(input, {32, 0x04C11DB7, 0xFFFFFFFF, 0xFFFFFFFF, true, true});
-        break;
-    case Algorithm::Crc32C:
-        out.value = crcHex(input, {32, 0x1EDC6F41, 0xFFFFFFFF, 0xFFFFFFFF, true, true});
-        break;
-    case Algorithm::MurmurHash3:
-        out.value = toHex(murmurHash3_x86_32(input, 0), 8);
-        break;
-    case Algorithm::XxHash32:
-        out.value = toHex(xxHash32(input, 0), 8);
-        break;
-    case Algorithm::Md5:
-        out.value = hashHex(input, QCryptographicHash::Md5);
-        break;
-    case Algorithm::Sha1:
-        out.value = hashHex(input, QCryptographicHash::Sha1);
-        break;
-    case Algorithm::Sha256:
-        out.value = hashHex(input, QCryptographicHash::Sha256);
-        break;
-    case Algorithm::Sha512:
-        out.value = hashHex(input, QCryptographicHash::Sha512);
-        break;
+        case Algorithm::Crc8Maxim:
+            out.value = crcHex(input, {8, 0x31, 0x00, 0x00, true, true});
+            break;
+        case Algorithm::Crc8J1850:
+            out.value = crcHex(input, {8, 0x1D, 0xFF, 0xFF, false, false});
+            break;
+        case Algorithm::Crc16Modbus:
+            out.value = crcHex(input, {16, 0x8005, 0xFFFF, 0x0000, true, true});
+            break;
+        case Algorithm::CrcCcitt:
+            out.value = crcHex(input, {16, 0x1021, 0xFFFF, 0x0000, false, false});
+            break;
+        case Algorithm::Crc32Iso3309:
+            out.value = crcHex(input, {32, 0x04C11DB7, 0xFFFFFFFF, 0xFFFFFFFF, true, true});
+            break;
+        case Algorithm::Crc32C:
+            out.value = crcHex(input, {32, 0x1EDC6F41, 0xFFFFFFFF, 0xFFFFFFFF, true, true});
+            break;
+        case Algorithm::MurmurHash3:
+            out.value = toHex(murmurHash3_x86_32(input, 0), 8);
+            break;
+        case Algorithm::XxHash32:
+            out.value = toHex(xxHash32(input, 0), 8);
+            break;
+        case Algorithm::Md5:
+            out.value = hashHex(input, QCryptographicHash::Md5);
+            break;
+        case Algorithm::Sha1:
+            out.value = hashHex(input, QCryptographicHash::Sha1);
+            break;
+        case Algorithm::Sha256:
+            out.value = hashHex(input, QCryptographicHash::Sha256);
+            break;
+        case Algorithm::Sha512:
+            out.value = hashHex(input, QCryptographicHash::Sha512);
+            break;
     }
 
     return out;
 }
 
-} // namespace CrcHashCore
+} // namespace Rheno::Core
 

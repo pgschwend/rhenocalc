@@ -1,6 +1,6 @@
 #pragma once
-#include "core/calculatorcore.h"
-#include <QWidget>
+
+#include "../core/calculator.h"
 #include <QLineEdit>
 #include <QPushButton>
 #include <QLabel>
@@ -73,5 +73,5 @@ private:
     QPushButton*        m_mcBtn = nullptr;
     bool                m_isDark = true;
 
-    CalculatorCore::CalculatorEngine m_engine;
+    Rheno::Core::CalculatorEngine m_engine;
 };

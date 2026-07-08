@@ -1,10 +1,8 @@
 #pragma once
 
-#include <QByteArray>
-#include <QString>
 #include <QVector>
 
-namespace CrcHashCore {
+namespace Rheno::Core {
 
 enum class Algorithm {
     Crc8Maxim,
@@ -34,5 +32,5 @@ struct ComputeResult {
 QVector<AlgorithmEntry> algorithms();
 ComputeResult compute(Algorithm algorithm, const QByteArray& input);
 
-} // namespace CrcHashCore
+} // namespace Rheno::Core
 

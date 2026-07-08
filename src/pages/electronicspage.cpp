@@ -1,4 +1,5 @@
 #include "electronicspage.h"
+#include "core/electronics.h"
 #include "ui/themecolors.h"
 
 #include <QComboBox>
@@ -7,61 +8,8 @@
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
-#include <QRegularExpression>
 #include <QScrollArea>
 #include <QVBoxLayout>
-#include <QtMath>
-#include <cmath>
-
-namespace {
-
-bool parseValue(const QString& text, double* value) {
-    QString trimmed = text.trimmed();
-    if (trimmed.isEmpty()) {
-        *value = 0.0;
-        return false;
-    }
-    bool ok = false;
-    double parsed = trimmed.toDouble(&ok);
-    if (!ok) {
-        QString normalized = trimmed;
-        parsed = normalized.replace(',', '.').toDouble(&ok);
-    }
-    if (!ok) return false;
-    *value = parsed;
-    return true;
-}
-
-QString formatEngineering(double value, const QString& unit) {
-    if (!std::isfinite(value) || value == 0.0)
-        return "—";
-
-    const char* prefixes[] = {"p", "n", "µ", "m", "", "k", "M", "G", "T"};
-    const int baseIndex = 4; // "" is at index 4
-    double absVal = std::abs(value);
-    int exp = 0;
-
-    if (absVal >= 1.0) {
-        while (absVal >= 1000.0 && exp < 4) {
-            absVal /= 1000.0;
-            exp++;
-        }
-    } else {
-        while (absVal < 1.0 && exp > -4) {
-            absVal *= 1000.0;
-            exp--;
-        }
-    }
-
-    if (value < 0) absVal = -absVal;
-    int prefixIdx = baseIndex + exp;
-    if (prefixIdx < 0 || prefixIdx > 8)
-        return QString::number(value, 'g', 4) + " " + unit;
-
-    return QString::number(absVal, 'f', 3).remove(QRegularExpression("\\.?0+$")) + " " + prefixes[prefixIdx] + unit;
-}
-
-} // namespace
 
 ElectronicsPage::ElectronicsPage(QWidget* parent) : QWidget(parent) {
     setupUI();
@@ -373,173 +321,137 @@ void ElectronicsPage::setupUI() {
 
 void ElectronicsPage::calcVoltageDivider() {
     double vin = 0, r1 = 0, r2 = 0;
-    if (!parseValue(m_vdVin->text(), &vin) ||
-        !parseValue(m_vdR1->text(), &r1) ||
-        !parseValue(m_vdR2->text(), &r2)) {
+    if (!Rheno::Core::parseValue(m_vdVin->text(), &vin) ||
+        !Rheno::Core::parseValue(m_vdR1->text(), &r1) ||
+        !Rheno::Core::parseValue(m_vdR2->text(), &r2)) {
         m_vdVout->setText("—");
         m_vdRatio->setText("—");
         return;
     }
 
-    if (r1 + r2 <= 0) {
+    const auto result = Rheno::Core::calculateVoltageDivider(vin, r1, r2);
+    if (!result.valid) {
         m_vdVout->setText("—");
         m_vdRatio->setText("—");
         return;
     }
 
-    double vout = vin * r2 / (r1 + r2);
-    double ratio = r2 / (r1 + r2);
-
-    m_vdVout->setText(QString::number(vout, 'f', 4) + " V");
-    m_vdRatio->setText(QString::number(ratio, 'f', 4));
+    m_vdVout->setText(QString::number(result.vout, 'f', 4) + " V");
+    m_vdRatio->setText(QString::number(result.ratio, 'f', 4));
 }
 
 void ElectronicsPage::calcLedResistor() {
     double vs = 0, vf = 0, ifMa = 0;
-    if (!parseValue(m_ledVs->text(), &vs) ||
-        !parseValue(m_ledVf->text(), &vf) ||
-        !parseValue(m_ledIf->text(), &ifMa)) {
+    if (!Rheno::Core::parseValue(m_ledVs->text(), &vs) ||
+        !Rheno::Core::parseValue(m_ledVf->text(), &vf) ||
+        !Rheno::Core::parseValue(m_ledIf->text(), &ifMa)) {
         m_ledR->setText("—");
         m_ledPower->setText("—");
         return;
     }
 
-    double ifA = ifMa / 1000.0; // mA to A
-    if (ifA <= 0 || vs <= vf) {
+    const auto result = Rheno::Core::calculateLedResistor(vs, vf, ifMa);
+    if (!result.valid) {
         m_ledR->setText("—");
         m_ledPower->setText("—");
         return;
     }
 
-    double r = (vs - vf) / ifA;
-    double p = (vs - vf) * ifA;
-
-    m_ledR->setText(formatEngineering(r, "Ω"));
-    m_ledPower->setText(formatEngineering(p, "W"));
+    m_ledR->setText(result.resistorText);
+    m_ledPower->setText(result.powerText);
 }
 
 void ElectronicsPage::calcWheatstone() {
     double r1 = 0, r2 = 0, r3 = 0;
-    if (!parseValue(m_wbR1->text(), &r1) ||
-        !parseValue(m_wbR2->text(), &r2) ||
-        !parseValue(m_wbR3->text(), &r3)) {
+    if (!Rheno::Core::parseValue(m_wbR1->text(), &r1) ||
+        !Rheno::Core::parseValue(m_wbR2->text(), &r2) ||
+        !Rheno::Core::parseValue(m_wbR3->text(), &r3)) {
         m_wbResult->setText("—");
         return;
     }
-
-    if (r1 <= 0) {
-        m_wbResult->setText("—");
-        return;
-    }
-
-    // Calculate Rx for balanced bridge: Rx = R2 * R3 / R1
-    double rxCalc = r2 * r3 / r1;
 
     double rxEntered = 0;
-    if (parseValue(m_wbRx->text(), &rxEntered) && rxEntered > 0) {
-        // User entered Rx - check if balanced
-        double diff = std::abs(rxEntered - rxCalc) / rxCalc * 100.0;
-        if (diff < 0.01) {
-            m_wbResult->setText("Balanced! Rx = " + formatEngineering(rxCalc, "Ω"));
-        } else {
-            m_wbResult->setText(QString("Unbalanced (%.2f%%). Need Rx = %3")
-                .arg(diff)
-                .arg(formatEngineering(rxCalc, "Ω")));
-        }
-    } else {
-        // Just show calculated Rx
-        m_wbResult->setText("Rx = " + formatEngineering(rxCalc, "Ω"));
+    const bool hasRxEntered = Rheno::Core::parseValue(m_wbRx->text(), &rxEntered) && rxEntered > 0;
+    const auto result = Rheno::Core::calculateWheatstone(r1, r2, r3, rxEntered, hasRxEntered);
+
+    if (!result.valid) {
+        m_wbResult->setText("—");
+        return;
     }
+
+    m_wbResult->setText(result.text);
 }
 
 void ElectronicsPage::calcRCFilter() {
     double r = 0, cNf = 0;
-    if (!parseValue(m_rcR->text(), &r) ||
-        !parseValue(m_rcC->text(), &cNf)) {
+    if (!Rheno::Core::parseValue(m_rcR->text(), &r) ||
+        !Rheno::Core::parseValue(m_rcC->text(), &cNf)) {
         m_rcFc->setText("—");
         m_rcTau->setText("—");
         return;
     }
 
-    double c = cNf * 1e-9; // nF to F
-    if (r <= 0 || c <= 0) {
+    const auto result = Rheno::Core::calculateRcFilter(r, cNf);
+    if (!result.valid) {
         m_rcFc->setText("—");
         m_rcTau->setText("—");
         return;
     }
 
-    double tau = r * c;
-    double fc = 1.0 / (2.0 * M_PI * tau);
-
-    m_rcFc->setText(formatEngineering(fc, "Hz"));
-    m_rcTau->setText(formatEngineering(tau, "s"));
+    m_rcFc->setText(result.fcText);
+    m_rcTau->setText(result.tauText);
 }
 
 void ElectronicsPage::calcLCResonance() {
     double lUh = 0, cPf = 0;
-    if (!parseValue(m_lcL->text(), &lUh) ||
-        !parseValue(m_lcC->text(), &cPf)) {
+    if (!Rheno::Core::parseValue(m_lcL->text(), &lUh) ||
+        !Rheno::Core::parseValue(m_lcC->text(), &cPf)) {
         m_lcF0->setText("—");
         m_lcOmega->setText("—");
         return;
     }
 
-    double l = lUh * 1e-6; // µH to H
-    double c = cPf * 1e-12; // pF to F
-    if (l <= 0 || c <= 0) {
+    const auto result = Rheno::Core::calculateLcResonance(lUh, cPf);
+    if (!result.valid) {
         m_lcF0->setText("—");
         m_lcOmega->setText("—");
         return;
     }
 
-    // f0 = 1 / (2π√(LC))
-    double omega0 = 1.0 / std::sqrt(l * c);
-    double f0 = omega0 / (2.0 * M_PI);
-
-    m_lcF0->setText(formatEngineering(f0, "Hz"));
-    m_lcOmega->setText(formatEngineering(omega0, "rad/s"));
+    m_lcF0->setText(result.f0Text);
+    m_lcOmega->setText(result.omegaText);
 }
 
 void ElectronicsPage::calcPullUpDown() {
     double r = 0, cPf = 0, vcc = 0, vth = 0;
-    if (!parseValue(m_puR->text(), &r) ||
-        !parseValue(m_puC->text(), &cPf) ||
-        !parseValue(m_puVcc->text(), &vcc) ||
-        !parseValue(m_puVth->text(), &vth)) {
+    if (!Rheno::Core::parseValue(m_puR->text(), &r) ||
+        !Rheno::Core::parseValue(m_puC->text(), &cPf) ||
+        !Rheno::Core::parseValue(m_puVcc->text(), &vcc) ||
+        !Rheno::Core::parseValue(m_puVth->text(), &vth)) {
         m_puTrise->setText("—");
         m_puTfall->setText("—");
         return;
     }
 
-    double c = cPf * 1e-12; // pF to F
-    if (r <= 0 || c <= 0 || vcc <= 0 || vth <= 0 || vth >= vcc) {
+    const auto result = Rheno::Core::calculatePullUpDown(r, cPf, vcc, vth);
+    if (!result.valid) {
         m_puTrise->setText("—");
         m_puTfall->setText("—");
         return;
     }
 
-    double tau = r * c;
-
-    // Rise time (pull-up): V(t) = Vcc * (1 - e^(-t/τ))
-    // Solve for t when V(t) = Vth: t = -τ * ln(1 - Vth/Vcc)
-    double tRise = -tau * std::log(1.0 - vth / vcc);
-
-    // Fall time (pull-down): V(t) = Vcc * e^(-t/τ)
-    // Solve for t when V(t) = Vth: t = -τ * ln(Vth/Vcc)
-    double tFall = -tau * std::log(vth / vcc);
-
-    m_puTrise->setText(formatEngineering(tRise, "s"));
-    m_puTfall->setText(formatEngineering(tFall, "s"));
+    m_puTrise->setText(result.riseText);
+    m_puTfall->setText(result.fallText);
 }
 
 void ElectronicsPage::applyTheme(bool dark) {
     m_isDark = dark;
 
-    const QString grpS = ThemeColors::unitGroupStyle(dark);
-    const QString fldS = ThemeColors::unitFieldStyle(dark);
-    const QString resS = ThemeColors::unitResultStyle(dark);
-    const QString ttlS = ThemeColors::unitTitleStyle(dark);
-    const QString frmS = ThemeColors::unitFormulaStyle(dark);
+    const QString grpS = Rheno::UI::unitGroupStyle(dark);
+    const QString fldS = Rheno::UI::unitFieldStyle(dark);
+    const QString resS = Rheno::UI::unitResultStyle(dark);
+    const QString ttlS = Rheno::UI::unitTitleStyle(dark);
+    const QString frmS = Rheno::UI::unitFormulaStyle(dark);
 
     m_titleLabel->setStyleSheet(ttlS);
 

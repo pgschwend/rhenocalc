@@ -1,6 +1,6 @@
 #include <winver.h>
 
-IDI_APP_ICON ICON "icons/calculator.ico"
+IDI_APP_ICON ICON "icons/rhenocalc.ico"
 
 
 

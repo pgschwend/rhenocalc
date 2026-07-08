@@ -18,11 +18,6 @@ private:
     void floatToBinary();
     void binaryToFloat();
 
-    // IEEE 754 conversion helpers
-    static QString doubleToIEEE(double value, int totalBits, int expBits, int mantBits);
-    static double ieeeToDouble(const QString& bits, int totalBits, int expBits, int mantBits);
-    static QString formatBinaryString(const QString& bits, int expBits, int mantBits);
-
     QLabel* m_titleLabel = nullptr;
 
     // Float to Binary section
@@ -45,4 +40,3 @@ private:
 
     bool m_isDark = true;
 };
-

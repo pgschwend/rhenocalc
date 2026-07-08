@@ -1,40 +1,14 @@
 #include "floatpage.h"
+#include "core/floathandler.h"
 #include "ui/themecolors.h"
 
 #include <QComboBox>
-#include <QDoubleValidator>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
 #include <QScrollArea>
 #include <QVBoxLayout>
-#include <QtMath>
-#include <cmath>
-#include <cstdint>
-#include <limits>
-
-namespace {
-
-// Float type parameters: {totalBits, exponentBits, mantissaBits, bias}
-struct FloatFormat {
-    int totalBits;
-    int expBits;
-    int mantBits;
-    int bias;
-};
-
-FloatFormat getFormat(const QString& typeName) {
-    if (typeName == "float16 (Half)")
-        return {16, 5, 10, 15};
-    if (typeName == "float32 (Single)")
-        return {32, 8, 23, 127};
-    if (typeName == "float64 (Double)")
-        return {64, 11, 52, 1023};
-    return {32, 8, 23, 127}; // Default to float32
-}
-
-} // namespace
 
 FloatPage::FloatPage(QWidget* parent) : QWidget(parent) {
     setupUI();
@@ -180,150 +154,14 @@ void FloatPage::setupUI() {
     connect(m_binTypeCombo, &QComboBox::currentTextChanged, this, &FloatPage::binaryToFloat);
 }
 
-QString FloatPage::doubleToIEEE(double value, int totalBits, int expBits, int mantBits) {
-    const int bias = (1 << (expBits - 1)) - 1;
-
-    // Handle special cases
-    if (std::isnan(value)) {
-        // NaN: all exponent bits 1, non-zero mantissa
-        QString result(totalBits, '0');
-        for (int i = 1; i <= expBits; ++i)
-            result[i] = '1';
-        result[totalBits - 1] = '1'; // non-zero mantissa
-        return result;
-    }
-
-    if (std::isinf(value)) {
-        // Infinity: all exponent bits 1, zero mantissa
-        QString result(totalBits, '0');
-        if (value < 0) result[0] = '1';
-        for (int i = 1; i <= expBits; ++i)
-            result[i] = '1';
-        return result;
-    }
-
-    if (value == 0.0) {
-        QString result(totalBits, '0');
-        // Check for -0.0
-        if (std::signbit(value))
-            result[0] = '1';
-        return result;
-    }
-
-    QString result(totalBits, '0');
-
-    // Sign bit
-    if (value < 0) {
-        result[0] = '1';
-        value = -value;
-    }
-
-    // Calculate exponent and mantissa
-    int exponent = 0;
-    double mantissa = std::frexp(value, &exponent);
-    // frexp returns mantissa in [0.5, 1.0), we need [1.0, 2.0)
-    mantissa *= 2.0;
-    exponent -= 1;
-
-    // Bias the exponent
-    int biasedExp = exponent + bias;
-
-    // Check for overflow (infinity)
-    if (biasedExp >= (1 << expBits) - 1) {
-        // Return infinity
-        for (int i = 1; i <= expBits; ++i)
-            result[i] = '1';
-        return result;
-    }
-
-    // Check for underflow (denormalized or zero)
-    if (biasedExp <= 0) {
-        // Denormalized number
-        biasedExp = 0;
-        mantissa = value / std::pow(2.0, 1 - bias);
-        // For denormals, there's no implicit leading 1
-    } else {
-        // Normalized: remove implicit leading 1
-        mantissa -= 1.0;
-    }
-
-    // Write exponent bits
-    for (int i = expBits - 1; i >= 0; --i) {
-        result[1 + (expBits - 1 - i)] = (biasedExp & (1 << i)) ? '1' : '0';
-    }
-
-    // Write mantissa bits
-    for (int i = 0; i < mantBits; ++i) {
-        mantissa *= 2.0;
-        if (mantissa >= 1.0) {
-            result[1 + expBits + i] = '1';
-            mantissa -= 1.0;
-        }
-    }
-
-    return result;
-}
-
-double FloatPage::ieeeToDouble(const QString& bits, int totalBits, int expBits, int mantBits) {
-    if (bits.length() != totalBits)
-        return std::numeric_limits<double>::quiet_NaN();
-
-    const int bias = (1 << (expBits - 1)) - 1;
-
-    // Extract sign
-    int sign = (bits[0] == '1') ? -1 : 1;
-
-    // Extract exponent
-    int exponent = 0;
-    for (int i = 1; i <= expBits; ++i) {
-        exponent = (exponent << 1) | (bits[i] == '1' ? 1 : 0);
-    }
-
-    // Extract mantissa
-    double mantissa = 0.0;
-    double fraction = 0.5;
-    for (int i = 1 + expBits; i < totalBits; ++i) {
-        if (bits[i] == '1')
-            mantissa += fraction;
-        fraction /= 2.0;
-    }
-
-    // Special cases
-    const int maxExp = (1 << expBits) - 1;
-
-    if (exponent == 0) {
-        // Denormalized or zero
-        if (mantissa == 0.0)
-            return sign > 0 ? 0.0 : -0.0;
-        // Denormalized: no implicit 1
-        return sign * mantissa * std::pow(2.0, 1 - bias);
-    }
-
-    if (exponent == maxExp) {
-        // Infinity or NaN
-        if (mantissa == 0.0)
-            return sign > 0 ? std::numeric_limits<double>::infinity()
-                           : -std::numeric_limits<double>::infinity();
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-
-    // Normalized number: add implicit 1
-    mantissa += 1.0;
-    return sign * mantissa * std::pow(2.0, exponent - bias);
-}
-
-QString FloatPage::formatBinaryString(const QString& bits, int expBits, int mantBits) {
-    if (bits.length() != 1 + expBits + mantBits)
-        return bits;
-
-    // Format: S EEEE...E MMM...M
-    return bits.left(1) + " " + bits.mid(1, expBits) + " " + bits.mid(1 + expBits);
-}
-
 void FloatPage::floatToBinary() {
-    QString text = m_floatInput->text().trimmed();
-    if (text.isEmpty()) {
-        m_signLabel->setText("—");
+    const auto result = Rheno::Core::encodeFloatText(m_floatInput->text(), m_floatTypeCombo->currentText());
+    if (!result.valid) {
+        if (result.error == "empty") {
+            m_signLabel->setText("—");
+        } else {
+            m_signLabel->setText("Invalid");
+        }
         m_exponentLabel->setText("—");
         m_mantissaLabel->setText("—");
         m_binaryLabel->setText("—");
@@ -331,57 +169,17 @@ void FloatPage::floatToBinary() {
         return;
     }
 
-    bool ok = false;
-    double value = text.toDouble(&ok);
-    if (!ok) {
-        // Try with comma as decimal separator
-        QString normalized = text;
-        normalized.replace(',', '.');
-        value = normalized.toDouble(&ok);
-    }
-
-    if (!ok) {
-        m_signLabel->setText("Invalid");
-        m_exponentLabel->setText("—");
-        m_mantissaLabel->setText("—");
-        m_binaryLabel->setText("—");
-        m_hexLabel->setText("—");
-        return;
-    }
-
-    FloatFormat fmt = getFormat(m_floatTypeCombo->currentText());
-    QString binary = doubleToIEEE(value, fmt.totalBits, fmt.expBits, fmt.mantBits);
-
-    // Extract components
-    QString sign = binary.left(1);
-    QString exponent = binary.mid(1, fmt.expBits);
-    QString mantissa = binary.mid(1 + fmt.expBits);
-
-    m_signLabel->setText(sign + (sign == "0" ? " (+)" : " (−)"));
-    m_exponentLabel->setText(exponent + " (" + QString::number(exponent.toInt(nullptr, 2)) + ")");
-    m_mantissaLabel->setText(mantissa);
-    m_binaryLabel->setText(formatBinaryString(binary, fmt.expBits, fmt.mantBits));
-
-    // Convert to hex
-    QString hex;
-    for (int i = 0; i < binary.length(); i += 4) {
-        QString nibble = binary.mid(i, 4);
-        hex += QString::number(nibble.toInt(nullptr, 2), 16).toUpper();
-    }
-    m_hexLabel->setText("0x" + hex);
+    m_signLabel->setText(result.sign + (result.sign == "0" ? " (+)" : " (−)"));
+    m_exponentLabel->setText(result.exponent + " (" + QString::number(result.exponent.toInt(nullptr, 2)) + ")");
+    m_mantissaLabel->setText(result.mantissa);
+    m_binaryLabel->setText(result.binarySpaced);
+    m_hexLabel->setText(result.hex);
 }
 
 void FloatPage::binaryToFloat() {
-    QString input = m_binaryInput->text().trimmed();
-    // Remove spaces and other separators
-    input.remove(' ').remove('-').remove('_');
-
-    FloatFormat fmt = getFormat(m_binTypeCombo->currentText());
-
-    if (input.isEmpty() || input.length() != fmt.totalBits) {
-        QString expected = QString("Need %1 bits").arg(fmt.totalBits);
-        if (input.isEmpty()) expected = "—";
-        m_binSignLabel->setText(expected);
+    const auto result = Rheno::Core::decodeFloatBits(m_binaryInput->text(), m_binTypeCombo->currentText());
+    if (!result.valid) {
+        m_binSignLabel->setText(result.error.isEmpty() ? "—" : result.error);
         m_binExponentLabel->setText("—");
         m_binMantissaLabel->setText("—");
         m_floatResultLabel->setText("—");
@@ -389,57 +187,21 @@ void FloatPage::binaryToFloat() {
         return;
     }
 
-    // Validate binary string
-    for (QChar c : input) {
-        if (c != '0' && c != '1') {
-            m_binSignLabel->setText("Invalid binary");
-            m_binExponentLabel->setText("—");
-            m_binMantissaLabel->setText("—");
-            m_floatResultLabel->setText("—");
-            m_hexResultLabel->setText("—");
-            return;
-        }
-    }
-
-    // Extract components
-    QString sign = input.left(1);
-    QString exponent = input.mid(1, fmt.expBits);
-    QString mantissa = input.mid(1 + fmt.expBits);
-
-    m_binSignLabel->setText(sign + (sign == "0" ? " (+)" : " (−)"));
-    m_binExponentLabel->setText(exponent + " (" + QString::number(exponent.toInt(nullptr, 2)) + ")");
-    m_binMantissaLabel->setText(mantissa);
-
-    // Convert to double
-    double result = ieeeToDouble(input, fmt.totalBits, fmt.expBits, fmt.mantBits);
-
-    if (std::isnan(result)) {
-        m_floatResultLabel->setText("NaN");
-    } else if (std::isinf(result)) {
-        m_floatResultLabel->setText(result > 0 ? "+∞" : "−∞");
-    } else {
-        // Use enough precision based on format
-        int precision = (fmt.totalBits == 16) ? 4 : (fmt.totalBits == 32) ? 9 : 17;
-        m_floatResultLabel->setText(QString::number(result, 'g', precision));
-    }
-
-    // Convert to hex
-    QString hex;
-    for (int i = 0; i < input.length(); i += 4) {
-        QString nibble = input.mid(i, 4);
-        hex += QString::number(nibble.toInt(nullptr, 2), 16).toUpper();
-    }
-    m_hexResultLabel->setText("0x" + hex);
+    m_binSignLabel->setText(result.sign + (result.sign == "0" ? " (+)" : " (−)"));
+    m_binExponentLabel->setText(result.exponent + " (" + QString::number(result.exponent.toInt(nullptr, 2)) + ")");
+    m_binMantissaLabel->setText(result.mantissa);
+    m_floatResultLabel->setText(result.decimal);
+    m_hexResultLabel->setText(result.hex);
 }
 
 void FloatPage::applyTheme(bool dark) {
     m_isDark = dark;
 
-    const QString grpS = ThemeColors::unitGroupStyle(dark);
-    const QString fldS = ThemeColors::unitFieldStyle(dark);
-    const QString resS = ThemeColors::unitResultStyle(dark);
-    const QString ttlS = ThemeColors::unitTitleStyle(dark);
-    const QString frmS = ThemeColors::unitFormulaStyle(dark);
+    const QString grpS = Rheno::UI::unitGroupStyle(dark);
+    const QString fldS = Rheno::UI::unitFieldStyle(dark);
+    const QString resS = Rheno::UI::unitResultStyle(dark);
+    const QString ttlS = Rheno::UI::unitTitleStyle(dark);
+    const QString frmS = Rheno::UI::unitFormulaStyle(dark);
 
     m_titleLabel->setStyleSheet(ttlS);
 
