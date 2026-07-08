@@ -237,7 +237,7 @@ void MainWindow::setupUI() {
     m_onTopBtn->setFixedSize(32, 26);
     m_onTopBtn->setCursor(Qt::PointingHandCursor);
     m_onTopBtn->setFocusPolicy(Qt::NoFocus);
-    m_onTopBtn->setIcon(QIcon(":/icons/pin_gray.svg"));
+    m_onTopBtn->setIcon(QIcon(":/symbols/pin_gray.svg"));
     m_onTopBtn->setIconSize(QSize(14, 14));
     connect(m_onTopBtn, &QPushButton::clicked, this, [this]() {
         applyAlwaysOnTop(!m_alwaysOnTop, true);

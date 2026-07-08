@@ -62,6 +62,14 @@ if(WIN32)
     list(APPEND SOURCES src/resources/rhenocalc.rc)
 endif()
 
+# macOS specific icon setup
+if(APPLE)
+    set(MACOSX_BUNDLE_ICON_FILE rhenocalc.icns)
+    set(MAC_ICON src/resources/icons/rhenocalc.icns)
+    set_source_files_properties(${MAC_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+    list(APPEND SOURCES ${MAC_ICON})
+endif()
+
 if(APPLE)
     set(CMAKE_xcode_attribute_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
     add_executable(RhenoCalc MACOSX_BUNDLE ${SOURCES})

@@ -6,7 +6,9 @@
     </qresource>
     <qresource prefix="/icons">
         <file alias="rhenocalc.svg">icons/rhenocalc.svg</file>
-        <file alias="pin_gray.svg">icons/pin_gray.svg</file>
+    </qresource>
+    <qresource prefix="/symbols">
+        <file alias="pin_gray.svg">symbols/pin_gray.svg</file>
     </qresource>
 </RCC>
 
