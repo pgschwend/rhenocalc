@@ -2,7 +2,7 @@ name: Build and Deploy RhenoCalc
 
 on:
   push:
-    branches: [ "main", "pipeline" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
   release:
@@ -42,6 +42,8 @@ jobs:
       - name: Set up MSVC (Windows)
         if: matrix.os == 'windows-latest'
         uses: TheMrMilchmann/setup-msvc-dev@v4
+        with:
+          arch: x64
 
       # --- QT INSTALLATION VIA AQTINSTALL ---
       - name: Set up Python
