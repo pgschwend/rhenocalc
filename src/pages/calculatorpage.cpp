@@ -551,7 +551,9 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
                 w->close();
             return;
         }
-        onClearClicked();
+        resetCeClearCycle();
+        m_engine.clearAllAndMemory();
+        updateDisplay();
         return;
     case Qt::Key_Delete:     onClearClicked(); return;
     case Qt::Key_Backspace:  onBackspaceClicked(); return;
@@ -624,4 +626,3 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
 
     QWidget::keyPressEvent(event);
 }
-

@@ -27,6 +27,7 @@ public:
 	void pressOperator(const QString& op);
 	void equals();
 	void clearAll();
+	void clearAllAndMemory();
 	void clearEntry();
 	void backspace();
 	void negate();

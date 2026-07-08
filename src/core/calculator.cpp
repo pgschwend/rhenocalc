@@ -658,11 +658,15 @@ void CalculatorEngine::clearAll() {
     m_inputString.clear();
     m_newInput = true;
     m_expression.clear();
-    m_memory = 0;
     m_bigCurrent = BigDecimal(0);
     m_bigAccumulator = BigDecimal(0);
-    m_bigMemory = BigDecimal(0);
     resetExpressionBuilder();
+}
+
+void CalculatorEngine::clearAllAndMemory() {
+    clearAll();
+    m_memory = 0;
+    m_bigMemory = BigDecimal(0);
 }
 
 void CalculatorEngine::clearEntry() {
