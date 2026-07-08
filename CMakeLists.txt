@@ -41,6 +41,8 @@ set(SOURCES
         src/pages/floatpage.h src/pages/floatpage.cpp
         src/pages/electronicspage.h src/pages/electronicspage.cpp
         src/pages/nettoolspage.h src/pages/nettoolspage.cpp
+        src/core/calc/operations.h src/core/calc/operations.cpp
+        src/core/calc/calcparser.h src/core/calc/calcparser.cpp
         src/core/calculator.h src/core/calculator.cpp
         src/core/baseconverter.h src/core/baseconverter.cpp
         src/core/unitconverter.h src/core/unitconverter.cpp
@@ -89,6 +91,7 @@ target_include_directories(RhenoCalc PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
         ${CMAKE_CURRENT_SOURCE_DIR}/src/pages
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/core/calc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/resources
 )
 

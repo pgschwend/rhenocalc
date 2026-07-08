@@ -1,11 +1,9 @@
 #pragma once
 
+#include "calc/calcparser.h"
 #include <QStringList>
-#include <boost/multiprecision/cpp_dec_float.hpp>
 
 namespace Rheno::Core {
-
-using BigDecimal = boost::multiprecision::cpp_dec_float_50;
 
 class CalculatorEngine {
 public:
@@ -62,19 +60,5 @@ private:
 	void syncExpressionOperand();
 	void resetExpressionBuilder();
 };
-
-long long maskToWidth(long long value, int bits);
-QString toBaseString(long long value, int base, int bits);
-long long fromBaseString(const QString& text, int base);
-QString formatDouble(double value);
-
-long long applyBinary(long long a, long long b, const QString& op);
-double applyBinary(double a, double b, const QString& op);
-
-long long applyUnaryInt(long long value, const QString& op, int bits);
-double applyUnaryDouble(double value, const QString& op);
-QString formatBigDecimal(const BigDecimal& value);
-BigDecimal applyBigBinary(const BigDecimal& a, const BigDecimal& b, const QString& op);
-BigDecimal applyBigUnary(const BigDecimal& value, const QString& op);
 
 } // namespace Rheno::Core
