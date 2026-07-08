@@ -257,42 +257,42 @@ ComputeResult compute(Algorithm algorithm, const QByteArray& input) {
     out.formula = algorithmFormula(algorithm);
 
     switch (algorithm) {
-    case Algorithm::Crc8Maxim:
-        out.value = crcHex(input, {8, 0x31, 0x00, 0x00, true, true});
-        break;
-    case Algorithm::Crc8J1850:
-        out.value = crcHex(input, {8, 0x1D, 0xFF, 0xFF, false, false});
-        break;
-    case Algorithm::Crc16Modbus:
-        out.value = crcHex(input, {16, 0x8005, 0xFFFF, 0x0000, true, true});
-        break;
-    case Algorithm::CrcCcitt:
-        out.value = crcHex(input, {16, 0x1021, 0xFFFF, 0x0000, false, false});
-        break;
-    case Algorithm::Crc32Iso3309:
-        out.value = crcHex(input, {32, 0x04C11DB7, 0xFFFFFFFF, 0xFFFFFFFF, true, true});
-        break;
-    case Algorithm::Crc32C:
-        out.value = crcHex(input, {32, 0x1EDC6F41, 0xFFFFFFFF, 0xFFFFFFFF, true, true});
-        break;
-    case Algorithm::MurmurHash3:
-        out.value = toHex(murmurHash3_x86_32(input, 0), 8);
-        break;
-    case Algorithm::XxHash32:
-        out.value = toHex(xxHash32(input, 0), 8);
-        break;
-    case Algorithm::Md5:
-        out.value = hashHex(input, QCryptographicHash::Md5);
-        break;
-    case Algorithm::Sha1:
-        out.value = hashHex(input, QCryptographicHash::Sha1);
-        break;
-    case Algorithm::Sha256:
-        out.value = hashHex(input, QCryptographicHash::Sha256);
-        break;
-    case Algorithm::Sha512:
-        out.value = hashHex(input, QCryptographicHash::Sha512);
-        break;
+        case Algorithm::Crc8Maxim:
+            out.value = crcHex(input, {8, 0x31, 0x00, 0x00, true, true});
+            break;
+        case Algorithm::Crc8J1850:
+            out.value = crcHex(input, {8, 0x1D, 0xFF, 0xFF, false, false});
+            break;
+        case Algorithm::Crc16Modbus:
+            out.value = crcHex(input, {16, 0x8005, 0xFFFF, 0x0000, true, true});
+            break;
+        case Algorithm::CrcCcitt:
+            out.value = crcHex(input, {16, 0x1021, 0xFFFF, 0x0000, false, false});
+            break;
+        case Algorithm::Crc32Iso3309:
+            out.value = crcHex(input, {32, 0x04C11DB7, 0xFFFFFFFF, 0xFFFFFFFF, true, true});
+            break;
+        case Algorithm::Crc32C:
+            out.value = crcHex(input, {32, 0x1EDC6F41, 0xFFFFFFFF, 0xFFFFFFFF, true, true});
+            break;
+        case Algorithm::MurmurHash3:
+            out.value = toHex(murmurHash3_x86_32(input, 0), 8);
+            break;
+        case Algorithm::XxHash32:
+            out.value = toHex(xxHash32(input, 0), 8);
+            break;
+        case Algorithm::Md5:
+            out.value = hashHex(input, QCryptographicHash::Md5);
+            break;
+        case Algorithm::Sha1:
+            out.value = hashHex(input, QCryptographicHash::Sha1);
+            break;
+        case Algorithm::Sha256:
+            out.value = hashHex(input, QCryptographicHash::Sha256);
+            break;
+        case Algorithm::Sha512:
+            out.value = hashHex(input, QCryptographicHash::Sha512);
+            break;
     }
 
     return out;

@@ -1,6 +1,6 @@
 #pragma once
+
 #include "core/unitconvertercore.h"
-#include <QWidget>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QLabel>

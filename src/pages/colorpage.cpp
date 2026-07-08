@@ -1,7 +1,5 @@
 #include "colorpage.h"
 #include "core/colorcore.h"
-#include "ui/themecolors.h"
-#include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -9,7 +7,6 @@
 #include <QSizePolicy>
 #include <QClipboard>
 #include <QApplication>
-#include <QScreen>
 #include <QTimer>
 #include <QPixmap>
 #include <QMouseEvent>

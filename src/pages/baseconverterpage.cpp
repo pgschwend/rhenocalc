@@ -1,7 +1,6 @@
 #include "baseconverterpage.h"
 #include "core/baseconvertercore.h"
 #include "ui/themecolors.h"
-#include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
 #include <QGroupBox>

@@ -4,7 +4,6 @@
 #include <QGuiApplication>
 #include <QGridLayout>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QFont>
 
 CalculatorPage::CalculatorPage(QWidget* parent) : QWidget(parent) {

@@ -3,17 +3,12 @@
 #include "ui/themecolors.h"
 
 #include <QComboBox>
-#include <QDoubleValidator>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
 #include <QScrollArea>
 #include <QVBoxLayout>
-#include <QtMath>
-#include <cmath>
-#include <cstdint>
-#include <limits>
 
 FloatPage::FloatPage(QWidget* parent) : QWidget(parent) {
     setupUI();

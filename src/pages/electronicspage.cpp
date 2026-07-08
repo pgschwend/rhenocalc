@@ -8,10 +8,8 @@
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
-#include <QRegularExpression>
 #include <QScrollArea>
 #include <QVBoxLayout>
-#include <QtMath>
 
 ElectronicsPage::ElectronicsPage(QWidget* parent) : QWidget(parent) {
     setupUI();

@@ -12,7 +12,6 @@
 #include <QTextEdit>
 #include <QProgressBar>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QRegularExpression>
 
 NetToolsPage::NetToolsPage(QWidget* parent) : QWidget(parent) {

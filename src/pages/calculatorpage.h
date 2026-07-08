@@ -1,6 +1,6 @@
 #pragma once
+
 #include "core/calculatorcore.h"
-#include <QWidget>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QLabel>

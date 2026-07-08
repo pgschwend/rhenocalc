@@ -1,7 +1,5 @@
 #include "baseconvertercore.h"
 
-#include <QChar>
-
 #include <cmath>
 #include <cstring>
 

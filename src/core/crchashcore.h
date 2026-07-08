@@ -1,7 +1,5 @@
 #pragma once
 
-#include <QByteArray>
-#include <QString>
 #include <QVector>
 
 namespace Rheno::Core {

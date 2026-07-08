@@ -12,7 +12,6 @@
 #include <QLocale>
 #include <QScrollArea>
 #include <QVBoxLayout>
-#include <QtMath>
 
 FinancePage::FinancePage(QWidget* parent) : QWidget(parent) {
     setupUI();
