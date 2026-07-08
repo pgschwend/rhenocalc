@@ -1,4 +1,4 @@
-#include "financecore.h"
+#include "finance.h"
 
 #include <QLocale>
 #include <QtMath>

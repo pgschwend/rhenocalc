@@ -41,16 +41,16 @@ set(SOURCES
         src/pages/floatpage.h src/pages/floatpage.cpp
         src/pages/electronicspage.h src/pages/electronicspage.cpp
         src/pages/nettoolspage.h src/pages/nettoolspage.cpp
-        src/core/calculatorcore.h src/core/calculatorcore.cpp
-        src/core/baseconvertercore.h src/core/baseconvertercore.cpp
-        src/core/unitconvertercore.h src/core/unitconvertercore.cpp
-        src/core/networkcalc.h src/core/networkcalc.cpp
-        src/core/crchashcore.h src/core/crchashcore.cpp
-        src/core/colorcore.h src/core/colorcore.cpp
-        src/core/financecore.h src/core/financecore.cpp
-        src/core/floatcore.h src/core/floatcore.cpp
-        src/core/electronicscore.h src/core/electronicscore.cpp
-        src/core/nettoolscore.h src/core/nettoolscore.cpp
+        src/core/calculator.h src/core/calculator.cpp
+        src/core/baseconverter.h src/core/baseconverter.cpp
+        src/core/unitconverter.h src/core/unitconverter.cpp
+        src/core/network.h src/core/network.cpp
+        src/core/crchash.h src/core/crchash.cpp
+        src/core/color.h src/core/color.cpp
+        src/core/finance.h src/core/finance.cpp
+        src/core/floathandler.h src/core/floathandler.cpp
+        src/core/electronics.h src/core/electronics.cpp
+        src/core/nettools.h src/core/nettools.cpp
         src/core/traceroute.h src/core/traceroute.cpp
         src/core/updater.h src/core/updater.cpp
         src/info.h

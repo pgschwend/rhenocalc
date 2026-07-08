@@ -1,4 +1,4 @@
-#include "floatcore.h"
+#include "floathandler.h"
 
 #include <QtMath>
 

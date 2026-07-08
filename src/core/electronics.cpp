@@ -1,4 +1,4 @@
-#include "electronicscore.h"
+#include "electronics.h"
 
 #include <QRegularExpression>
 

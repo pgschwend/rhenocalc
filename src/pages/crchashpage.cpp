@@ -1,6 +1,6 @@
 #include "crchashpage.h"
 
-#include "core/crchashcore.h"
+#include "core/crchash.h"
 #include "ui/themecolors.h"
 
 #include <QComboBox>

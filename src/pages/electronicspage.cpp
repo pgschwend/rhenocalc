@@ -1,5 +1,5 @@
 #include "electronicspage.h"
-#include "core/electronicscore.h"
+#include "core/electronics.h"
 #include "ui/themecolors.h"
 
 #include <QComboBox>

@@ -1,4 +1,4 @@
-#include "baseconvertercore.h"
+#include "baseconverter.h"
 
 #include <cmath>
 #include <cstring>

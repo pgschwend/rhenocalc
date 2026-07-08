@@ -1,4 +1,4 @@
-#include "colorcore.h"
+#include "color.h"
 
 #include <QtMath>
 

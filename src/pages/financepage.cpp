@@ -1,5 +1,5 @@
 #include "financepage.h"
-#include "core/financecore.h"
+#include "core/finance.h"
 #include "ui/themecolors.h"
 
 #include <QCheckBox>

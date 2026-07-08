@@ -1,6 +1,6 @@
 #include "networkpage.h"
 
-#include "core/networkcalc.h"
+#include "core/network.h"
 #include "ui/themecolors.h"
 
 #include <QGridLayout>

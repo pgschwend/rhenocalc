@@ -1,4 +1,4 @@
-#include "nettoolscore.h"
+#include "nettools.h"
 
 #include <QStringList>
 

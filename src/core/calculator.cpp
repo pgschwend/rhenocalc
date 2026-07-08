@@ -1,4 +1,4 @@
-#include "calculatorcore.h"
+#include "calculator.h"
 
 #include <cmath>
 #include <limits>

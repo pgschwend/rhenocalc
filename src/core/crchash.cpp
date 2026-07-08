@@ -1,4 +1,4 @@
-#include "crchashcore.h"
+#include "crchash.h"
 
 #include <QCryptographicHash>
 

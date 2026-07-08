@@ -1,4 +1,4 @@
-#include "networkcalc.h"
+#include "network.h"
 
 #include <QStringList>
 

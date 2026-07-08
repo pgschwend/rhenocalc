@@ -1,5 +1,5 @@
 #include "baseconverterpage.h"
-#include "core/baseconvertercore.h"
+#include "core/baseconverter.h"
 #include "ui/themecolors.h"
 #include <QHBoxLayout>
 #include <QGridLayout>

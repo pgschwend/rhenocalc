@@ -1,5 +1,5 @@
 #include "colorpage.h"
-#include "core/colorcore.h"
+#include "core/color.h"
 #include <QHBoxLayout>
 #include <QGridLayout>
 #include <QGroupBox>

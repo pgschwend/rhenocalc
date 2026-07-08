@@ -1,5 +1,5 @@
 #include "floatpage.h"
-#include "core/floatcore.h"
+#include "core/floathandler.h"
 #include "ui/themecolors.h"
 
 #include <QComboBox>

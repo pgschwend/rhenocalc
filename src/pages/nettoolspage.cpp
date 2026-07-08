@@ -1,5 +1,5 @@
 #include "nettoolspage.h"
-#include "core/nettoolscore.h"
+#include "core/nettools.h"
 #include "core/traceroute.h"
 #include "ui/themecolors.h"
 
