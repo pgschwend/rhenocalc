@@ -1,4 +1,5 @@
 #include "financepage.h"
+#include "core/financecore.h"
 #include "ui/themecolors.h"
 
 #include <QCheckBox>
@@ -12,28 +13,6 @@
 #include <QScrollArea>
 #include <QVBoxLayout>
 #include <QtMath>
-
-namespace {
-
-double clampNonNegative(double value) {
-    return value < 0.0 ? 0.0 : value;
-}
-
-int compoundingPerYear(const QString& label) {
-    if (label == "Daily") return 365;
-    if (label == "Monthly") return 12;
-    if (label == "Quarterly") return 4;
-    return 1;
-}
-
-int contributionsPerYear(const QString& label) {
-    if (label == "None") return 0;
-    if (label == "Monthly") return 12;
-    if (label == "Quarterly") return 4;
-    return 1;
-}
-
-} // namespace
 
 FinancePage::FinancePage(QWidget* parent) : QWidget(parent) {
     setupUI();
@@ -216,103 +195,41 @@ void FinancePage::setupUI() {
     connect(m_contribBeginCheck, &QCheckBox::toggled, this, [this]() { recalc(); });
 }
 
-bool FinancePage::parseDouble(const QString& text, double* value) const {
-    QString trimmed = text.trimmed();
-    if (trimmed.isEmpty()) {
-        *value = 0.0;
-        return true;
-    }
-
-    bool ok = false;
-    double parsed = QLocale::system().toDouble(trimmed, &ok);
-    if (!ok) {
-        QString normalized = trimmed;
-        parsed = normalized.replace(',', '.').toDouble(&ok);
-    }
-    if (!ok) return false;
-    *value = parsed;
-    return true;
-}
-
-void FinancePage::setMoneyLabel(QLabel* label, double value) const {
-    const QLocale loc = QLocale::system();
-    label->setText(loc.toString(value, 'f', 2));
-}
-
 void FinancePage::recalc() {
     double simplePrincipal = 0.0;
     double simpleRate = 0.0;
     double simplePeriods = 0.0;
 
-    if (!parseDouble(m_simplePrincipalEdit->text(), &simplePrincipal)) return;
-    if (!parseDouble(m_simpleRateEdit->text(), &simpleRate)) return;
-    if (!parseDouble(m_simplePeriodsEdit->text(), &simplePeriods)) return;
+    if (!Rheno::Core::parseDouble(m_simplePrincipalEdit->text(), &simplePrincipal)) return;
+    if (!Rheno::Core::parseDouble(m_simpleRateEdit->text(), &simpleRate)) return;
+    if (!Rheno::Core::parseDouble(m_simplePeriodsEdit->text(), &simplePeriods)) return;
 
-    simplePrincipal = clampNonNegative(simplePrincipal);
-    simpleRate = clampNonNegative(simpleRate);
-    simplePeriods = clampNonNegative(simplePeriods);
-    const double simpleResult = simplePrincipal * qPow(1.0 + (simpleRate / 100.0), simplePeriods);
-    setMoneyLabel(m_simpleResultLabel, simpleResult);
+    const auto simple = Rheno::Core::calculateSimpleCompound(simplePrincipal, simpleRate, simplePeriods);
+    m_simpleResultLabel->setText(Rheno::Core::formatMoney(simple.futureValue));
 
     double principal = 0.0;
     double contrib = 0.0;
     double annualRate = 0.0;
     double years = 0.0;
 
-    if (!parseDouble(m_principalEdit->text(), &principal)) return;
-    if (!parseDouble(m_contribEdit->text(), &contrib)) return;
-    if (!parseDouble(m_rateEdit->text(), &annualRate)) return;
-    if (!parseDouble(m_yearsEdit->text(), &years)) return;
+    if (!Rheno::Core::parseDouble(m_principalEdit->text(), &principal)) return;
+    if (!Rheno::Core::parseDouble(m_contribEdit->text(), &contrib)) return;
+    if (!Rheno::Core::parseDouble(m_rateEdit->text(), &annualRate)) return;
+    if (!Rheno::Core::parseDouble(m_yearsEdit->text(), &years)) return;
 
-    principal = clampNonNegative(principal);
-    contrib = clampNonNegative(contrib);
-    annualRate = clampNonNegative(annualRate);
-    years = clampNonNegative(years);
+    const auto compound = Rheno::Core::calculateCompoundInterest(
+        principal,
+        annualRate,
+        contrib,
+        years,
+        Rheno::Core::compoundingPerYear(m_compoundCombo->currentText()),
+        Rheno::Core::contributionsPerYear(m_contribFreqCombo->currentText()),
+        m_contribBeginCheck->isChecked());
 
-    const int n = compoundingPerYear(m_compoundCombo->currentText());
-    const int m = contributionsPerYear(m_contribFreqCombo->currentText());
-
-    const double periodRate = (annualRate / 100.0) / static_cast<double>(n);
-    const int totalPeriods = static_cast<int>(qRound(years * n));
-
-    double balance = principal;
-    double totalContrib = principal;
-
-    const bool contribAtStart = m_contribBeginCheck->isChecked();
-    const double contribInterval = (m > 0) ? (1.0 / static_cast<double>(m)) : 0.0;
-    double nextContribution = (m > 0) ? (contribAtStart ? 0.0 : contribInterval) : 1e9;
-    const double epsilon = 1e-9;
-
-    for (int i = 1; i <= totalPeriods; ++i) {
-        const double periodStart = (static_cast<double>(i - 1)) / static_cast<double>(n);
-        const double periodEnd = (static_cast<double>(i)) / static_cast<double>(n);
-
-        if (m > 0 && contribAtStart) {
-            while (nextContribution <= periodStart + epsilon) {
-                balance += contrib;
-                totalContrib += contrib;
-                nextContribution += contribInterval;
-            }
-        }
-
-        balance *= (1.0 + periodRate);
-
-        if (m > 0 && !contribAtStart) {
-            while (nextContribution <= periodEnd + epsilon) {
-                balance += contrib;
-                totalContrib += contrib;
-                nextContribution += contribInterval;
-            }
-        }
-    }
-
-    const double totalInterest = balance - totalContrib;
-    const double effectiveRate = qPow(1.0 + periodRate, n) - 1.0;
-
-    setMoneyLabel(m_futureValueLabel, balance);
-    setMoneyLabel(m_totalContribLabel, totalContrib);
-    setMoneyLabel(m_totalInterestLabel, totalInterest);
-    m_effectiveRateLabel->setText(QLocale::system().toString(effectiveRate * 100.0, 'f', 3) + "%");
+    m_futureValueLabel->setText(Rheno::Core::formatMoney(compound.futureValue));
+    m_totalContribLabel->setText(Rheno::Core::formatMoney(compound.totalContributions));
+    m_totalInterestLabel->setText(Rheno::Core::formatMoney(compound.totalInterest));
+    m_effectiveRateLabel->setText(QLocale::system().toString(compound.effectiveAnnualRate * 100.0, 'f', 3) + "%");
 }
 
 void FinancePage::applyTheme(bool dark) {

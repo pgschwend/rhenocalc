@@ -1,4 +1,5 @@
 #include "nettoolspage.h"
+#include "core/nettoolscore.h"
 #include "core/traceroute.h"
 #include "ui/themecolors.h"
 
@@ -231,18 +232,10 @@ void NetToolsPage::onPingOutput() {
     output += QString::fromLocal8Bit(m_pingProcess->readAllStandardError());
 
     for (const QString& line : output.split('\n', Qt::SkipEmptyParts)) {
-        QString trimmed = line.trimmed();
+        const QString trimmed = line.trimmed();
         if (trimmed.isEmpty()) continue;
-
-        // Color code based on content
-        if (trimmed.contains("Reply from") || trimmed.contains("bytes from") || trimmed.contains("64 bytes")) {
-            appendOutput(m_pingOutput, trimmed, "#2ecc71");
-        } else if (trimmed.contains("timed out") || trimmed.contains("unreachable") ||
-                   trimmed.contains("Destination") || trimmed.contains("Request timed out")) {
-            appendOutput(m_pingOutput, trimmed, "#e74c3c");
-        } else {
-            appendOutput(m_pingOutput, trimmed);
-        }
+        const auto styled = Rheno::Core::classifyPingLine(trimmed);
+        appendOutput(m_pingOutput, styled.text, styled.color);
     }
 }
 
@@ -259,26 +252,7 @@ void NetToolsPage::startPortScan() {
     QString portsStr = m_scanPorts->text().trimmed();
     if (host.isEmpty() || portsStr.isEmpty()) return;
 
-    // Parse ports
-    m_portsToScan.clear();
-    QStringList parts = portsStr.split(',', Qt::SkipEmptyParts);
-    for (const QString& part : parts) {
-        QString p = part.trimmed();
-        if (p.contains('-')) {
-            QStringList range = p.split('-');
-            if (range.size() == 2) {
-                int start = range[0].toInt();
-                int end = range[1].toInt();
-                for (int port = start; port <= end && port <= 65535; ++port) {
-                    if (port > 0) m_portsToScan.append(port);
-                }
-            }
-        } else {
-            int port = p.toInt();
-            if (port > 0 && port <= 65535) m_portsToScan.append(port);
-        }
-    }
-
+    m_portsToScan = Rheno::Core::parsePorts(portsStr);
     if (m_portsToScan.isEmpty()) {
         appendOutput(m_scanOutput, "No valid ports specified", "#e74c3c");
         return;
@@ -371,25 +345,7 @@ void NetToolsPage::onPortConnected() {
     int port = m_portsToScan[m_currentPortIndex];
     m_openPorts++;
 
-    // Common port names
-    QString service;
-    switch (port) {
-        case 21: service = "FTP"; break;
-        case 22: service = "SSH"; break;
-        case 23: service = "Telnet"; break;
-        case 25: service = "SMTP"; break;
-        case 53: service = "DNS"; break;
-        case 80: service = "HTTP"; break;
-        case 110: service = "POP3"; break;
-        case 143: service = "IMAP"; break;
-        case 443: service = "HTTPS"; break;
-        case 445: service = "SMB"; break;
-        case 3306: service = "MySQL"; break;
-        case 3389: service = "RDP"; break;
-        case 5432: service = "PostgreSQL"; break;
-        case 8080: service = "HTTP-Alt"; break;
-        default: service = ""; break;
-    }
+    QString service = Rheno::Core::serviceNameForPort(port);
 
     QString portInfo = QString::number(port);
     if (!service.isEmpty()) portInfo += " (" + service + ")";
@@ -462,14 +418,8 @@ void NetToolsPage::stopTraceroute() {
 }
 
 void NetToolsPage::onTraceHop(const TraceHop& hop) {
-    QString line;
-    if (hop.rtt < 0) {
-        line = QString("%1    *    Request timed out").arg(hop.hop, 2);
-        appendOutput(m_traceOutput, line, "#e74c3c");
-    } else {
-        line = QString("%1    %2 ms    %3").arg(hop.hop, 2).arg(hop.rtt, 4).arg(hop.address);
-        appendOutput(m_traceOutput, line, "#2ecc71");
-    }
+    const auto styled = Rheno::Core::formatTraceHopLine(hop.hop, hop.rtt, hop.address);
+    appendOutput(m_traceOutput, styled.text, styled.color);
 }
 
 void NetToolsPage::onTraceFinished(bool success, const QString& message) {

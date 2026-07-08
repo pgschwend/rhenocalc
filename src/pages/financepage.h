@@ -17,8 +17,6 @@ public:
 private:
     void setupUI();
     void recalc();
-    bool parseDouble(const QString& text, double* value) const;
-    void setMoneyLabel(QLabel* label, double value) const;
 
     QLabel* m_titleLabel = nullptr;
     QLabel* m_resultTitleLabel = nullptr;
