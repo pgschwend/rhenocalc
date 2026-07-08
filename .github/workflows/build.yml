@@ -125,7 +125,7 @@ jobs:
           mkdir -p AppDir/usr/bin
           cp build/RhenoCalc AppDir/usr/bin/
           
-          cp src/resources/icons/calculator.svg RhenoCalc.svg
+          cp src/resources/icons/rhenocalc.svg RhenoCalc.svg
           echo -e "[Desktop Entry]\nType=Application\nName=RhenoCalc\nExec=RhenoCalc\nIcon=RhenoCalc\nCategories=Utility;\nTerminal=false" > RhenoCalc.desktop
   
           ./linuxdeploy-x86_64.AppImage --appdir AppDir --desktop-file RhenoCalc.desktop --icon-file RhenoCalc.svg --plugin qt --output appimage

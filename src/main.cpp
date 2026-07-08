@@ -11,9 +11,9 @@ int main(int argc, char* argv[]) {
 #endif
 
     QApplication a(argc, argv);
-    a.setWindowIcon(QIcon(":/icons/calculator.svg"));
+    a.setWindowIcon(QIcon(":/icons/rhenocalc.svg"));
     MainWindow w;
-    w.setWindowIcon(QIcon(":/icons/calculator.svg"));
+    w.setWindowIcon(QIcon(":/icons/rhenocalc.svg"));
     w.show();
     return QApplication::exec();
 }

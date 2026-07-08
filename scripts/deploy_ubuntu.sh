@@ -13,7 +13,7 @@ VERSION=$(grep -oP 'APP_VERSION_STRING\s+"V?\K[^"]+' "${SOURCE_DIR}/src/info.h" 
 APPIMAGE_NAME="rhenocalc-linux-x86_64_v${VERSION}.AppImage"
 
 # Paths to icon and desktop file
-ICON_PATH="${SOURCE_DIR}/src/resources/icons/calculator.svg"
+ICON_PATH="${SOURCE_DIR}/src/resources/icons/rhenocalc.svg"
 DESKTOP_PATH="${SOURCE_DIR}/scripts/rhenocalc.desktop"
 
 # Qt prefix (auto-detect from CMakeCache or use env)

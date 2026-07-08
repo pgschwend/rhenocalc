@@ -5,7 +5,7 @@
         <file alias="light.qss">styles/light.qss</file>
     </qresource>
     <qresource prefix="/icons">
-        <file alias="calculator.svg">icons/calculator.svg</file>
+        <file alias="rhenocalc.svg">icons/rhenocalc.svg</file>
         <file alias="pin_gray.svg">icons/pin_gray.svg</file>
     </qresource>
 </RCC>
