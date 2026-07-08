@@ -56,6 +56,8 @@ private:
 	int m_openParens = 0;
 
 	QString currentOperandToken() const;
+	QString formatTokenForExpression(const QString& token) const;
+	QString expressionFromTokens(const QStringList& tokens) const;
 	void syncExpressionOperand();
 	void resetExpressionBuilder();
 };
@@ -75,4 +77,3 @@ BigDecimal applyBigBinary(const BigDecimal& a, const BigDecimal& b, const QStrin
 BigDecimal applyBigUnary(const BigDecimal& value, const QString& op);
 
 } // namespace Rheno::Core
-

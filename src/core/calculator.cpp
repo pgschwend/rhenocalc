@@ -11,10 +11,16 @@ namespace {
 
 // ── helpers for BigDecimal ────────────────────────────────────────────────────
 
-QString bigToQString(const Rheno::Core::BigDecimal& v) {
-    // Use default format (scientific when needed) with 12 significant digits
+QString bigToDisplayString(const Rheno::Core::BigDecimal& v) {
     std::string s = v.str(12);
+    if (s.empty() || s == "-0") s = "0";
+    return QString::fromStdString(s);
+}
 
+// Precise value to further internal calculations
+QString bigToTokenString(const Rheno::Core::BigDecimal& v) {
+    constexpr auto digits = std::numeric_limits<Rheno::Core::BigDecimal>::max_digits10;
+    std::string s = v.str(digits);
     if (s.empty() || s == "-0") s = "0";
     return QString::fromStdString(s);
 }
@@ -187,7 +193,7 @@ QString formatDouble(double value) {
 }
 
 QString formatBigDecimal(const BigDecimal& value) {
-    return bigToQString(value);
+    return bigToTokenString(value);
 }
 
 BigDecimal applyBigBinary(const BigDecimal& a, const BigDecimal& b, const QString& op) {
@@ -297,7 +303,7 @@ QString CalculatorEngine::displayText() const {
     if (m_bigMode && m_base == 10) {
         if (!m_inputString.isEmpty())
             return m_inputString;
-        return bigToQString(m_bigCurrent);
+        return bigToDisplayString(m_bigCurrent);
     }
 
     if (m_floatMode) {
@@ -312,7 +318,7 @@ QString CalculatorEngine::currentOperandToken() const {
     if (m_bigMode && m_base == 10) {
         if (!m_inputString.isEmpty())
             return m_inputString;
-        return bigToQString(m_bigCurrent);
+        return bigToTokenString(m_bigCurrent);
     }
     if (m_floatMode) {
         if (!m_inputString.isEmpty())
@@ -320,6 +326,28 @@ QString CalculatorEngine::currentOperandToken() const {
         return formatDouble(m_currentDouble);
     }
     return toBaseString(m_current, m_base, m_wordBits);
+}
+
+QString CalculatorEngine::formatTokenForExpression(const QString& token) const {
+    if (!(m_bigMode && m_base == 10))
+        return token;
+
+    if (token == "(" || token == ")" || isBinaryOperatorToken(token))
+        return token;
+
+    // Keep active user input exactly as typed (e.g. trailing dot).
+    if (!m_inputString.isEmpty() && token == m_inputString)
+        return token;
+
+    return bigToDisplayString(qStringToBig(token));
+}
+
+QString CalculatorEngine::expressionFromTokens(const QStringList& tokens) const {
+    QStringList displayTokens;
+    displayTokens.reserve(tokens.size());
+    for (const QString& token : tokens)
+        displayTokens.append(formatTokenForExpression(token));
+    return displayTokens.join(" ");
 }
 
 void CalculatorEngine::syncExpressionOperand() {
@@ -333,7 +361,7 @@ void CalculatorEngine::syncExpressionOperand() {
     } else if (last != ")") {
         m_infixTokens.last() = value;
     }
-    m_expression = m_infixTokens.join(" ");
+    m_expression = expressionFromTokens(m_infixTokens);
 }
 
 void CalculatorEngine::resetExpressionBuilder() {
@@ -353,7 +381,7 @@ void CalculatorEngine::pressDigit(const QString& digit) {
 
     if (m_bigMode && m_base == 10) {
         if (digit == ".") {
-            QString cur = !m_inputString.isEmpty() ? m_inputString : bigToQString(m_bigCurrent);
+            QString cur = !m_inputString.isEmpty() ? m_inputString : bigToTokenString(m_bigCurrent);
             if (cur.contains('.')) return;
             if (m_newInput) {
                 m_inputString = "0.";
@@ -372,7 +400,7 @@ void CalculatorEngine::pressDigit(const QString& digit) {
             m_newInput = false;
         } else {
             if (m_inputString.isEmpty())
-                m_inputString = bigToQString(m_bigCurrent);
+                m_inputString = bigToTokenString(m_bigCurrent);
             if (m_inputString == "0")
                 m_inputString = digit;
             else
@@ -436,7 +464,7 @@ void CalculatorEngine::pressLeftParen() {
 
     m_infixTokens.append("(");
     ++m_openParens;
-    m_expression = m_infixTokens.join(" ");
+    m_expression = expressionFromTokens(m_infixTokens);
     m_newInput = true;
 }
 
@@ -460,7 +488,7 @@ void CalculatorEngine::pressRightParen() {
 
     m_infixTokens.append(")");
     --m_openParens;
-    m_expression = m_infixTokens.join(" ");
+    m_expression = expressionFromTokens(m_infixTokens);
     m_newInput = true;
 }
 
@@ -479,7 +507,7 @@ void CalculatorEngine::pressOperator(const QString& op) {
         }
     }
 
-    m_expression = m_infixTokens.join(" ");
+    m_expression = expressionFromTokens(m_infixTokens);
     m_pendingOp.clear();
     m_newInput = true;
     m_inputString.clear();
@@ -538,7 +566,7 @@ void CalculatorEngine::equals() {
             m_current = maskToWidth(res, m_wordBits);
         }
 
-        m_expression = tokens.join(" ") + " =";
+        m_expression = expressionFromTokens(tokens) + " =";
         resetExpressionBuilder();
         m_pendingOp.clear();
         m_newInput = true;
@@ -575,7 +603,7 @@ void CalculatorEngine::equals() {
         }
 
         if (m_bigMode && m_base == 10) {
-            m_expression = bigToQString(m_bigAccumulator) + " " + opSymbol + " " + bigToQString(m_bigCurrent) + " =";
+            m_expression = bigToDisplayString(m_bigAccumulator) + " " + opSymbol + " " + bigToDisplayString(m_bigCurrent) + " =";
             m_bigCurrent = BigDecimal(result);
         } else {
             m_expression = formatDouble(aVal) + " " + opSymbol + " " + formatDouble(bVal) + " =";
@@ -589,8 +617,8 @@ void CalculatorEngine::equals() {
     }
 
     if (m_bigMode && m_base == 10) {
-        const QString a = bigToQString(m_bigAccumulator);
-        const QString b = bigToQString(m_bigCurrent);
+        const QString a = bigToDisplayString(m_bigAccumulator);
+        const QString b = bigToDisplayString(m_bigCurrent);
         m_bigCurrent = applyBigBinary(m_bigAccumulator, m_bigCurrent, m_pendingOp);
         m_expression = a + " " + m_pendingOp + " " + b + " =";
         m_inputString.clear();
@@ -649,7 +677,7 @@ void CalculatorEngine::clearEntry() {
 
 void CalculatorEngine::backspace() {
     if (m_bigMode && m_base == 10) {
-        QString s = !m_inputString.isEmpty() ? m_inputString : bigToQString(m_bigCurrent);
+        QString s = !m_inputString.isEmpty() ? m_inputString : bigToTokenString(m_bigCurrent);
         bool neg = s.startsWith('-');
         if (neg) s.remove(0, 1);
         if (s.length() > 1) s.chop(1); else s = "0";
@@ -727,7 +755,7 @@ void CalculatorEngine::setEuler() {
 
 void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
     if (m_bigMode && m_base == 10) {
-        const QString bStr = bigToQString(m_bigCurrent);
+        const QString bStr = bigToDisplayString(m_bigCurrent);
 
         if (op == "AND" || op == "OR" || op == "XOR" || op == "POW" || op == "NROOT" || op == "LOGXY") {
             if (!m_pendingOp.isEmpty() && (m_pendingOp == "AND" || m_pendingOp == "OR" || m_pendingOp == "XOR" ||
@@ -784,7 +812,7 @@ void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
         if (op == "MR") {
             m_bigCurrent = m_bigMemory;
             m_inputString.clear();
-            m_expression = "M→ " + bigToQString(m_bigMemory);
+            m_expression = "M→ " + bigToDisplayString(m_bigMemory);
             m_newInput = true;
             return;
         }
@@ -960,4 +988,3 @@ double applyUnaryDouble(double value, const QString& op) {
 }
 
 } // namespace Rheno::Core
-
