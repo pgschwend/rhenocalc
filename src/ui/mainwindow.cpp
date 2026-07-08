@@ -82,9 +82,18 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Return focus to the calculator when clicking on empty area
     connect(qApp, &QApplication::focusChanged, this, [this](QWidget* /*old*/, QWidget* now) {
-        if (!now && isActiveWindow())
-            m_calcPage->setFocus();
-    });
+    // If focus goes to the tab bar or to no widget, return focus to calculator page
+    if (isActiveWindow()) {
+        if (!now || qobject_cast<QTabBar*>(now) ||
+            now == m_tabWidget || now == m_onTopBtn || now == m_themeBtn) {
+            QTimer::singleShot(0, this, [this]() {
+                if (m_tabWidget->currentIndex() == 0) {
+                    m_calcPage->setFocus();
+                }
+            });
+        }
+    }
+});
 
     // Auto-update check
     auto* updater = new Updater(this);

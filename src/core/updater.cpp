@@ -43,7 +43,7 @@ void Updater::onReleaseFetched(QNetworkReply* reply)
     QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
     QJsonObject obj = doc.object();
 
-    QString tagName = obj["tag_name"].toString(); // e.g. "V0.2.0"
+    QString tagName = obj["tag_name"].toString();
     QString remoteVersion = tagName;
     remoteVersion.remove(QRegularExpression("^[vV]"));
 
