@@ -336,9 +336,9 @@ void CalculatorPage::updateSecondFuncButtons() {
     // Update 2nd button visual state (pressed look)
     if (m_secondFuncBtn) {
         if (m_secondActive) {
-            m_secondFuncBtn->setStyleSheet(ThemeColors::calcSecondFuncButtonActive(m_isDark));
+            m_secondFuncBtn->setStyleSheet(Rheno::UI::calcSecondFuncButtonActive(m_isDark));
         } else {
-            m_secondFuncBtn->setStyleSheet(ThemeColors::calcSecondFuncButton(m_isDark));
+            m_secondFuncBtn->setStyleSheet(Rheno::UI::calcSecondFuncButton(m_isDark));
         }
     }
 
@@ -385,16 +385,16 @@ void CalculatorPage::resetCeClearCycle() {
 void CalculatorPage::applyTheme(bool dark) {
     m_isDark = dark;
 
-    const QString numS  = ThemeColors::calcNumButton(dark);
-    const QString opS   = ThemeColors::calcOpButton(dark);
-    const QString bitS  = ThemeColors::calcBitButton(dark);
-    const QString funcS = ThemeColors::calcFuncButton(dark);
-    const QString hexS  = ThemeColors::calcHexButton(dark);
-    const QString eqS   = ThemeColors::calcEqButton(dark);
-    const QString clrS  = ThemeColors::calcClearButton(dark);
-    const QString dispS = ThemeColors::calcDisplayStyle(dark);
-    const QString exprS = ThemeColors::calcExprStyle(dark);
-    const QString hintS = ThemeColors::calcHintStyle(dark);
+    const QString numS  = Rheno::UI::calcNumButton(dark);
+    const QString opS   = Rheno::UI::calcOpButton(dark);
+    const QString bitS  = Rheno::UI::calcBitButton(dark);
+    const QString funcS = Rheno::UI::calcFuncButton(dark);
+    const QString hexS  = Rheno::UI::calcHexButton(dark);
+    const QString eqS   = Rheno::UI::calcEqButton(dark);
+    const QString clrS  = Rheno::UI::calcClearButton(dark);
+    const QString dispS = Rheno::UI::calcDisplayStyle(dark);
+    const QString exprS = Rheno::UI::calcExprStyle(dark);
+    const QString hintS = Rheno::UI::calcHintStyle(dark);
 
     // ── Apply ─────────────────────────────────────────────────────────────────
     m_display->setStyleSheet(dispS);

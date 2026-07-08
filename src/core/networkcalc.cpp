@@ -17,7 +17,7 @@ bool inRange(quint32 ip, quint32 from, quint32 to) {
 
 } // namespace
 
-namespace NetworkCalc {
+namespace Rheno::Core {
 
 bool parseIpv4(const QString& text, quint32& outIp, QString* error) {
     const QString t = text.trimmed();
@@ -205,5 +205,5 @@ IpInfo classifyIp(quint32 ip) {
     return info;
 }
 
-} // namespace NetworkCalc
+} // namespace Rheno::Core
 

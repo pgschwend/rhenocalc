@@ -52,7 +52,7 @@ void CrcHashPage::setupUI() {
 
     m_algoLabel = new QLabel("Algorithm:", this);
     m_algoCombo = new QComboBox(this);
-    for (const auto& entry : CrcHashCore::algorithms()) {
+    for (const auto& entry : Rheno::Core::algorithms()) {
         m_algoCombo->addItem(entry.name, static_cast<int>(entry.algorithm));
     }
 
@@ -114,8 +114,8 @@ void CrcHashPage::setupUI() {
 
 void CrcHashPage::recalculate() {
     const QByteArray data = m_inputEdit->toPlainText().toUtf8();
-    const auto alg = static_cast<CrcHashCore::Algorithm>(m_algoCombo->currentData().toInt());
-    const CrcHashCore::ComputeResult result = CrcHashCore::compute(alg, data);
+    const auto alg = static_cast<Rheno::Core::Algorithm>(m_algoCombo->currentData().toInt());
+    const Rheno::Core::ComputeResult result = Rheno::Core::compute(alg, data);
 
     m_outputEdit->setText(result.value);
     m_statusLabel->setText(QString("%1 bytes processed").arg(data.size()));
@@ -130,11 +130,11 @@ void CrcHashPage::copyResult() {
 }
 
 void CrcHashPage::applyTheme(bool dark) {
-    const QString grpS = ThemeColors::unitGroupStyle(dark);
-    const QString fldS = ThemeColors::unitFieldStyle(dark);
-    const QString resS = ThemeColors::unitResultStyle(dark);
-    const QString ttlS = ThemeColors::unitTitleStyle(dark);
-    const QString frmS = ThemeColors::unitFormulaStyle(dark);
+    const QString grpS = Rheno::UI::unitGroupStyle(dark);
+    const QString fldS = Rheno::UI::unitFieldStyle(dark);
+    const QString resS = Rheno::UI::unitResultStyle(dark);
+    const QString ttlS = Rheno::UI::unitTitleStyle(dark);
+    const QString frmS = Rheno::UI::unitFormulaStyle(dark);
 
     m_titleLabel->setStyleSheet(ttlS);
     m_inputGroup->setStyleSheet(grpS);

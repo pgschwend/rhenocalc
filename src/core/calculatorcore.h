@@ -4,7 +4,7 @@
 #include <QStringList>
 #include <boost/multiprecision/cpp_dec_float.hpp>
 
-namespace CalculatorCore {
+namespace Rheno::Core {
 
 using BigDecimal = boost::multiprecision::cpp_dec_float_50;
 
@@ -75,5 +75,5 @@ QString formatBigDecimal(const BigDecimal& value);
 BigDecimal applyBigBinary(const BigDecimal& a, const BigDecimal& b, const QString& op);
 BigDecimal applyBigUnary(const BigDecimal& value, const QString& op);
 
-} // namespace CalculatorCore
+} // namespace Rheno::Core
 

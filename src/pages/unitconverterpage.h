@@ -35,6 +35,6 @@ private:
     QGroupBox* m_convGroup;
     QGroupBox* m_refGroup;
 
-    QList<QList<UnitConverterCore::UnitDef>> m_categories;
+    QList<QList<Rheno::Core::UnitDef>> m_categories;
     QStringList m_categoryNames;
 };

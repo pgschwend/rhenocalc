@@ -3,7 +3,7 @@
 #include <QString>
 #include <QtGlobal>
 
-namespace NetworkCalc {
+namespace Rheno::Core {
 
 struct SubnetResult {
     bool valid = false;
@@ -45,5 +45,5 @@ bool minimalPrefixForHosts(quint64 devices, int& outPrefix, QString* error = nul
 
 IpInfo classifyIp(quint32 ip);
 
-} // namespace NetworkCalc
+} // namespace Rheno::Core
 

@@ -17,7 +17,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Changed to 22.04 for maximum backward compatibility
           - os: ubuntu-22.04
             qt-arch: gcc_64
           - os: windows-latest

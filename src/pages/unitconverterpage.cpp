@@ -9,8 +9,8 @@
 #include <QSizePolicy>
 
 UnitConverterPage::UnitConverterPage(QWidget* parent) : QWidget(parent) {
-    m_categoryNames = UnitConverterCore::defaultCategoryNames();
-    m_categories = UnitConverterCore::defaultCategories();
+    m_categoryNames = Rheno::Core::defaultCategoryNames();
+    m_categories = Rheno::Core::defaultCategories();
 
     setupUI();
 }
@@ -58,7 +58,7 @@ void UnitConverterPage::setupUI() {
 
     // Converter box
     m_convGroup = new QGroupBox("Convert", this);
-    m_convGroup->setStyleSheet(ThemeColors::unitGroupStyle(true));
+    m_convGroup->setStyleSheet(Rheno::UI::unitGroupStyle(true));
     auto* convLayout = new QGridLayout(m_convGroup);
     convLayout->setSpacing(10);
 
@@ -151,7 +151,7 @@ void UnitConverterPage::convert() {
     int toIdx   = m_toUnit->currentIndex();
     if (fromIdx < 0 || toIdx < 0 || fromIdx >= m_categories[cat].size() || toIdx >= m_categories[cat].size()) return;
 
-    const UnitConverterCore::ConversionResult result = UnitConverterCore::convert(
+    const Rheno::Core::ConversionResult result = Rheno::Core::convert(
         fromVal, cat, fromIdx, toIdx, m_categories, m_categoryNames);
     if (!result.valid) {
         m_resultLabel->setText("—");
@@ -164,11 +164,11 @@ void UnitConverterPage::convert() {
 }
 
 void UnitConverterPage::applyTheme(bool dark) {
-    const QString grpS = ThemeColors::unitGroupStyle(dark);
-    const QString fldS = ThemeColors::unitFieldStyle(dark);
-    const QString resS = ThemeColors::unitResultStyle(dark);
-    const QString ttlS = ThemeColors::unitTitleStyle(dark);
-    const QString frmS = ThemeColors::unitFormulaStyle(dark);
+    const QString grpS = Rheno::UI::unitGroupStyle(dark);
+    const QString fldS = Rheno::UI::unitFieldStyle(dark);
+    const QString resS = Rheno::UI::unitResultStyle(dark);
+    const QString ttlS = Rheno::UI::unitTitleStyle(dark);
+    const QString frmS = Rheno::UI::unitFormulaStyle(dark);
 
     m_titleLabel->setStyleSheet(ttlS);
     m_formulaLabel->setStyleSheet(frmS);

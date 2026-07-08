@@ -3,7 +3,7 @@
 #include <QPalette>
 #include <QString>
 
-namespace ThemeColors {
+namespace Rheno::UI {
 
 QString applyQssColors(QString qssTemplate, bool dark);
 QPalette applicationPalette(bool dark);
@@ -36,5 +36,5 @@ QString unitResultStyle(bool dark);
 QString unitTitleStyle(bool dark);
 QString unitFormulaStyle(bool dark);
 
-} // namespace ThemeColors
+} // namespace Rheno::UI
 

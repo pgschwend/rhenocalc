@@ -35,7 +35,7 @@ void BitButton::setDark(bool dark) {
 
 void BitButton::refresh() {
     setText(m_state ? "1" : "0");
-    setStyleSheet(ThemeColors::baseBitButtonStyle(m_dark, m_state));
+    setStyleSheet(Rheno::UI::baseBitButtonStyle(m_dark, m_state));
 }
 
 // ─── BaseConverterPage ────────────────────────────────────────────────────────
@@ -107,7 +107,7 @@ void BaseConverterPage::setupUI() {
 
     // ── Register / Bit Viewer ─────────────────────────────────────────────────
     m_regGroup = new QGroupBox("Register View", this);
-    m_regGroup->setStyleSheet(ThemeColors::baseGroupStyle(true));
+    m_regGroup->setStyleSheet(Rheno::UI::baseGroupStyle(true));
     auto* regLayout = new QVBoxLayout(m_regGroup);
     regLayout->setSpacing(4);
 
@@ -237,17 +237,17 @@ void BaseConverterPage::onSignedToggled(bool checked) {
 void BaseConverterPage::updateAll(unsigned long long value, QLineEdit* skip) {
     if (m_updating) return;
     m_updating = true;
-    m_value = BaseConverterCore::applyMask(value, m_wordBits);
+    m_value = Rheno::Core::applyMask(value, m_wordBits);
 
     if (m_hexEdit != skip) m_hexEdit->setText(QString::number(m_value, 16).toUpper());
     if (m_decEdit != skip) {
         if (m_signed) {
-            m_decEdit->setText(QString::number(BaseConverterCore::signedValue(m_value, m_wordBits)));
+            m_decEdit->setText(QString::number(Rheno::Core::signedValue(m_value, m_wordBits)));
         } else {
             m_decEdit->setText(QString::number(static_cast<qulonglong>(m_value)));
         }
     }
-    if (m_binEdit != skip) m_binEdit->setText(BaseConverterCore::formatBinarySpaced(m_value, m_wordBits));
+    if (m_binEdit != skip) m_binEdit->setText(Rheno::Core::formatBinarySpaced(m_value, m_wordBits));
     if (m_octEdit != skip) m_octEdit->setText(QString::number(m_value, 8));
 
     updateBitButtons(m_value);
@@ -267,25 +267,26 @@ void BaseConverterPage::updateInfoLabels(unsigned long long value) {
     // Unsigned
     m_unsignedLabel->setText(QString::number(value));
     // Hex
-    m_hexInfoLabel->setText(BaseConverterCore::hexWithPadding(value, m_wordBits));
+    m_hexInfoLabel->setText(Rheno::Core::hexWithPadding(value, m_wordBits));
 
     // Signed interpretation
-    long long sval = BaseConverterCore::signedValue(value, m_wordBits);
+    long long sval = Rheno::Core::signedValue(value, m_wordBits);
     m_signedLabel->setText(QString::number(sval));
 
     // Float (only meaningful for 32-bit)
     if (m_wordBits == 32) {
-        m_floatLabel->setText(BaseConverterCore::float32String(value));
+        m_floatLabel->setText(Rheno::Core::float32String(value));
     } else {
         m_floatLabel->setText(m_wordBits == 64 ? "(use 32-bit)" : "—");
     }
 
     // Byte labels
     for (int i = 0; i < m_wordBits / 8; ++i) {
-        m_byteLabels[i]->setText(BaseConverterCore::byteHex(value, i));
-        m_byteLabels[i]->setToolTip(BaseConverterCore::byteTooltip(value, i));
+        m_byteLabels[i]->setText(Rheno::Core::byteHex(value, i));
+        m_byteLabels[i]->setToolTip(Rheno::Core::byteTooltip(value, i));
     }
 }
+
 
 void BaseConverterPage::onBitToggled(int bit, bool state) {
     if (state) m_value |=  (1ULL << bit);
@@ -294,30 +295,34 @@ void BaseConverterPage::onBitToggled(int bit, bool state) {
 }
 
 void BaseConverterPage::onHexChanged() {
+    if (m_updating) return;
     unsigned long long v = 0;
-    if (BaseConverterCore::tryParse(m_hexEdit->text(), 16, v)) updateAll(v, m_hexEdit);
+    if (Rheno::Core::tryParse(m_hexEdit->text(), 16, v)) updateAll(v, m_hexEdit);
 }
 
 void BaseConverterPage::onDecChanged() {
+    if (m_updating) return;
     unsigned long long v = 0;
-    if (BaseConverterCore::tryParse(m_decEdit->text(), 10, v)) updateAll(v, m_decEdit);
+    if (Rheno::Core::tryParse(m_decEdit->text(), 10, v)) updateAll(v, m_decEdit);
 }
 
 void BaseConverterPage::onBinChanged() {
+    if (m_updating) return;
     unsigned long long v = 0;
-    if (BaseConverterCore::tryParse(m_binEdit->text(), 2, v)) updateAll(v, m_binEdit);
+    if (Rheno::Core::tryParse(m_binEdit->text(), 2, v)) updateAll(v, m_binEdit);
 }
 
 void BaseConverterPage::onOctChanged() {
+    if (m_updating) return;
     unsigned long long v = 0;
-    if (BaseConverterCore::tryParse(m_octEdit->text(), 8, v)) updateAll(v, m_octEdit);
+    if (Rheno::Core::tryParse(m_octEdit->text(), 8, v)) updateAll(v, m_octEdit);
 }
 
 void BaseConverterPage::applyTheme(bool dark) {
-    const QString editS = ThemeColors::baseEditStyle(dark);
-    const QString valS  = ThemeColors::baseValueStyle(dark);
-    const QString grpS  = ThemeColors::baseGroupStyle(dark);
-    const QString fldS  = ThemeColors::baseFieldLabelStyle(dark);
+    const QString editS = Rheno::UI::baseEditStyle(dark);
+    const QString valS  = Rheno::UI::baseValueStyle(dark);
+    const QString grpS  = Rheno::UI::baseGroupStyle(dark);
+    const QString fldS  = Rheno::UI::baseFieldLabelStyle(dark);
 
     m_hexEdit->setStyleSheet(editS);
     m_decEdit->setStyleSheet(editS);

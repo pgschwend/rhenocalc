@@ -73,5 +73,5 @@ private:
     QPushButton*        m_mcBtn = nullptr;
     bool                m_isDark = true;
 
-    CalculatorCore::CalculatorEngine m_engine;
+    Rheno::Core::CalculatorEngine m_engine;
 };

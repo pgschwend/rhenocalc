@@ -318,11 +318,11 @@ void FinancePage::recalc() {
 void FinancePage::applyTheme(bool dark) {
     m_isDark = dark;
 
-    const QString grpS = ThemeColors::unitGroupStyle(dark);
-    const QString fldS = ThemeColors::unitFieldStyle(dark);
-    const QString resS = ThemeColors::unitResultStyle(dark);
-    const QString ttlS = ThemeColors::unitTitleStyle(dark);
-    const QString frmS = ThemeColors::unitFormulaStyle(dark);
+    const QString grpS = Rheno::UI::unitGroupStyle(dark);
+    const QString fldS = Rheno::UI::unitFieldStyle(dark);
+    const QString resS = Rheno::UI::unitResultStyle(dark);
+    const QString ttlS = Rheno::UI::unitTitleStyle(dark);
+    const QString frmS = Rheno::UI::unitFormulaStyle(dark);
 
     m_titleLabel->setStyleSheet(ttlS);
 
@@ -357,7 +357,7 @@ void FinancePage::applyTheme(bool dark) {
         m_effectiveRateLabel->setStyleSheet(resS + "font-size:13px;");
 
     if (m_resultTitleLabel)
-        m_resultTitleLabel->setStyleSheet(ThemeColors::unitTitleStyle(dark) + "font-size:13px;");
+        m_resultTitleLabel->setStyleSheet(Rheno::UI::unitTitleStyle(dark) + "font-size:13px;");
 
     m_titleLabel->setStyleSheet(ttlS);
 }

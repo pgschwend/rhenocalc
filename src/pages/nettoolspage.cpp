@@ -485,10 +485,10 @@ void NetToolsPage::onTraceError(const QString& message) {
 void NetToolsPage::applyTheme(bool dark) {
     m_isDark = dark;
 
-    const QString grpS = ThemeColors::unitGroupStyle(dark);
-    const QString fldS = ThemeColors::unitFieldStyle(dark);
-    const QString ttlS = ThemeColors::unitTitleStyle(dark);
-    const QString frmS = ThemeColors::unitFormulaStyle(dark);
+    const QString grpS = Rheno::UI::unitGroupStyle(dark);
+    const QString fldS = Rheno::UI::unitFieldStyle(dark);
+    const QString ttlS = Rheno::UI::unitTitleStyle(dark);
+    const QString frmS = Rheno::UI::unitFormulaStyle(dark);
 
     m_titleLabel->setStyleSheet(ttlS);
 

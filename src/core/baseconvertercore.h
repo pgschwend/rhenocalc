@@ -3,7 +3,7 @@
 #include <QString>
 #include <QStringList>
 
-namespace BaseConverterCore {
+namespace Rheno::Core {
 
 unsigned long long applyMask(unsigned long long value, int bits);
 QString formatBinarySpaced(unsigned long long value, int bits);
@@ -16,5 +16,5 @@ QString float32String(unsigned long long value);
 QString byteHex(unsigned long long value, int byteIndex);
 QString byteTooltip(unsigned long long value, int byteIndex);
 
-} // namespace BaseConverterCore
+} // namespace Rheno::Core
 

@@ -92,7 +92,7 @@ QString c(bool dark, const QString& key) {
 
 } // namespace
 
-namespace ThemeColors {
+namespace Rheno::UI {
 
 QString applyQssColors(QString qssTemplate, bool dark) {
     const auto& map = themeData(dark).qss;
@@ -271,5 +271,5 @@ QString unitFormulaStyle(bool dark) {
     return QString("color:%1;font-size:12px;padding:4px;").arg(c(dark, "formula_fg"));
 }
 
-} // namespace ThemeColors
+} // namespace Rheno::UI
 

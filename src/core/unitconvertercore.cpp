@@ -3,7 +3,7 @@
 #include <cmath>
 #include <limits>
 
-namespace UnitConverterCore {
+namespace Rheno::Core {
 
 QList<QList<UnitDef>> defaultCategories() {
     QList<QList<UnitDef>> categories;
@@ -147,5 +147,5 @@ ConversionResult convert(
     return out;
 }
 
-} // namespace UnitConverterCore
+} // namespace Rheno::Core
 

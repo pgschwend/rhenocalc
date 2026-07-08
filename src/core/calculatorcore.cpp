@@ -11,7 +11,7 @@ namespace {
 
 // ── helpers for BigDecimal ────────────────────────────────────────────────────
 
-QString bigToQString(const CalculatorCore::BigDecimal& v) {
+QString bigToQString(const Rheno::Core::BigDecimal& v) {
     // Use default format (scientific when needed) with 12 significant digits
     std::string s = v.str(12);
 
@@ -19,11 +19,11 @@ QString bigToQString(const CalculatorCore::BigDecimal& v) {
     return QString::fromStdString(s);
 }
 
-CalculatorCore::BigDecimal qStringToBig(const QString& s) {
+Rheno::Core::BigDecimal qStringToBig(const QString& s) {
     try {
-        return CalculatorCore::BigDecimal(s.toStdString());
+        return Rheno::Core::BigDecimal(s.toStdString());
     } catch (...) {
-        return CalculatorCore::BigDecimal(0);
+        return Rheno::Core::BigDecimal(0);
     }
 }
 
@@ -95,7 +95,7 @@ bool evalIntRpn(const QStringList& rpn, int base, int bits, long long* result) {
                 return false;
             const long long b = st.back(); st.pop_back();
             const long long a = st.back(); st.pop_back();
-            st.push_back(CalculatorCore::maskToWidth(CalculatorCore::applyBinary(a, b, tk), bits));
+            st.push_back(Rheno::Core::maskToWidth(Rheno::Core::applyBinary(a, b, tk), bits));
             continue;
         }
 
@@ -103,12 +103,12 @@ bool evalIntRpn(const QStringList& rpn, int base, int bits, long long* result) {
         const long long v = tk.toLongLong(&ok, base);
         if (!ok)
             return false;
-        st.push_back(CalculatorCore::maskToWidth(v, bits));
+        st.push_back(Rheno::Core::maskToWidth(v, bits));
     }
 
     if (st.size() != 1)
         return false;
-    *result = CalculatorCore::maskToWidth(st.back(), bits);
+    *result = Rheno::Core::maskToWidth(st.back(), bits);
     return true;
 }
 
@@ -120,7 +120,7 @@ bool evalDoubleRpn(const QStringList& rpn, double* result) {
                 return false;
             const double b = st.back(); st.pop_back();
             const double a = st.back(); st.pop_back();
-            st.push_back(CalculatorCore::applyBinary(a, b, tk));
+            st.push_back(Rheno::Core::applyBinary(a, b, tk));
             continue;
         }
 
@@ -137,15 +137,15 @@ bool evalDoubleRpn(const QStringList& rpn, double* result) {
     return true;
 }
 
-bool evalBigRpn(const QStringList& rpn, CalculatorCore::BigDecimal* result) {
-    QVector<CalculatorCore::BigDecimal> st;
+bool evalBigRpn(const QStringList& rpn, Rheno::Core::BigDecimal* result) {
+    QVector<Rheno::Core::BigDecimal> st;
     for (const QString& tk : rpn) {
         if (isBinaryOperatorToken(tk)) {
             if (st.size() < 2)
                 return false;
             const auto b = st.back(); st.pop_back();
             const auto a = st.back(); st.pop_back();
-            st.push_back(CalculatorCore::applyBigBinary(a, b, tk));
+            st.push_back(Rheno::Core::applyBigBinary(a, b, tk));
             continue;
         }
         st.push_back(qStringToBig(tk));
@@ -158,7 +158,7 @@ bool evalBigRpn(const QStringList& rpn, CalculatorCore::BigDecimal* result) {
 
 } // namespace
 
-namespace CalculatorCore {
+namespace Rheno::Core {
 
 long long maskToWidth(long long value, int bits) {
     if (bits == 64) return value;
@@ -959,5 +959,5 @@ double applyUnaryDouble(double value, const QString& op) {
     return value;
 }
 
-} // namespace CalculatorCore
+} // namespace Rheno::Core
 
