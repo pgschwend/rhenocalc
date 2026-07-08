@@ -41,7 +41,7 @@ jobs:
 
       - name: Set up MSVC (Windows)
         if: matrix.os == 'windows-latest'
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: TheMrMilchmann/setup-msvc-dev@v4
 
       # --- QT INSTALLATION VIA AQTINSTALL ---
       - name: Set up Python
@@ -50,8 +50,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install aqtinstall
-        run: |
-          pip install aqtinstall
+        run: pip install aqtinstall
 
       - name: Install Qt (Linux)
         if: matrix.os == 'ubuntu-22.04'
@@ -169,7 +168,7 @@ jobs:
           path: ./artifacts
 
       - name: Upload Binaries to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           # Grabs the files we just downloaded and attaches them to the release
           files: ./artifacts/**/rhenocalc-*
