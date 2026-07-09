@@ -1,17 +1,17 @@
 #include "mainwindow.h"
-#include "pages/calculatorpage.h"
-#include "pages/baseconverterpage.h"
-#include "pages/unitconverterpage.h"
-#include "pages/networkpage.h"
-#include "pages/crchashpage.h"
-#include "pages/colorpage.h"
-#include "pages/financepage.h"
-#include "pages/floatpage.h"
-#include "pages/electronicspage.h"
-#include "pages/nettoolspage.h"
+#include "calculatorpage.h"
+#include "baseconverterpage.h"
+#include "unitconverterpage.h"
+#include "networkpage.h"
+#include "crchashpage.h"
+#include "colorpage.h"
+#include "financepage.h"
+#include "floatpage.h"
+#include "electronicspage.h"
 #include "themecolors.h"
 #include "info.h"
 #include "core/updater.h"
+#include "fixedtab.h"
 #include <QApplication>
 #include <QStyleFactory>
 #include <QFile>
@@ -23,9 +23,8 @@
 #include <QGuiApplication>
 #include <QIcon>
 #include <QLabel>
-#include <QDesktopServices>
-#include <QUrl>
 #include <QTimer>
+
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -96,11 +95,11 @@ MainWindow::MainWindow(QWidget* parent)
 });
 
     // Auto-update check
-    auto* updater = new Updater(this);
-    connect(updater, &Updater::updateAvailable, this, [this](const QString& version, const QString& releaseUrl) {
+    auto* updater = new Rheno::Core::Updater(this);
+    connect(updater, &Rheno::Core::Updater::updateAvailable, this, [this](const QString& version, const QString& releaseUrl) {
         updateStatusBar(version, releaseUrl);
     });
-    QTimer::singleShot(1500, updater, &Updater::checkForUpdate);
+    QTimer::singleShot(1500, updater, &Rheno::Core::Updater::checkForUpdate);
 }
 
 MainWindow::~MainWindow() = default;
@@ -157,7 +156,6 @@ void MainWindow::setupUI() {
     m_financePage = new FinancePage(this);
     m_floatPage = new FloatPage(this);
     m_electronicsPage = new ElectronicsPage(this);
-    m_netToolsPage = new NetToolsPage(this);
 
     // Hide pages not initially in the tab widget so they don't appear as floating children
     m_networkPage->hide();
@@ -166,7 +164,6 @@ void MainWindow::setupUI() {
     m_financePage->hide();
     m_floatPage->hide();
     m_electronicsPage->hide();
-    m_netToolsPage->hide();
 
     m_tabWidget->addTab(m_calcPage, "Calc");       // index 0 - fixed
     m_tabWidget->addTab(m_basePage, "Base");       // index 1 - fixed
@@ -184,7 +181,6 @@ void MainWindow::setupUI() {
         {"Finance",  m_financePage},
         {"Color",    m_colorPage},
         {"IP-Address",  m_networkPage},
-        {"Net-Tools", m_netToolsPage},
         {"Electronics", m_electronicsPage},
     };
 
@@ -297,7 +293,6 @@ void MainWindow::applyTheme(bool dark) {
     m_financePage->applyTheme(dark);
     m_floatPage->applyTheme(dark);
     m_electronicsPage->applyTheme(dark);
-    m_netToolsPage->applyTheme(dark);
 
     // Status Bar
     statusBar()->setStyleSheet(Rheno::UI::statusBarStyle(dark));

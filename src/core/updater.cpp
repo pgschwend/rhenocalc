@@ -7,6 +7,8 @@
 #include <QVersionNumber>
 #include <QRegularExpression>
 
+namespace Rheno::Core {
+
 Updater::Updater(QObject* parent)
     : QObject(parent)
     , m_nam(new QNetworkAccessManager(this))
@@ -64,3 +66,6 @@ void Updater::onReleaseFetched(QNetworkReply* reply)
         emit noUpdateAvailable();
     }
 }
+
+} // namespace Rheno::Core
+
