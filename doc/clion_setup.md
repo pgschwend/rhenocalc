@@ -22,7 +22,7 @@ Environment variables: ````PATH=C:\Qt\6.9.3\mingw_64\bin````
 ## Ubuntu
 
 ### Settings in Build, Execution, Deployment - CMake
-![img.png](img/img.png)
+![scr_config_ubuntu.png](img/scr_config_ubuntu.png)
 
 Enter the Qt build path, see example below (modify according to your system)
 

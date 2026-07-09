@@ -8,7 +8,6 @@
 #include "financepage.h"
 #include "floatpage.h"
 #include "electronicspage.h"
-#include "nettoolspage.h"
 #include "themecolors.h"
 #include "info.h"
 #include "core/updater.h"
@@ -157,7 +156,6 @@ void MainWindow::setupUI() {
     m_financePage = new FinancePage(this);
     m_floatPage = new FloatPage(this);
     m_electronicsPage = new ElectronicsPage(this);
-    m_netToolsPage = new NetToolsPage(this);
 
     // Hide pages not initially in the tab widget so they don't appear as floating children
     m_networkPage->hide();
@@ -166,7 +164,6 @@ void MainWindow::setupUI() {
     m_financePage->hide();
     m_floatPage->hide();
     m_electronicsPage->hide();
-    m_netToolsPage->hide();
 
     m_tabWidget->addTab(m_calcPage, "Calc");       // index 0 - fixed
     m_tabWidget->addTab(m_basePage, "Base");       // index 1 - fixed
@@ -184,7 +181,6 @@ void MainWindow::setupUI() {
         {"Finance",  m_financePage},
         {"Color",    m_colorPage},
         {"IP-Address",  m_networkPage},
-        {"Net-Tools", m_netToolsPage},
         {"Electronics", m_electronicsPage},
     };
 
@@ -297,7 +293,6 @@ void MainWindow::applyTheme(bool dark) {
     m_financePage->applyTheme(dark);
     m_floatPage->applyTheme(dark);
     m_electronicsPage->applyTheme(dark);
-    m_netToolsPage->applyTheme(dark);
 
     // Status Bar
     statusBar()->setStyleSheet(Rheno::UI::statusBarStyle(dark));

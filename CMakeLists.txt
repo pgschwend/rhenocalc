@@ -43,7 +43,6 @@ set(SOURCES
         src/pages/financepage.h src/pages/financepage.cpp
         src/pages/floatpage.h src/pages/floatpage.cpp
         src/pages/electronicspage.h src/pages/electronicspage.cpp
-        src/pages/nettoolspage.h src/pages/nettoolspage.cpp
         src/core/calc/operations.h src/core/calc/operations.cpp
         src/core/calc/calcparser.h src/core/calc/calcparser.cpp
         src/core/calculator.h src/core/calculator.cpp
@@ -55,8 +54,6 @@ set(SOURCES
         src/core/finance.h src/core/finance.cpp
         src/core/floathandler.h src/core/floathandler.cpp
         src/core/electronics.h src/core/electronics.cpp
-        src/core/nettools.h src/core/nettools.cpp
-        src/core/traceroute.h src/core/traceroute.cpp
         src/core/updater.h src/core/updater.cpp
         src/info.h
 )
