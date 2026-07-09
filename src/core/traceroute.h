@@ -3,6 +3,8 @@
 #include <QThread>
 #include <QHostAddress>
 
+namespace Rheno::Core {
+
 struct TraceHop {
     int hop = 0;
     QString address;
@@ -63,4 +65,6 @@ private:
     TracerouteWorker* m_worker = nullptr;
     bool m_running = false;
 };
+
+} // namespace Rheno::Core
 

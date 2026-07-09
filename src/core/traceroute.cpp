@@ -28,6 +28,8 @@
 #include <cstring>
 #endif
 
+namespace Rheno::Core {
+
 // ─────────────────────────────────────────────────────────────────────────────
 // TracerouteWorker
 // ─────────────────────────────────────────────────────────────────────────────
@@ -395,3 +397,4 @@ void Traceroute::stop() {
     m_thread = nullptr;
 }
 
+} // namespace Rheno::Core

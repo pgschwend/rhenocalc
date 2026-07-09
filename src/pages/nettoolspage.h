@@ -12,8 +12,11 @@ class QLineEdit;
 class QPushButton;
 class QTextEdit;
 class QProgressBar;
-class Traceroute;
-struct TraceHop;
+
+namespace Rheno::Core {
+    class Traceroute;
+    struct TraceHop;
+}
 
 class NetToolsPage : public QWidget {
     Q_OBJECT
@@ -38,7 +41,7 @@ private slots:
 
     void startTraceroute();
     void stopTraceroute();
-    void onTraceHop(const TraceHop& hop);
+    void onTraceHop(const Rheno::Core::TraceHop& hop);
     void onTraceFinished(bool success, const QString& message);
     void onTraceError(const QString& message);
 
@@ -76,7 +79,7 @@ private:
     QPushButton* m_traceStartBtn = nullptr;
     QPushButton* m_traceStopBtn = nullptr;
     QTextEdit* m_traceOutput = nullptr;
-    Traceroute* m_traceroute = nullptr;
+    Rheno::Core::Traceroute* m_traceroute = nullptr;
 
     bool m_isDark = true;
 };

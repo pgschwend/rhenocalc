@@ -6,6 +6,8 @@
 class QNetworkAccessManager;
 class QNetworkReply;
 
+namespace Rheno::Core {
+
 class Updater : public QObject {
     Q_OBJECT
 public:
@@ -30,3 +32,6 @@ private slots:
 private:
     QNetworkAccessManager* m_nam = nullptr;
 };
+
+} // namespace Rheno::Core
+

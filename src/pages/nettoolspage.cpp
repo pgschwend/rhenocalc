@@ -398,10 +398,10 @@ void NetToolsPage::startTraceroute() {
     m_traceStopBtn->setEnabled(true);
 
     if (!m_traceroute) {
-        m_traceroute = new Traceroute(this);
-        connect(m_traceroute, &Traceroute::hopResult, this, &NetToolsPage::onTraceHop);
-        connect(m_traceroute, &Traceroute::finished, this, &NetToolsPage::onTraceFinished);
-        connect(m_traceroute, &Traceroute::error, this, &NetToolsPage::onTraceError);
+        m_traceroute = new Rheno::Core::Traceroute(this);
+        connect(m_traceroute, &Rheno::Core::Traceroute::hopResult, this, &NetToolsPage::onTraceHop);
+        connect(m_traceroute, &Rheno::Core::Traceroute::finished, this, &NetToolsPage::onTraceFinished);
+        connect(m_traceroute, &Rheno::Core::Traceroute::error, this, &NetToolsPage::onTraceError);
     }
 
     appendOutput(m_traceOutput, QString("Tracing route to %1...").arg(host), "#888");
@@ -416,7 +416,7 @@ void NetToolsPage::stopTraceroute() {
     m_traceStopBtn->setEnabled(false);
 }
 
-void NetToolsPage::onTraceHop(const TraceHop& hop) {
+void NetToolsPage::onTraceHop(const Rheno::Core::TraceHop& hop) {
     const auto styled = Rheno::Core::formatTraceHopLine(hop.hop, hop.rtt, hop.address);
     appendOutput(m_traceOutput, styled.text, styled.color);
 }

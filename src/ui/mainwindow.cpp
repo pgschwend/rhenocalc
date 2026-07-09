@@ -1,17 +1,18 @@
 #include "mainwindow.h"
-#include "pages/calculatorpage.h"
-#include "pages/baseconverterpage.h"
-#include "pages/unitconverterpage.h"
-#include "pages/networkpage.h"
-#include "pages/crchashpage.h"
-#include "pages/colorpage.h"
-#include "pages/financepage.h"
-#include "pages/floatpage.h"
-#include "pages/electronicspage.h"
-#include "pages/nettoolspage.h"
+#include "calculatorpage.h"
+#include "baseconverterpage.h"
+#include "unitconverterpage.h"
+#include "networkpage.h"
+#include "crchashpage.h"
+#include "colorpage.h"
+#include "financepage.h"
+#include "floatpage.h"
+#include "electronicspage.h"
+#include "nettoolspage.h"
 #include "themecolors.h"
 #include "info.h"
 #include "core/updater.h"
+#include "fixedtab.h"
 #include <QApplication>
 #include <QStyleFactory>
 #include <QFile>
@@ -23,9 +24,8 @@
 #include <QGuiApplication>
 #include <QIcon>
 #include <QLabel>
-#include <QDesktopServices>
-#include <QUrl>
 #include <QTimer>
+
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -96,11 +96,11 @@ MainWindow::MainWindow(QWidget* parent)
 });
 
     // Auto-update check
-    auto* updater = new Updater(this);
-    connect(updater, &Updater::updateAvailable, this, [this](const QString& version, const QString& releaseUrl) {
+    auto* updater = new Rheno::Core::Updater(this);
+    connect(updater, &Rheno::Core::Updater::updateAvailable, this, [this](const QString& version, const QString& releaseUrl) {
         updateStatusBar(version, releaseUrl);
     });
-    QTimer::singleShot(1500, updater, &Updater::checkForUpdate);
+    QTimer::singleShot(1500, updater, &Rheno::Core::Updater::checkForUpdate);
 }
 
 MainWindow::~MainWindow() = default;

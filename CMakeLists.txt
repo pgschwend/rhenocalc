@@ -31,10 +31,13 @@ set(SOURCES
         src/main.cpp
         src/ui/themecolors.h src/ui/themecolors.cpp
         src/ui/mainwindow.h src/ui/mainwindow.cpp
+        src/ui/widgets/fixedtab.h
+        src/ui/widgets/colorwheel.h src/ui/widgets/colorwheel.cpp
+        src/ui/widgets/bitbutton.h src/ui/widgets/bitbutton.cpp
         src/pages/calculatorpage.h src/pages/calculatorpage.cpp
         src/pages/baseconverterpage.h src/pages/baseconverterpage.cpp
         src/pages/unitconverterpage.h src/pages/unitconverterpage.cpp
-        src/pages/networkpage.cpp
+        src/pages/networkpage.h src/pages/networkpage.cpp
         src/pages/crchashpage.h src/pages/crchashpage.cpp
         src/pages/colorpage.h src/pages/colorpage.cpp
         src/pages/financepage.h src/pages/financepage.cpp
@@ -98,6 +101,7 @@ endif()
 target_include_directories(RhenoCalc PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/widgets
         ${CMAKE_CURRENT_SOURCE_DIR}/src/pages
         ${CMAKE_CURRENT_SOURCE_DIR}/src/core/calc
         ${CMAKE_CURRENT_SOURCE_DIR}/src/resources
