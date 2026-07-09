@@ -1,0 +1,35 @@
+name: rhenocalc
+base: core22 # Uses Ubuntu 22.04 LTS as the base (or core24 if building on 24.04)
+version: '1.0.0' # Or 'git' to automatically extract the version from Git
+summary: Embedded Engineering Calculator
+description: |
+  RhenoCalc is a cross-platform desktop engineering calculator 
+  tailored for embedded software and hardware engineers.
+
+grade: devel # Change to 'stable' when ready for store release
+confinement: strict # 'strict' is required for the Snap Store (sandbox environment)
+
+# Uses the KDE/Qt extension to provide all required Qt libraries and themes
+extensions:
+  - kde-neon
+
+apps:
+  rhenocalc:
+    command: usr/bin/rhenocalc # Path to your binary inside the snap
+    desktop: usr/share/applications/rhenocalc.desktop
+    plugs:
+      - home
+      - x11
+      - wayland
+      - opengl
+
+parts:
+  rhenocalc:
+    plugin: cmake # Or 'qmake' if you are not using CMake yet
+    source: .
+    # If you need specific build configuration parameters for CMake:
+    # cmake-parameters:
+    #   - -DCMAKE_BUILD_TYPE=Release
+    build-packages:
+      - build-essential
+      - libgl1-mesa-dev
