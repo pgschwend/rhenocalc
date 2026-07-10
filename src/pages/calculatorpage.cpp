@@ -59,7 +59,7 @@ void CalculatorPage::setupUI() {
     // Keyboard shortcut hint bar
 #if defined(Q_OS_MACOS)
     m_hintLabel = new QLabel(
-    "% MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n< LSL  |  > LSR  |  Enter =  |  Esc AC/Close  |  ⌫ BS  |\nCMD+D/X/B/O: Base  |  CMD+1–5: Mode  |  CMD+◀ ▶: Tab",
+    "CMD+D/X/B/O: Base  |  CMD+1–5: Mode  |  CMD+◀ ▶: Tab \n% MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  \n< LSL  |  > LSR   |  Esc AC/Close",
     this);
 #else
     m_hintLabel = new QLabel(
@@ -87,7 +87,7 @@ void CalculatorPage::setupUI() {
     grid->addWidget(bsBtn, 0, 6);
 
     // Row 1: Bitwise ops
-    const char* bitOps[] = {"AND","OR","XOR","NOT","LSL","LSR","ROR","ROL"};
+    const char* bitOps[] = {"AND","OR","XOR","NOT","LSL","LSR","ROL","ROR"};
     // Split to 2 rows of 4
     for (int i = 0; i < 4; ++i) {
         auto* b = makeBtn(bitOps[i]);
