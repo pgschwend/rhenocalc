@@ -39,6 +39,7 @@ private:
     void switchDynamicTab(QWidget* page, const QString& title);
     void saveWindowGeometry();
     void restoreWindowGeometry();
+    void moveToMousePosition();
 
     QTabWidget*        m_tabWidget = nullptr;
     CalculatorPage*    m_calcPage = nullptr;
