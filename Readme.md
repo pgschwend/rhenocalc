@@ -1,23 +1,48 @@
 # RhenoCalc
 
-RhenoCalc is a Qt desktop toolbox focused on practical engineering utilities.
-It combines a calculator, converters, network tools, and CRC/hash functions in one app.
+RhenoCalc is a lightweight, native Qt6 desktop toolbox focused on practical engineering utilities. It combines an arbitrary-precision calculator, value and unit converters, an IPv4/CIDR subnet calculator, and CRC/hash functions in one application.
 
+The app is optimized for quick utility workflows: it opens directly at the current mouse cursor position, operates via keyboard shortcuts, and closes instantly by pressing `ESC`.
+
+[![GitHub Releases](https://img.shields.io/github/v/release/pgschwend/rhenocalc?label=Latest%20Release)](https://github.com/pgschwend/rhenocalc/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+---
+
+## Key Characteristics
+
+- **Performance:** Written in native C++20 and Qt6. It uses less than 50 MB of RAM and starts instantly.
+- **Offline & Privacy:** Developed by a Swiss company. No cloud dependencies, no tracking, and no telemetry. The only network activity is a direct check for updates against the official GitHub Release URL.
+
+---
+
+## Availability
+
+RhenoCalc is open-source. You can choose how to use it:
+
+### 1. Pre-compiled Binaries
+You can download the compiled binaries directly from the GitHub Releases page:
+ **[Latest Release](https://github.com/pgschwend/rhenocalc/releases)**
+
+### 2. App Stores (Optional Support)
+For automated background updates and seamless OS integration, the app can be purchased for a small one-time fee (~5.00 CHF) in the official stores. This supports further independent development — or simply buys me a coffee ☕
+- **Windows:** *[Coming soon to the Microsoft Store]*
+- **macOS:** *[Coming soon to the Apple App Store]*
+
+---
 
 ## Features
 
-- Scientific calculator with arbitrary precision (Boost.Multiprecision)
-- Multiple number bases (binary, octal, decimal, hexadecimal) and bit-width modes
-- Trigonometric functions, logarithms, and constants (π, e)
-- Base converter with live bit visualization
-- Unit converter (length, weight, temperature, and more)
-- IEEE 754 float inspector (32-bit and 64-bit)
-- Network tools: IPv4/CIDR calculator, traceroute
-- CRC and hash tools (CRC-8/16/32, MD5, SHA-1/256/512)
-- Color picker with hex/RGB/HSL conversion and screen pipette
-- Finance calculator (interest, loan payments)
-- Electronics helpers (LED resistor, Ohm's law)
-- Dark and light theme with keyboard shortcuts
+- **Scientific Calculator:** Arbitrary precision math powered by `Boost.Multiprecision`.
+- **Programmer Mode:** Multiple number bases (Binary, Octal, Decimal, Hexadecimal) with live bit visualization and bit-width modes.
+- **Math & Science:** Trigonometric functions, logarithms, and built-in constants ($\pi$, $e$).
+- **IEEE 754 Inspector:** Visualizer for 32-bit (float) and 64-bit (double) binary representations.
+- **Network Helper:** Local IPv4/CIDR subnet calculator.
+- **Cryptography & Integrity:** Fast CRC (CRC-8/16/32) and cryptographic hash tools (MD5, SHA-1, SHA-256, SHA-512).
+- **Electronics Helpers:** Ohm's law calculators and LED series resistor dimensioning.
+- **Color Picker:** Hex/RGB/HSL conversion utility with a screen pipette.
+- **Finance Utilities:** Calculators for interest and loan payments.
+- **UI & Shortcuts:** Dark and Light themes with customizable keyboard shortcuts.
 
 ## Requirements
 
@@ -60,13 +85,6 @@ RhenoCalc checks for updates on startup. When a new version is available,
 a notification appears in the status bar with a link to the GitHub releases page.
 Download the latest release manually from:
 https://github.com/pgschwend/rhenocalc/releases
-
-## Linux Notes
-
-For traceroute functionality, install the `traceroute` package:
-```bash
-sudo apt install traceroute
-```
 
 ## Project Layout
 

@@ -57,7 +57,7 @@ void CalculatorPage::setupUI() {
     root->addWidget(m_display);
 
     // Keyboard shortcut hint bar
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
     m_hintLabel = new QLabel(
     "% MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n< LSL  |  > LSR  |  Enter =  |  Esc AC/Close  |  ⌫ BS  |\nCMD+D/X/B/O: Base  |  CMD+1–5: Mode  |  CMD+◀ ▶: Tab",
     this);
