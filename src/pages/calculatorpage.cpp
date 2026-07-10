@@ -57,9 +57,16 @@ void CalculatorPage::setupUI() {
     root->addWidget(m_display);
 
     // Keyboard shortcut hint bar
+#if defined(Q_OS_MAC)
     m_hintLabel = new QLabel(
-        "% MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n< LSL  |  > LSR  |  Enter =  |  Esc AC/Close  |  ⌫ BS  |\nCtrl+D/H/B/O: Base  |  Ctrl+1–5: Mode  |  Ctrl+◀ ▶: Tab",
-        this);
+    "% MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n< LSL  |  > LSR  |  Enter =  |  Esc AC/Close  |  ⌫ BS  |\nCMD+D/X/B/O: Base  |  CMD+1–5: Mode  |  CMD+◀ ▶: Tab",
+    this);
+#else
+    m_hintLabel = new QLabel(
+    "% MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n< LSL  |  > LSR  |  Enter =  |  Esc AC/Close  |  ⌫ BS  |\nCtrl+D/X/B/O: Base  |  Ctrl+1–5: Mode  |  Ctrl+◀ ▶: Tab",
+    this);
+#endif
+
     m_hintLabel->setWordWrap(true);
     root->addWidget(m_hintLabel);
 
@@ -589,11 +596,11 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
         break;
 
     // ── Base switching shortcuts ──────────────────────────────────────────────
-    // Ctrl+D = Decimal, Ctrl+H = Hex, Ctrl+B = Binary, Ctrl+O = Octal
+    // Ctrl+D = Decimal, Ctrl+X = Hex, Ctrl+B = Binary, Ctrl+O = Octal
     case Qt::Key_D:
         if (mod == Qt::ControlModifier) { m_baseCombo->setCurrentIndex(0); return; }
         break;
-    case Qt::Key_H:
+    case Qt::Key_X:
         if (mod == Qt::ControlModifier) { m_baseCombo->setCurrentIndex(1); return; }
         break;
     case Qt::Key_B:

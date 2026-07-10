@@ -158,7 +158,6 @@ void MainWindow::moveToMousePosition() {
 
         // Keep the window inside the visible screen bounds (so it doesn't clip out)
         QRect screenGeometry = currentScreen->geometry();
-
         if (x < screenGeometry.left()) x = screenGeometry.left();
         if (y < screenGeometry.top()) y = screenGeometry.top();
         if (x + this->width() > screenGeometry.right()) x = screenGeometry.right() - this->width();
