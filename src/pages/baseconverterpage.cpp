@@ -101,14 +101,14 @@ void BaseConverterPage::setupUI() {
         int flatPos = 63 - i; // 0=bit63, 63=bit0
         int row = flatPos / 16;
         int col = flatPos % 16;
-        bitGrid->addWidget(bb, row * 2, col); // *2 for index labels
+        bitGrid->addWidget(bb, row * 2 + 1, col); // *2 for index labels
 
         // Bit index label below button
         auto* idxLbl = new QLabel(QString::number(i), bitArea);
         idxLbl->setAlignment(Qt::AlignCenter);
         idxLbl->setStyleSheet("font-size:11px; margin-top:-2px;");
         idxLbl->setFixedWidth(14);
-        bitGrid->addWidget(idxLbl, row * 2 + 1, col);
+        bitGrid->addWidget(idxLbl, row * 2, col);
     }
 
     regLayout->addWidget(bitArea);
