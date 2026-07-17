@@ -25,7 +25,7 @@ You can download the compiled binaries directly from the GitHub Releases page:
  **[Latest Release](https://github.com/pgschwend/rhenocalc/releases)**
 
 ### 2. App Stores (Optional Support)
-For automated background updates and seamless OS integration, the app can be purchased for a small one-time fee (~5.00 CHF) in the official stores. This supports further independent development — or simply buys me a coffee ☕
+For automated background updates and seamless OS integration, the app can be purchased for a small one-time fee in the official stores. This supports further independent development — or simply buys me a coffee ☕
 - **Windows:** *[Coming soon to the Microsoft Store]*
 - **macOS:** *[Coming soon to the Apple App Store]*
 
