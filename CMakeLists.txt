@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
-project(RhenoCalc)
+
+# Set up project name and version
+project(RhenoCalc VERSION 0.2.5 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_AUTOMOC ON)
@@ -16,6 +18,7 @@ FetchContent_Declare(
 set(BOOST_INCLUDE_LIBRARIES multiprecision math)
 FetchContent_MakeAvailable(Boost)
 
+# Set Qt installation prefix path depending on the platform
 if(WIN32)
     list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.9.3/mingw_64")
 elseif(UNIX AND NOT APPLE)
@@ -26,6 +29,7 @@ endif()
 
 find_package(Qt6 COMPONENTS Core Gui Widgets Network REQUIRED)
 
+# List of source files excluding the info.h.in template
 set(SOURCES
         src/resources/resources.qrc
         src/main.cpp
@@ -55,25 +59,41 @@ set(SOURCES
         src/core/floathandler.h src/core/floathandler.cpp
         src/core/electronics.h src/core/electronics.cpp
         src/core/updater.h src/core/updater.cpp
-        src/info.h
 )
 
-if(WIN32)
-    list(APPEND SOURCES src/resources/rhenocalc.rc)
-endif()
+# Generate info.h from the template file into the build directory
+configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/info.h.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/generated/info.h"
+)
 
-# macOS specific icon setup
+# Provide the generated directory path to the preprocessor
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/generated")
+
+
 if(APPLE)
-    set(MACOSX_BUNDLE_ICON_FILE rhenocalc.icns)
-    set(MAC_ICON src/resources/icons/rhenocalc.icns)
+    # Configure macOS Application Bundle and App Store Sandboxing
+    set(MAC_ICON "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/icons/rhenocalc.icns")
     set_source_files_properties(${MAC_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
     list(APPEND SOURCES ${MAC_ICON})
-endif()
 
-if(APPLE)
     set(CMAKE_xcode_attribute_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
     add_executable(RhenoCalc MACOSX_BUNDLE ${SOURCES})
+
+    set_target_properties(RhenoCalc PROPERTIES
+            MACOSX_BUNDLE_BUNDLE_NAME "RhenoCalc"
+            MACOSX_BUNDLE_GUI_IDENTIFIER "ch.rhenosys.rhenocalc"
+            MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
+            MACOSX_BUNDLE_COPYRIGHT "Copyright © 2026 Rhenosys GmbH. All rights reserved."
+            MACOSX_BUNDLE_ICON_FILE "rhenocalc.icns"
+            XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${CMAKE_CURRENT_SOURCE_DIR}/packaging/macos/RhenoCalc.entitlements"
+    )
 else()
+    # Windows and Linux build target configuration
+    if(WIN32)
+        list(APPEND SOURCES src/resources/rhenocalc.rc)
+    endif()
     add_executable(RhenoCalc ${SOURCES})
 endif()
 
@@ -81,6 +101,7 @@ if(WIN32)
     target_compile_definitions(RhenoCalc PRIVATE _USE_MATH_DEFINES)
     set_target_properties(RhenoCalc PROPERTIES WIN32_EXECUTABLE ON)
 
+    # Automate windeployqt deployment post-build
     get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
     get_filename_component(QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
@@ -95,6 +116,7 @@ if(WIN32)
     endif()
 endif()
 
+# Include local development directories
 target_include_directories(RhenoCalc PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
@@ -104,6 +126,7 @@ target_include_directories(RhenoCalc PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/resources
 )
 
+# Link shared libraries
 target_link_libraries(RhenoCalc
         Qt::Core
         Qt::Gui
@@ -112,6 +135,7 @@ target_link_libraries(RhenoCalc
         Boost::multiprecision
 )
 
+# Link platform-specific networking libraries for Windows
 if(WIN32)
     target_link_libraries(RhenoCalc iphlpapi ws2_32)
 endif()
