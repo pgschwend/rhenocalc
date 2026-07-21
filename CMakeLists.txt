@@ -59,16 +59,14 @@ set(SOURCES
         src/core/floathandler.h src/core/floathandler.cpp
         src/core/electronics.h src/core/electronics.cpp
         src/core/updater.h src/core/updater.cpp
+        src/info.h
 )
 
-# Generate info.h from the template file into the build directory
+# Generate info.h into a namespaced subdirectory inside the build directory
 configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/info.h.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/generated/info.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/info.h"
+        "${CMAKE_CURRENT_BINARY_DIR}/generated/rhenocalc/info.h"
 )
-
-# Provide the generated directory path to the preprocessor
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/generated")
 
 
 if(APPLE)
@@ -78,7 +76,7 @@ if(APPLE)
     list(APPEND SOURCES ${MAC_ICON})
 
     set(CMAKE_xcode_attribute_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
-    add_executable(RhenoCalc MACOSX_BUNDLE ${SOURCES})
+    add_executable(RhenoCalc MACOSX_BUNDLE ${SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/generated/rhenocalc/info.h")
 
     set_target_properties(RhenoCalc PROPERTIES
             MACOSX_BUNDLE_BUNDLE_NAME "RhenoCalc"
@@ -116,7 +114,11 @@ if(WIN32)
     endif()
 endif()
 
-# Include local development directories
+target_compile_definitions(RhenoCalc PRIVATE
+        APP_VERSION_CMAKE_STRING="${PROJECT_VERSION}"
+)
+
+# Include local development directories and the generated headers directory
 target_include_directories(RhenoCalc PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ui

@@ -59,7 +59,7 @@ void CalculatorPage::setupUI() {
     // Keyboard shortcut hint bar
 #if defined(Q_OS_MACOS)
     m_hintLabel = new QLabel(
-    "CMD+D/X/B/O: Base  |  CMD+1–5: Mode  |  CMD+◀ ▶: Tab \n% MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  \n< LSL  |  > LSR   |  Esc AC/Close",
+    "CMD+D/X/B/O: Base  |  CMD+1–5: Mode  |  CMD+◀ ▶: Tab \n% MOD  |  & AND  |  | OR  |  ^ XOR  |  ~ NOT\n< LSL  |  > LSR  |  Esc AC/Close",
     this);
 #else
     m_hintLabel = new QLabel(
