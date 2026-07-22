@@ -1,6 +1,6 @@
 # RhenoCalc
 
-RhenoCalc is a lightweight, native Qt6 desktop toolbox focused on practical engineering utilities. It combines an arbitrary-precision calculator, value and unit converters, an IPv4/CIDR subnet calculator, and CRC/hash functions in one application.
+RhenoCalc is a lightweight native engineering toolbox for developers, embedded engineers, electronics engineers and IT professionals. It combines a scientific calculator, networking tools, electronics utilities, cryptographic functions and various engineering helpers into a single fast desktop application.
 
 The app is optimized for quick utility workflows: it opens directly at the current mouse cursor position, operates via keyboard shortcuts, and closes instantly by pressing `ESC`.
 
@@ -40,9 +40,9 @@ For automated background updates and seamless OS integration, the app can be pur
 - **Network Helper:** Local IPv4/CIDR subnet calculator.
 - **Cryptography & Integrity:** Fast CRC (CRC-8/16/32) and cryptographic hash tools (MD5, SHA-1, SHA-256, SHA-512).
 - **Electronics Helpers:** Ohm's law calculators and LED series resistor dimensioning.
-- **Color Picker:** Hex/RGB/HSL conversion utility with a screen pipette.
-- **Finance Utilities:** Calculators for interest and loan payments.
-- **UI & Shortcuts:** Dark and Light themes with customizable keyboard shortcuts.
+- **Color Converter:** Hex/RGB/HSL conversion utility with a screen pipette.
+- **Finance Utilities:** Calculators for compound interest and loan payments.
+- **UI & Shortcuts:** Dark and Light themes with keyboard shortcuts.
 
 ## Requirements
 
