@@ -101,14 +101,15 @@ void BaseConverterPage::setupUI() {
         int flatPos = 63 - i; // 0=bit63, 63=bit0
         int row = flatPos / 16;
         int col = flatPos % 16;
-        bitGrid->addWidget(bb, row * 2, col); // *2 for index labels
+        bitGrid->addWidget(bb, row * 2 + 1, col); // *2 for index labels
 
-        // Bit index label below button
+        // Bit index label above button
         auto* idxLbl = new QLabel(QString::number(i), bitArea);
+        m_bitLabels.push_back(idxLbl);
         idxLbl->setAlignment(Qt::AlignCenter);
         idxLbl->setStyleSheet("font-size:11px; margin-top:-2px;");
         idxLbl->setFixedWidth(14);
-        bitGrid->addWidget(idxLbl, row * 2 + 1, col);
+        bitGrid->addWidget(idxLbl, row * 2, col);
     }
 
     regLayout->addWidget(bitArea);
@@ -122,6 +123,7 @@ void BaseConverterPage::setupUI() {
         auto* label = new QLabel(QString("B%1").arg(i), this);
         label->setAlignment(Qt::AlignCenter);
         label->setStyleSheet("font-size:11px;");
+        m_byteTitles[i] = label;
         byteGrid->addWidget(label, 0, col);
 
         auto* bl = new QLabel("00", this);
@@ -187,12 +189,18 @@ void BaseConverterPage::onWordWidthChanged(int index) {
     for (int i = 0; i < 64; ++i) {
         int bitIdx = m_bitBtns[63 - i]->bitIndex(); // m_bitBtns[0] = bit63
         bool visible = (bitIdx < m_wordBits);
+        m_bitLabels[63 - i]->setVisible(visible || (i<16)); // Show always at least 16 bitLabels
         m_bitBtns[63 - i]->setVisible(visible);
-        // Also hide its index label (it's at row*2+1 in grid)
     }
     // Show/hide byte labels
     int numBytes = m_wordBits / 8;
     for (int i = 0; i < 8; ++i) {
+        if (i < numBytes) {
+            m_byteTitles[i]->setText(QString("B%1").arg(i));
+        } else {
+            m_byteTitles[i]->setText("");
+        }
+
         m_byteLabels[i]->setVisible(i < numBytes);
     }
 

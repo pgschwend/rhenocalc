@@ -4,7 +4,8 @@ set -euo pipefail
 APP_NAME="${APP_NAME:-RhenoCalc}"
 BUILD_TYPE="${BUILD_TYPE:-Release}"
 SOURCE_DIR="${SOURCE_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-BUILD_DIR="${BUILD_DIR:-${SOURCE_DIR}/cmake-build-${BUILD_TYPE,,}}"
+BUILD_TYPE_LOWER=$(echo "$BUILD_TYPE" | tr '[:upper:]' '[:lower:]')
+BUILD_DIR="${BUILD_DIR:-${SOURCE_DIR}/cmake-build-${BUILD_TYPE_LOWER}}"
 DIST_ROOT="${DIST_ROOT:-${SOURCE_DIR}/dist/macos}"
 
 # Extract version from info.h (e.g. "V0.1.2" → "0.1.2")
@@ -19,7 +20,7 @@ if [[ -z "${CMAKE_PREFIX_PATH:-}" && -f "${BUILD_DIR}/CMakeCache.txt" ]]; then
   CMAKE_PREFIX_PATH=$(grep -oE 'CMAKE_PREFIX_PATH:PATH=.*' "${BUILD_DIR}/CMakeCache.txt" | cut -d= -f2 || true)
 fi
 QT_DIR="${CMAKE_PREFIX_PATH:-/usr/local/opt/qt}"
-MACDEPLOYQT="${QT_DIR}/bin/macdeployqt"
+MACDEPLOYQT="/Users/patrick/Qt/6.9.3/macos/bin/macdeployqt"
 
 run() {
   echo "> $*"

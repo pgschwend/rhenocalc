@@ -42,9 +42,11 @@ private:
     QLabel*    m_wLabel;
     QLabel*    m_fieldLabels[4];
 
+    QLabel*    m_byteTitles[8];
     QLabel*    m_byteLabels[8];
     QLabel*    m_bitIndexLabels[32];
     std::vector<BitButton*> m_bitBtns;
+    std::vector<QLabel*> m_bitLabels;
 
     QLabel*    m_signedLabel;
     QLabel*    m_unsignedLabel;

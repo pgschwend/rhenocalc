@@ -1,5 +1,7 @@
 # Execute with following command:
 # powershell -ExecutionPolicy Bypass -File D:\32_QT\rhenocalc\scripts\deploy_windows.ps1 -VerboseProbe
+# Or with this command if cmake was not found:
+# powershell -ExecutionPolicy Bypass -File .\deploy_windows.ps1 -CMakeExe "C:\Program Files\JetBrains\CLion 2026.2.0.1\bin\cmake\win\x64\bin\cmake.exe" -QtBinDir "C:\Qt\6.9.3\mingw_64\bin" -VerboseProb
 
 param(
     [string]$BuildType = "Release",

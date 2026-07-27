@@ -25,6 +25,10 @@
 #include <QLabel>
 #include <QTimer>
 
+#include <QGuiApplication>
+#include <QScreen>
+#include <QCursor>
+
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -38,6 +42,7 @@ MainWindow::MainWindow(QWidget* parent)
     applyTheme(m_isDark);
     setWindowTitle("RhenoCalc");
     restoreWindowGeometry();
+    moveToMousePosition();
     // Apply after restoreState/restoreGeometry so restored state does not override the hint.
     applyAlwaysOnTop(m_alwaysOnTop, false);
 
@@ -138,6 +143,27 @@ void MainWindow::restoreWindowGeometry() {
         restoreState(settings.value("windowState").toByteArray());
     } else {
         adjustSize();
+    }
+}
+
+void MainWindow::moveToMousePosition() {
+    QPoint mousePos = QCursor::pos();
+
+    QScreen *currentScreen = QGuiApplication::screenAt(mousePos);
+
+    // If no current screen is detected (eg. VM environment), no movement to mouse position
+    if (currentScreen) {
+        int x = mousePos.x() - (this->width() / 2);
+        int y = mousePos.y() - (this->height() / 2);
+
+        // Keep the window inside the visible screen bounds (so it doesn't clip out)
+        QRect screenGeometry = currentScreen->geometry();
+        if (x < screenGeometry.left()) x = screenGeometry.left();
+        if (y < screenGeometry.top()) y = screenGeometry.top();
+        if (x + this->width() > screenGeometry.right()) x = screenGeometry.right() - this->width();
+        if (y + this->height() > screenGeometry.bottom()) y = screenGeometry.bottom() - this->height();
+
+        this->move(x, y);
     }
 }
 

@@ -1,4 +1,4 @@
 #pragma once
 
-#define APP_VERSION_STRING "V0.2.5"
+#define APP_VERSION_STRING "V" APP_VERSION_CMAKE_STRING
 
