@@ -40,6 +40,8 @@ private:
     void saveWindowGeometry();
     void restoreWindowGeometry();
     void moveToMousePosition();
+    void centerOnMouseScreen();
+    void setWindowPosition();
 
     QTabWidget*        m_tabWidget = nullptr;
     CalculatorPage*    m_calcPage = nullptr;
@@ -58,6 +60,14 @@ private:
     QLabel*            m_statusLabel = nullptr;
 
     QVector<QPair<QString, QWidget*>> m_extraPages;
+
+    enum class WindowStartPosition {
+        LastPosition,
+        CenterOnScreen,
+        AtMousePosition
+    };
+
+    WindowStartPosition m_windowStartPosition = WindowStartPosition::CenterOnScreen;
 
     bool m_isDark = true;
     bool m_alwaysOnTop = false;

@@ -37,12 +37,15 @@ MainWindow::MainWindow(QWidget* parent)
     QSettings settings("RhenoCalc", "RhenoCalc");
     m_isDark = settings.value("darkTheme", true).toBool();
     m_alwaysOnTop = settings.value("alwaysOnTop", false).toBool();
+    int positionMode = settings.value("windowStartPosition", 1).toInt();
+    m_windowStartPosition = static_cast<WindowStartPosition>(positionMode);
 
     setupUI();
     applyTheme(m_isDark);
     setWindowTitle("RhenoCalc");
     restoreWindowGeometry();
-    moveToMousePosition();
+    setWindowPosition();
+
     // Apply after restoreState/restoreGeometry so restored state does not override the hint.
     applyAlwaysOnTop(m_alwaysOnTop, false);
 
@@ -125,6 +128,7 @@ void MainWindow::saveWindowGeometry() {
     settings.setValue("windowState", saveState());
     settings.setValue("darkTheme", m_isDark);
     settings.setValue("alwaysOnTop", m_alwaysOnTop);
+    settings.setValue("lastWindowPos", pos());
 
     // Save the name of the currently shown dynamic tab
     QWidget* dynWidget = m_tabWidget->widget(2);
@@ -164,6 +168,34 @@ void MainWindow::moveToMousePosition() {
         if (y + this->height() > screenGeometry.bottom()) y = screenGeometry.bottom() - this->height();
 
         this->move(x, y);
+    }
+}
+
+void MainWindow::centerOnMouseScreen() {
+    QPoint mousePos = QCursor::pos();
+    QScreen* currentScreen = QGuiApplication::screenAt(mousePos);
+
+    if (currentScreen) {
+        QRect screenGeometry = currentScreen->availableGeometry();
+        int x = screenGeometry.left() + (screenGeometry.width() - this->width()) / 2;
+        int y = screenGeometry.top() + (screenGeometry.height() - this->height()) / 2;
+        this->move(x, y);
+    }
+}
+
+void MainWindow::setWindowPosition() {
+    switch (m_windowStartPosition) {
+        case WindowStartPosition::LastPosition:
+            // Do nothing - restoreWindowGeometry() has already been executed
+            break;
+
+        case WindowStartPosition::CenterOnScreen:
+            centerOnMouseScreen();
+            break;
+
+        case WindowStartPosition::AtMousePosition:
+            moveToMousePosition();
+            break;
     }
 }
 
