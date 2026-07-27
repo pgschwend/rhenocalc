@@ -5,7 +5,7 @@ RhenoCalc is a lightweight native engineering toolbox for developers, embedded e
 The app is optimized for quick utility workflows: it opens directly at the current mouse cursor position, operates via keyboard shortcuts, and closes instantly by pressing `ESC`.
 
 [![GitHub Releases](https://img.shields.io/github/v/release/pgschwend/rhenocalc?label=Latest%20Release)](https://github.com/pgschwend/rhenocalc/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 ---
 
