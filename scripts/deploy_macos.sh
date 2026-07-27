@@ -20,7 +20,7 @@ if [[ -z "${CMAKE_PREFIX_PATH:-}" && -f "${BUILD_DIR}/CMakeCache.txt" ]]; then
   CMAKE_PREFIX_PATH=$(grep -oE 'CMAKE_PREFIX_PATH:PATH=.*' "${BUILD_DIR}/CMakeCache.txt" | cut -d= -f2 || true)
 fi
 QT_DIR="${CMAKE_PREFIX_PATH:-/usr/local/opt/qt}"
-MACDEPLOYQT="${QT_DIR}/bin/macdeployqt"
+MACDEPLOYQT="/Users/patrick/Qt/6.9.3/macos/bin/macdeployqt"
 
 run() {
   echo "> $*"
