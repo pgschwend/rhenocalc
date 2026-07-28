@@ -50,43 +50,55 @@ MainWindow::MainWindow(QWidget* parent)
     // Apply after restoreState/restoreGeometry so restored state does not override the hint.
     applyAlwaysOnTop(m_alwaysOnTop, false);
 
-    // Tab navigation with Ctrl+Left / Ctrl+Right
-    // Virtual order: Calc(0), Base(1), then all extra pages on the dynamic tab (index 2)
-    auto currentVirtual = std::make_shared<int>(0);
-
-    auto navigateTab = [this, currentVirtual](int direction) {
-        const int totalPages = 2 + static_cast<int>(m_extraPages.size()); // NOLINT(bugprone-narrowing-conversions)
-        *currentVirtual = (*currentVirtual + direction + totalPages) % totalPages;
-
-        if (*currentVirtual < 2) {
-            m_tabWidget->setCurrentIndex(*currentVirtual);
-        } else {
-            int extraIdx = *currentVirtual - 2;
-            switchDynamicTab(m_extraPages[extraIdx].second, m_extraPages[extraIdx].first);
-        }
+    // Tab navigation with Ctrl+Left / Ctrl+Right - only cycles through visible tabs (0, 1, 2)
+    auto* prevTab = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Left), this);
+    connect(prevTab, &QShortcut::activated, this, [this]() {
+        int current = m_tabWidget->currentIndex();
+        int next = (current - 1 + 3) % 3; // Cycle through 0, 1, 2
+        m_tabWidget->setCurrentIndex(next);
         m_calcPage->setFocus();
-    };
+    });
 
-    // Keep currentVirtual in sync when user clicks tabs manually
-    connect(m_tabWidget, &QTabWidget::currentChanged, this, [this, currentVirtual](int index) {
-        if (index < 2) {
-            *currentVirtual = index;
-        } else if (index == 2) {
-            // Find which extra page is currently shown
-            QWidget* current = m_tabWidget->widget(2);
-            for (int i = 0; i < m_extraPages.size(); ++i) {
-                if (m_extraPages[i].second == current) {
-                    *currentVirtual = 2 + i;
-                    break;
-                }
+    auto* nextTab = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Right), this);
+    connect(nextTab, &QShortcut::activated, this, [this]() {
+        int current = m_tabWidget->currentIndex();
+        int next = (current + 1) % 3; // Cycle through 0, 1, 2
+        m_tabWidget->setCurrentIndex(next);
+        m_calcPage->setFocus();
+    });
+
+    // Page list navigation with Ctrl+Up / Ctrl+Down - opens the menu
+    auto* openPageListDown = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Down), this);
+    connect(openPageListDown, &QShortcut::activated, this, [this]() {
+        if (!m_moreMenu->isVisible()) {
+            // Open menu below the "More" tab
+            QRect tabRect = m_tabWidget->tabBar()->tabRect(3);
+            QPoint pos = m_tabWidget->tabBar()->mapToGlobal(tabRect.bottomLeft());
+            m_moreMenu->popup(pos);
+            // Set focus to menu so keyboard navigation works
+            m_moreMenu->setFocus();
+            // Select first item
+            if (!m_moreMenu->actions().isEmpty()) {
+                m_moreMenu->setActiveAction(m_moreMenu->actions().first());
             }
         }
     });
 
-    auto* prevTab = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Left), this);
-    connect(prevTab, &QShortcut::activated, this, [navigateTab]() { navigateTab(-1); });
-    auto* nextTab = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Right), this);
-    connect(nextTab, &QShortcut::activated, this, [navigateTab]() { navigateTab(1); });
+    auto* openPageListUp = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Up), this);
+    connect(openPageListUp, &QShortcut::activated, this, [this]() {
+        if (!m_moreMenu->isVisible()) {
+            // Open menu below the "More" tab
+            QRect tabRect = m_tabWidget->tabBar()->tabRect(3);
+            QPoint pos = m_tabWidget->tabBar()->mapToGlobal(tabRect.bottomLeft());
+            m_moreMenu->popup(pos);
+            // Set focus to menu so keyboard navigation works
+            m_moreMenu->setFocus();
+            // Select last item when opening with Up
+            if (!m_moreMenu->actions().isEmpty()) {
+                m_moreMenu->setActiveAction(m_moreMenu->actions().last());
+            }
+        }
+    });
 
     // Return focus to the calculator when clicking on empty area
     connect(qApp, &QApplication::focusChanged, this, [this](QWidget* /*old*/, QWidget* now) {
