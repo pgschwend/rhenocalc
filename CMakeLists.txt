@@ -47,6 +47,7 @@ set(SOURCES
         src/pages/financepage.h src/pages/financepage.cpp
         src/pages/floatpage.h src/pages/floatpage.cpp
         src/pages/electronicspage.h src/pages/electronicspage.cpp
+        src/pages/settingspage.h src/pages/settingspage.cpp
         src/core/calc/operations.h src/core/calc/operations.cpp
         src/core/calc/calcparser.h src/core/calc/calcparser.cpp
         src/core/calculator.h src/core/calculator.cpp

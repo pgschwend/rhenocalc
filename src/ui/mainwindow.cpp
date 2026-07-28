@@ -8,6 +8,7 @@
 #include "financepage.h"
 #include "floatpage.h"
 #include "electronicspage.h"
+#include "settingspage.h"
 #include "themecolors.h"
 #include "info.h"
 #include "core/updater.h"
@@ -92,7 +93,7 @@ MainWindow::MainWindow(QWidget* parent)
     // If focus goes to the tab bar or to no widget, return focus to calculator page
     if (isActiveWindow()) {
         if (!now || qobject_cast<QTabBar*>(now) ||
-            now == m_tabWidget || now == m_onTopBtn || now == m_themeBtn) {
+            now == m_tabWidget || now == m_onTopBtn) {
             QTimer::singleShot(0, this, [this]() {
                 if (m_tabWidget->currentIndex() == 0) {
                     m_calcPage->setFocus();
@@ -214,6 +215,7 @@ void MainWindow::setupUI() {
     m_financePage = new FinancePage(this);
     m_floatPage = new FloatPage(this);
     m_electronicsPage = new ElectronicsPage(this);
+    m_settingsPage = new SettingsPage(this, this);
 
     // Hide pages not initially in the tab widget so they don't appear as floating children
     m_networkPage->hide();
@@ -222,6 +224,7 @@ void MainWindow::setupUI() {
     m_financePage->hide();
     m_floatPage->hide();
     m_electronicsPage->hide();
+    m_settingsPage->hide();
 
     m_tabWidget->addTab(m_calcPage, "Calc");       // index 0 - fixed
     m_tabWidget->addTab(m_basePage, "Base");       // index 1 - fixed
@@ -240,6 +243,7 @@ void MainWindow::setupUI() {
         {"Color",    m_colorPage},
         {"IP-Address",  m_networkPage},
         {"Electronics", m_electronicsPage},
+        {"Settings", m_settingsPage},
     };
 
     // Restore last dynamic tab from settings
@@ -298,23 +302,24 @@ void MainWindow::setupUI() {
         m_calcPage->setFocus();
     });
 
-
-    m_themeBtn = new QPushButton("☀", this); // NOLINT(cppcoreguidelines-owning-memory)
-    m_themeBtn->setFixedSize(32, 26);
-    m_themeBtn->setCursor(Qt::PointingHandCursor);
-    m_themeBtn->setFocusPolicy(Qt::NoFocus);
-    connect(m_themeBtn, &QPushButton::clicked, this, [this]() {
-        m_isDark = !m_isDark;
-        applyTheme(m_isDark);
-        m_calcPage->setFocus();
-    });
     auto* corner = new QWidget(this);
     auto* cornerLayout = new QHBoxLayout(corner);
     cornerLayout->setContentsMargins(0, 0, 4, 0);
     cornerLayout->setSpacing(4);
     cornerLayout->addWidget(m_onTopBtn);
-    cornerLayout->addWidget(m_themeBtn);
     m_tabWidget->setCornerWidget(corner, Qt::TopRightCorner);
+
+    // Connect SettingsPage signals
+    connect(m_settingsPage, &SettingsPage::themeChanged, this, [this](bool dark) {
+        m_isDark = dark;
+        applyTheme(dark);
+    });
+    connect(m_settingsPage, &SettingsPage::alwaysOnTopChanged, this, [this](bool enabled) {
+        applyAlwaysOnTop(enabled, true);
+    });
+    connect(m_settingsPage, &SettingsPage::windowPositionChanged, this, [this](int mode) {
+        m_windowStartPosition = static_cast<WindowStartPosition>(mode);
+    });
 
     setCentralWidget(m_tabWidget);
 
@@ -351,16 +356,12 @@ void MainWindow::applyTheme(bool dark) {
     m_financePage->applyTheme(dark);
     m_floatPage->applyTheme(dark);
     m_electronicsPage->applyTheme(dark);
+    m_settingsPage->applyTheme(dark);
 
     // Status Bar
     statusBar()->setStyleSheet(Rheno::UI::statusBarStyle(dark));
     updateStatusBar(); // Refresh link color for current theme
 
-    // Update theme button label
-    if (m_themeBtn) {
-        m_themeBtn->setText(dark ? "☀" : "🌙");
-        m_themeBtn->setStyleSheet(Rheno::UI::themeToggleButtonStyle(dark));
-    }
 
     updateOnTopButton();
 }

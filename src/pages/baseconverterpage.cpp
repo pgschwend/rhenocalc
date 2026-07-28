@@ -59,7 +59,7 @@ void BaseConverterPage::setupUI() {
     inputGrid->setSpacing(6);
 
     struct { const char* label; QLineEdit** edit; const char* placeholder; } fields[] = {
-        {"HEX", &m_hexEdit, "e.g. DEADBEEF"},
+        {"HEX", &m_hexEdit, "e.g. ABCDEF"},
         {"DEC", &m_decEdit, "e.g. 3735928559"},
         {"BIN", &m_binEdit, "e.g. 1101..."},
         {"OCT", &m_octEdit, "e.g. 33653337357"},

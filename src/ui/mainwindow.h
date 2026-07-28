@@ -16,6 +16,7 @@ class FinancePage;
 class FloatPage;
 class ElectronicsPage;
 class NetToolsPage;
+class SettingsPage;
 class QLabel;
 
 
@@ -54,8 +55,8 @@ private:
     FloatPage*         m_floatPage = nullptr;
     ElectronicsPage*   m_electronicsPage = nullptr;
     NetToolsPage*      m_netToolsPage = nullptr;
+    SettingsPage*      m_settingsPage = nullptr;
     QPushButton*       m_onTopBtn = nullptr;
-    QPushButton*       m_themeBtn = nullptr;
     QMenu*             m_moreMenu = nullptr;
     QLabel*            m_statusLabel = nullptr;
 
