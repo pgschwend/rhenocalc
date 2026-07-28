@@ -34,6 +34,7 @@ protected:
 private:
     void setupUI();
     void applyTheme(bool dark);
+    void applyTitleBarTheme(bool dark);
     void applyAlwaysOnTop(bool enabled, bool persist);
     void updateOnTopButton();
     void updateStatusBar(const QString& updateVersion = QString(), const QString& releaseUrl = QString());

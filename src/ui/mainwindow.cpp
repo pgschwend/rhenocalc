@@ -29,6 +29,20 @@
 #include <QGuiApplication>
 #include <QScreen>
 #include <QCursor>
+#include <QWindow>
+
+// Platform-specific includes for title bar theming
+#if defined(Q_OS_WIN)
+#include <windows.h>
+#include <dwmapi.h>
+#elif defined(__APPLE__) || defined(Q_OS_MACOS)
+#include "macoshelper.h"
+#elif defined(Q_OS_LINUX)
+#include <QWindow>
+#include <qpa/qplatformnativeinterface.h>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#endif
 
 
 MainWindow::MainWindow(QWidget* parent)
@@ -132,6 +146,14 @@ void MainWindow::closeEvent(QCloseEvent* event) {
 
 void MainWindow::showEvent(QShowEvent* event) {
     QMainWindow::showEvent(event);
+    
+    // Apply title bar theme after window is shown (native handle is ready)
+    static bool firstShow = true;
+    if (firstShow) {
+        applyTitleBarTheme(m_isDark);
+        firstShow = false;
+    }
+    
     m_calcPage->setFocus();
 }
 
@@ -384,8 +406,49 @@ void MainWindow::applyTheme(bool dark) {
     statusBar()->setStyleSheet(Rheno::UI::statusBarStyle(dark));
     updateStatusBar(); // Refresh link color for current theme
 
+    // Apply title bar theme
+    applyTitleBarTheme(dark);
 
     updateOnTopButton();
+}
+
+void MainWindow::applyTitleBarTheme(bool dark) {
+#if defined(Q_OS_WIN)
+    // Windows 10 (Build 19041+) and Windows 11: Set dark title bar
+    if (QWindow* window = windowHandle()) {
+        HWND hwnd = reinterpret_cast<HWND>(window->winId());
+        BOOL value = dark ? TRUE : FALSE;
+        // DWMWA_USE_IMMERSIVE_DARK_MODE = 20 (Windows 10 20H1+)
+        // DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19 (older Windows 10)
+        DwmSetWindowAttribute(hwnd, 20, &value, sizeof(value));
+    }
+#elif defined(__APPLE__) || defined(Q_OS_MACOS)
+    // macOS: Use Objective-C++ helper to set native appearance
+    if (QWindow* window = windowHandle()) {
+        MacOSHelper::setWindowAppearance(window, dark);
+    }
+#elif defined(Q_OS_LINUX)
+    // Linux/X11: Set _GTK_THEME_VARIANT property for dark/light title bar
+    // This works with GTK-based window managers (GNOME, etc.)
+    if (QWindow* window = windowHandle()) {
+        QPlatformNativeInterface* native = QGuiApplication::platformNativeInterface();
+        if (native) {
+            Display* display = reinterpret_cast<Display*>(
+                native->nativeResourceForWindow("display", window));
+            Window x11Window = static_cast<Window>(window->winId());
+            
+            if (display && x11Window) {
+                Atom atom = XInternAtom(display, "_GTK_THEME_VARIANT", False);
+                const char* variant = dark ? "dark" : "light";
+                XChangeProperty(display, x11Window, atom, XA_STRING, 8, 
+                               PropModeReplace,
+                               reinterpret_cast<const unsigned char*>(variant), 
+                               strlen(variant));
+                XFlush(display);
+            }
+        }
+    }
+#endif
 }
 
 void MainWindow::applyAlwaysOnTop(bool enabled, bool persist) {

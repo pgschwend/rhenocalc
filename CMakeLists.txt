@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 # Set up project name and version
-project(RhenoCalc VERSION 0.2.5 LANGUAGES CXX)
+project(RhenoCalc VERSION 0.2.7 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_AUTOMOC ON)
@@ -27,7 +27,12 @@ elseif(APPLE)
     list(APPEND CMAKE_PREFIX_PATH "/Users/patrick/Qt/6.9.3/macos/")
 endif()
 
-find_package(Qt6 COMPONENTS Core Gui Widgets Network REQUIRED)
+# Find Qt packages - add X11Extras for Linux
+if(UNIX AND NOT APPLE)
+    find_package(Qt6 COMPONENTS Core Gui Widgets Network REQUIRED)
+else()
+    find_package(Qt6 COMPONENTS Core Gui Widgets Network REQUIRED)
+endif()
 
 # List of source files excluding the info.h.in template
 set(SOURCES
@@ -62,6 +67,11 @@ set(SOURCES
         src/core/updater.h src/core/updater.cpp
         src/info.h
 )
+
+# Add platform-specific source files for title bar theming
+if(APPLE)
+    list(APPEND SOURCES src/ui/macoshelper.h src/ui/macoshelper.mm)
+endif()
 
 # Generate info.h into a namespaced subdirectory inside the build directory
 configure_file(
@@ -137,6 +147,17 @@ target_link_libraries(RhenoCalc
         Qt::Network
         Boost::multiprecision
 )
+
+# Link platform-specific libraries for title bar theming
+if(WIN32)
+    target_link_libraries(RhenoCalc dwmapi)
+elseif(APPLE)
+    target_link_libraries(RhenoCalc "-framework AppKit")
+elseif(UNIX)
+    find_package(X11 REQUIRED)
+    target_include_directories(RhenoCalc PRIVATE ${X11_INCLUDE_DIR})
+    target_link_libraries(RhenoCalc ${X11_LIBRARIES})
+endif()
 
 # Link platform-specific networking libraries for Windows
 if(WIN32)
