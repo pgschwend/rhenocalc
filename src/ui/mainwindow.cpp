@@ -282,13 +282,23 @@ void MainWindow::setupUI() {
         });
     }
 
+    // Track when menu is hidden to prevent immediate reopening
+    connect(m_moreMenu, &QMenu::aboutToHide, this, [this]() {
+        m_menuJustClosed = true;
+        QTimer::singleShot(200, this, [this]() {
+            m_menuJustClosed = false;
+        });
+    });
+
     // Intercept click on the "More" tab (index 3): show menu instead of switching
     connect(m_tabWidget, &QTabWidget::tabBarClicked, this, [this, previousTab](int index) {
         if (index == 3) {
-            // Show menu below the "More" tab
-            QRect tabRect = m_tabWidget->tabBar()->tabRect(3);
-            QPoint pos = m_tabWidget->tabBar()->mapToGlobal(tabRect.bottomLeft());
-            m_moreMenu->popup(pos);
+            if (!m_menuJustClosed) {
+                // Show menu below the "More" tab
+                QRect tabRect = m_tabWidget->tabBar()->tabRect(3);
+                QPoint pos = m_tabWidget->tabBar()->mapToGlobal(tabRect.bottomLeft());
+                m_moreMenu->popup(pos);
+            }
         } else {
             *previousTab = index;
         }

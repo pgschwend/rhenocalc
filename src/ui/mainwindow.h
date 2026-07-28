@@ -72,6 +72,7 @@ private:
 
     bool m_isDark = true;
     bool m_alwaysOnTop = false;
+    bool m_menuJustClosed = false;
     QString m_updateVersion;
     QString m_updateUrl;
 };
