@@ -128,13 +128,6 @@ MainWindow::MainWindow(QWidget* parent)
         }
     }
 });
-
-    // Auto-update check
-    auto* updater = new Rheno::Core::Updater(this);
-    connect(updater, &Rheno::Core::Updater::updateAvailable, this, [this](const QString& version, const QString& releaseUrl) {
-        updateStatusBar(version, releaseUrl);
-    });
-    QTimer::singleShot(1500, updater, &Rheno::Core::Updater::checkForUpdate);
 }
 
 MainWindow::~MainWindow() = default;
@@ -373,7 +366,18 @@ void MainWindow::setupUI() {
     m_statusLabel->setTextFormat(Qt::RichText);
     m_statusLabel->setContentsMargins(6, 0, 0, 0);
     statusBar()->addWidget(m_statusLabel, 1);
-    updateStatusBar();
+
+    QString statusText = QString(
+        "<table width=\"100%\" style=\"border-collapse: collapse;\">"
+        "  <tr>"
+        "    <td style=\"text-align: left; width: 33%;\"> RhenoCalc  |  Embedded Engineering Toolbox</td>"
+        "    <td style=\"text-align: right; width: 33%;\"> | %1</td>"
+        "  </tr>"
+        "</table>"
+    )
+    .arg(APP_VERSION_STRING);
+
+    m_statusLabel->setText(statusText);
 }
 
 void MainWindow::applyTheme(bool dark) {
@@ -404,7 +408,6 @@ void MainWindow::applyTheme(bool dark) {
 
     // Status Bar
     statusBar()->setStyleSheet(Rheno::UI::statusBarStyle(dark));
-    updateStatusBar(); // Refresh link color for current theme
 
     // Apply title bar theme
     applyTitleBarTheme(dark);
@@ -517,39 +520,4 @@ void MainWindow::switchDynamicTab(QWidget* page, const QString& title) {
     m_tabWidget->setCurrentIndex(2);
 }
 
-void MainWindow::updateStatusBar(const QString& updateVersion, const QString& releaseUrl) {
-    if (!m_statusLabel) return;
 
-    // Store values if provided (for theme refresh)
-    if (!updateVersion.isEmpty()) {
-        m_updateVersion = updateVersion;
-        m_updateUrl = releaseUrl;
-    }
-
-    QString linkColor = m_isDark ? "#6eb5ff" : "#0066cc";
-    QString statusText;
-
-    if (m_updateVersion.isEmpty()) {
-        // Normal status - no update available
-        statusText = QString(
-        "<table width=\"100%\" style=\"border-collapse: collapse;\">"
-            "  <tr>"
-            "    <td style=\"text-align: left; width: 33%;\"> RhenoCalc  |  Embedded Engineering Toolbox</td>"
-            "    <td style=\"text-align: right; width: 33%;\"> | %1</td>"
-            "  </tr>"
-            "</table>"
-            )
-            .arg(APP_VERSION_STRING);
-    } else {
-        // Update available - show clickable link
-        statusText = QString(
-            "<table width=\"100%\" style=\"border-collapse: collapse;\">"
-            "  <tr>"
-            "    <td style=\"text-align: left; width: 33%;\"> RhenoCalc  |  <a href=\"%2\" style=\"color:%3;\">Update %1 available</a></td>"
-            "    <td style=\"text-align: right; width: 33%;\"> | %4</td>"
-            "  </tr>"
-            "</table>"
-        ).arg(m_updateVersion, m_updateUrl, linkColor, APP_VERSION_STRING);
-    }
-    m_statusLabel->setText(statusText);
-}

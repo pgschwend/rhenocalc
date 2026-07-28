@@ -1,6 +1,7 @@
 #include "settingspage.h"
 #include "ui/mainwindow.h"
 #include "ui/themecolors.h"
+#include "core/updater.h"
 #include "info.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -8,11 +9,19 @@
 #include <QScrollArea>
 #include <QSettings>
 #include <QSizePolicy>
+#include <QTimer>
 
 SettingsPage::SettingsPage(MainWindow* mainWindow, QWidget* parent)
     : QWidget(parent), m_mainWindow(mainWindow)
 {
     setupUI();
+
+    // Auto-update check
+    auto* updater = new Rheno::Core::Updater(this);
+    connect(updater, &Rheno::Core::Updater::updateAvailable, this, [this](const QString& version, const QString& releaseUrl) {
+        updateStatusBar(version, releaseUrl);
+    });
+    QTimer::singleShot(1500, updater, &Rheno::Core::Updater::checkForUpdate);
 }
 
 void SettingsPage::setupUI() {
@@ -113,24 +122,24 @@ void SettingsPage::setupUI() {
     // ── About ────────────────────────────────────────────────────────────────
     m_aboutGroup = new QGroupBox("About", this);
     m_aboutGroup->setStyleSheet(Rheno::UI::baseGroupStyle(true));
-    auto* aboutLayout = new QVBoxLayout(m_aboutGroup);
-    aboutLayout->setSpacing(8);
+    m_aboutLayout = new QVBoxLayout(m_aboutGroup);
+    m_aboutLayout->setSpacing(8);
 
     auto* appName = new QLabel("<b>RhenoCalc</b>", this);
     appName->setStyleSheet("font-size:14px;");
-    aboutLayout->addWidget(appName);
+    m_aboutLayout->addWidget(appName);
 
     m_versionLabel = new QLabel(QString("Version: %1").arg(APP_VERSION_STRING), this);
     m_versionLabel->setStyleSheet("font-size:12px;");
-    aboutLayout->addWidget(m_versionLabel);
+    m_aboutLayout->addWidget(m_versionLabel);
 
     auto* descLabel = new QLabel("Embedded Engineering Toolbox", this);
     descLabel->setStyleSheet("font-size:12px; color: #888;");
-    aboutLayout->addWidget(descLabel);
+    m_aboutLayout->addWidget(descLabel);
 
     auto* copyrightLabel = new QLabel("© 2026 Rhenosys GmbH", this);
     copyrightLabel->setStyleSheet("font-size:11px; color: #666;");
-    aboutLayout->addWidget(copyrightLabel);
+    m_aboutLayout->addWidget(copyrightLabel);
 
     root->addWidget(m_aboutGroup);
     root->addStretch();
@@ -154,3 +163,30 @@ void SettingsPage::applyTheme(bool dark) {
     }
 }
 
+void SettingsPage::updateStatusBar(const QString& updateVersion, const QString& releaseUrl) {
+
+    // Store values if provided (for theme refresh)
+    if (!updateVersion.isEmpty()) {
+        m_updateVersion = updateVersion;
+        m_updateUrl = releaseUrl;
+    }
+
+    QString linkColor = m_isDark ? "#6eb5ff" : "#0066cc";
+    QString statusText;
+
+    if (!m_updateVersion.isEmpty()) {
+        // Update available - show clickable link
+        m_updateText = QString(
+            "<table width=\"100%\" style=\"border-collapse: collapse;\">"
+            "  <tr>"
+            "    <td style=\"text-align: left; width: 33%;\"><a href=\"%2\" style=\"color:%3;\">Update %1 available</a></td>"
+            "    <td style=\"text-align: right; width: 33%;\"> | %4</td>"
+            "  </tr>"
+            "</table>"
+        ).arg(m_updateVersion, m_updateUrl, linkColor, APP_VERSION_STRING);
+
+        m_versionUpdateAvailable = new QLabel(m_updateText, this);
+        m_versionUpdateAvailable->setStyleSheet("font-size:12px;");
+        m_aboutLayout->addWidget(m_versionUpdateAvailable);
+    }
+}
