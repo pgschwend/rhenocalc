@@ -109,6 +109,14 @@ MainWindow::MainWindow(QWidget* parent)
         }
     });
 
+    // Close app with ESC key (only if setting is enabled)
+    auto* closeShortcut = new QShortcut(QKeySequence(Qt::Key_Escape), this);
+    connect(closeShortcut, &QShortcut::activated, this, [this]() {
+        if (m_closeWithEsc) {
+            close();
+        }
+    });
+
     // Return focus to the calculator when clicking on empty area
     connect(qApp, &QApplication::focusChanged, this, [this](QWidget* /*old*/, QWidget* now) {
     // If focus goes to the tab bar or to no widget, return focus to calculator page
@@ -170,6 +178,7 @@ void MainWindow::restoreToolSettings() {
 
     m_isDark = settings.value("darkTheme", true).toBool();
     m_alwaysOnTop = settings.value("alwaysOnTop", false).toBool();
+    m_closeWithEsc = settings.value("closeWithEscCheck", false).toBool();
 
     int positionMode = settings.value("windowStartPosition", 1).toInt();
     m_windowStartPosition = static_cast<WindowStartPosition>(positionMode);
@@ -289,8 +298,8 @@ void MainWindow::setupUI() {
     };
 
     // Restore last dynamic tab from settings
+    QSettings settings("RhenoCalc", "RhenoCalc");
     {
-        QSettings settings("RhenoCalc", "RhenoCalc");
         QString lastDyn = settings.value("dynamicTab", "Unit").toString();
         for (const auto& [name, page] : m_extraPages) {
             if (name == lastDyn && page != m_unitPage) {
@@ -301,14 +310,14 @@ void MainWindow::setupUI() {
         }
     }
 
-    auto previousTab = std::make_shared<int>(0);
+    m_previousTab = settings.value("currentTabIndex", 0).toInt();
 
     // Build the "More" popup menu
     m_moreMenu = new QMenu(this);
     for (const auto& [name, page] : m_extraPages) {
-        m_moreMenu->addAction(name, this, [this, page, name, previousTab]() {
+        m_moreMenu->addAction(name, this, [this, page, name]() {
             switchDynamicTab(page, name);
-            *previousTab = 2;
+            m_previousTab = 2;
         });
     }
 
@@ -321,7 +330,7 @@ void MainWindow::setupUI() {
     });
 
     // Intercept click on the "More" tab (index 3): show menu instead of switching
-    connect(m_tabWidget, &QTabWidget::tabBarClicked, this, [this, previousTab](int index) {
+    connect(m_tabWidget, &QTabWidget::tabBarClicked, this, [this](int index) {
         if (index == 3) {
             if (!m_menuJustClosed) {
                 // Show menu below the "More" tab
@@ -330,14 +339,14 @@ void MainWindow::setupUI() {
                 m_moreMenu->popup(pos);
             }
         } else {
-            *previousTab = index;
+            m_previousTab = index;
         }
     });
 
     // Prevent the "More" tab from actually being selected – return to previous tab
-    connect(m_tabWidget, &QTabWidget::currentChanged, this, [this, previousTab](int index) {
+    connect(m_tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
         if (index == 3) {
-            m_tabWidget->setCurrentIndex(*previousTab);
+            m_tabWidget->setCurrentIndex(m_previousTab);
         }
     });
 
@@ -366,9 +375,11 @@ void MainWindow::setupUI() {
         m_isDark = dark;
         applyTheme(dark);
     });
+
     connect(m_settingsPage, &SettingsPage::closeWithEscChanged, this, [this](bool enabled) {
         m_closeWithEsc = enabled;
     });
+
     connect(m_settingsPage, &SettingsPage::windowPositionChanged, this, [this](int mode) {
         m_windowStartPosition = static_cast<WindowStartPosition>(mode);
     });

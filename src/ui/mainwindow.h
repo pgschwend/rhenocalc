@@ -77,5 +77,6 @@ private:
     bool m_closeWithEsc = false;
     QString m_updateVersion;
     QString m_updateUrl;
+    int m_previousTab;
 };
 
