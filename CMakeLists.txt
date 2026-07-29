@@ -1,12 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
 
 # Set up project name and version
-project(RhenoCalc VERSION 0.2.1 LANGUAGES CXX)
+project(RhenoCalc VERSION 0.2.7 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 # -- Boost.Multiprecision via FetchContent -------------------------------------
 include(FetchContent)
@@ -18,21 +15,12 @@ FetchContent_Declare(
 set(BOOST_INCLUDE_LIBRARIES multiprecision math)
 FetchContent_MakeAvailable(Boost)
 
-# Set Qt installation prefix path depending on the platform
-if(WIN32)
-    list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.9.3/mingw_64")
-elseif(UNIX AND NOT APPLE)
-    list(APPEND CMAKE_PREFIX_PATH "/opt/qt/6.9.3/gcc_64")
-elseif(APPLE)
-    list(APPEND CMAKE_PREFIX_PATH "/Users/patrick/Qt/6.9.3/macos/")
-endif()
+# Enable Qt Auto-Tools AFTER Boost is loaded (prevents warnings from Boost targets)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
-# Find Qt packages - add X11Extras for Linux
-if(UNIX AND NOT APPLE)
-    find_package(Qt6 COMPONENTS Core Gui Widgets Network REQUIRED)
-else()
-    find_package(Qt6 COMPONENTS Core Gui Widgets Network REQUIRED)
-endif()
+find_package(Qt6 COMPONENTS Core Gui Widgets Network REQUIRED)
 
 # List of source files excluding the info.h.in template
 set(SOURCES

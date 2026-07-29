@@ -25,6 +25,7 @@
 #include <QIcon>
 #include <QLabel>
 #include <QTimer>
+#include <QKeyEvent>
 
 #include <QGuiApplication>
 #include <QScreen>
@@ -109,13 +110,8 @@ MainWindow::MainWindow(QWidget* parent)
         }
     });
 
-    // Close app with ESC key (only if setting is enabled)
-    auto* closeShortcut = new QShortcut(QKeySequence(Qt::Key_Escape), this);
-    connect(closeShortcut, &QShortcut::activated, this, [this]() {
-        if (m_closeWithEsc) {
-            close();
-        }
-    });
+    // Note: ESC key handling moved to keyPressEvent to allow proper event propagation
+    // Calculator page handles ESC internally for AC -> Close workflow
 
     // Return focus to the calculator when clicking on empty area
     connect(qApp, &QApplication::focusChanged, this, [this](QWidget* /*old*/, QWidget* now) {
@@ -151,6 +147,27 @@ void MainWindow::showEvent(QShowEvent* event) {
     }
     
     m_calcPage->setFocus();
+}
+
+void MainWindow::keyPressEvent(QKeyEvent* event) {
+    // Handle ESC key for non-calculator pages
+    if (event->key() == Qt::Key_Escape) {
+        // Calculator page (tab 0) handles ESC itself in its keyPressEvent
+        if (m_tabWidget->currentIndex() == 0) {
+            // Let the event propagate to calculator page
+            QMainWindow::keyPressEvent(event);
+            return;
+        }
+        
+        // On other pages: Close app if setting is enabled
+        if (m_closeWithEsc) {
+            close();
+            event->accept();
+            return;
+        }
+    }
+    
+    QMainWindow::keyPressEvent(event);
 }
 
 void MainWindow::saveToolSettings() {

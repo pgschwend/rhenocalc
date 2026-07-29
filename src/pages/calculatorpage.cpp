@@ -5,6 +5,7 @@
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <QFont>
+#include <QSettings>
 
 CalculatorPage::CalculatorPage(QWidget* parent) : QWidget(parent) {
     setupUI();
@@ -552,16 +553,25 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
     case Qt::Key_Equal:      onEqualsClicked(); return;
 
     // ── Clear ────────────────────────────────────────────────────────────────
-    case Qt::Key_Escape:
-        if (m_engine.isClearState()) {
-            if (QWidget* w = window())
-                w->close();
+    case Qt::Key_Escape: {
+        // First ESC: Clear calculator if not already clear
+        if (!m_engine.isClearState()) {
+            resetCeClearCycle();
+            m_engine.clearAllAndMemory();
+            updateDisplay();
             return;
         }
-        resetCeClearCycle();
-        m_engine.clearAllAndMemory();
-        updateDisplay();
+        // Second ESC (when clear): Close app only if setting is enabled
+        // Check parent MainWindow for closeWithEsc setting
+        if (QWidget* mainWin = window()) {
+            // Read setting from QSettings
+            QSettings settings("RhenoCalc", "RhenoCalc");
+            if (settings.value("closeWithEscCheck", false).toBool()) {
+                mainWin->close();
+            }
+        }
         return;
+    }
     case Qt::Key_Delete:     onClearClicked(); return;
     case Qt::Key_Backspace:  onBackspaceClicked(); return;
 
