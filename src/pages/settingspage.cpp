@@ -84,19 +84,19 @@ void SettingsPage::setupUI() {
     windowLayout->setSpacing(12);
 
     // Always On Top
-    m_alwaysOnTopCheck = new QCheckBox("Always on top", this);
-    m_alwaysOnTopCheck->setStyleSheet("font-size:13px;");
-    bool alwaysOnTopCheck = settings.value("alwaysOnTopCheck", false).toBool();
-    m_alwaysOnTopCheck->setChecked(alwaysOnTopCheck);
+    m_closeWithEscCheck = new QCheckBox("Close with ESC", this);
+    m_closeWithEscCheck->setStyleSheet("font-size:13px;");
+    bool closeWithEscCheck = settings.value("closeWithEscCheck", false).toBool();
+    m_closeWithEscCheck->setChecked(closeWithEscCheck);
 
-    connect(m_alwaysOnTopCheck, &QCheckBox::toggled, this, [this](bool checked) {
-        emit alwaysOnTopChanged(checked);
+    connect(m_closeWithEscCheck, &QCheckBox::toggled, this, [this](bool checked) {
+        emit closeWithEscChanged(checked);
 
         QSettings settings("RhenoCalc", "RhenoCalc");
-        settings.setValue("alwaysOnTop", checked);
+        settings.setValue("closeWithEscCheck", checked);
     });
 
-    windowLayout->addWidget(m_alwaysOnTopCheck, 0, 0, 1, 2);
+    windowLayout->addWidget(m_closeWithEscCheck, 0, 0, 1, 2);
 
     // Restore Tab Index on start
     m_restoreTabIndexCheck = new QCheckBox("Restore Tab Index", this);

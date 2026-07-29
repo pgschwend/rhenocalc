@@ -19,7 +19,7 @@ public:
 
 signals:
     void themeChanged(bool dark);
-    void alwaysOnTopChanged(bool enabled);
+    void closeWithEscChanged(bool enabled);
     void restoreTabIndexChanged(bool enabled);
     void windowPositionChanged(int mode);
 
@@ -28,7 +28,7 @@ private:
 
     MainWindow* m_mainWindow;
     QPushButton* m_themeBtn;
-    QCheckBox*   m_alwaysOnTopCheck;
+    QCheckBox*   m_closeWithEscCheck;
     QCheckBox*   m_restoreTabIndexCheck;
     QComboBox*   m_windowPosCombo;
     QLabel*      m_versionLabel;

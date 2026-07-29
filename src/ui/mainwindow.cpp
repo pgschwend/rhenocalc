@@ -366,8 +366,8 @@ void MainWindow::setupUI() {
         m_isDark = dark;
         applyTheme(dark);
     });
-    connect(m_settingsPage, &SettingsPage::alwaysOnTopChanged, this, [this](bool enabled) {
-        applyAlwaysOnTop(enabled, true);
+    connect(m_settingsPage, &SettingsPage::closeWithEscChanged, this, [this](bool enabled) {
+        m_closeWithEsc = enabled;
     });
     connect(m_settingsPage, &SettingsPage::windowPositionChanged, this, [this](int mode) {
         m_windowStartPosition = static_cast<WindowStartPosition>(mode);
