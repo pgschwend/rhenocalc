@@ -38,8 +38,9 @@ private:
     void applyAlwaysOnTop(bool enabled, bool persist);
     void updateOnTopButton();
     void switchDynamicTab(QWidget* page, const QString& title);
-    void saveWindowGeometry();
-    void restoreWindowGeometry();
+    void saveToolSettings();
+    void restoreToolSettings();
+    void restoreUISettings();
     void moveToMousePosition();
     void centerOnMouseScreen();
     void setWindowPosition();

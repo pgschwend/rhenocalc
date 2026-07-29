@@ -48,17 +48,12 @@
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
-    // Load theme from QSettings (default: dark)
-    QSettings settings("RhenoCalc", "RhenoCalc");
-    m_isDark = settings.value("darkTheme", true).toBool();
-    m_alwaysOnTop = settings.value("alwaysOnTop", false).toBool();
-    int positionMode = settings.value("windowStartPosition", 1).toInt();
-    m_windowStartPosition = static_cast<WindowStartPosition>(positionMode);
-
+    restoreToolSettings();
     setupUI();
+    restoreUISettings();
+    
     applyTheme(m_isDark);
     setWindowTitle("RhenoCalc");
-    restoreWindowGeometry();
     setWindowPosition();
 
     // Apply after restoreState/restoreGeometry so restored state does not override the hint.
@@ -133,7 +128,7 @@ MainWindow::MainWindow(QWidget* parent)
 MainWindow::~MainWindow() = default;
 
 void MainWindow::closeEvent(QCloseEvent* event) {
-    saveWindowGeometry();
+    saveToolSettings();
     QMainWindow::closeEvent(event);
 }
 
@@ -150,13 +145,15 @@ void MainWindow::showEvent(QShowEvent* event) {
     m_calcPage->setFocus();
 }
 
-void MainWindow::saveWindowGeometry() {
+void MainWindow::saveToolSettings() {
     QSettings settings("RhenoCalc", "RhenoCalc");
+
     settings.setValue("windowGeometry", saveGeometry());
     settings.setValue("windowState", saveState());
     settings.setValue("darkTheme", m_isDark);
     settings.setValue("alwaysOnTop", m_alwaysOnTop);
     settings.setValue("lastWindowPos", pos());
+    settings.setValue("currentTabIndex", m_tabWidget->currentIndex());
 
     // Save the name of the currently shown dynamic tab
     QWidget* dynWidget = m_tabWidget->widget(2);
@@ -168,13 +165,31 @@ void MainWindow::saveWindowGeometry() {
     }
 }
 
-void MainWindow::restoreWindowGeometry() {
+void MainWindow::restoreToolSettings() {
     QSettings settings("RhenoCalc", "RhenoCalc");
+
+    m_isDark = settings.value("darkTheme", true).toBool();
+    m_alwaysOnTop = settings.value("alwaysOnTop", false).toBool();
+
+    int positionMode = settings.value("windowStartPosition", 1).toInt();
+    m_windowStartPosition = static_cast<WindowStartPosition>(positionMode);
+
+    // Note: Tab index is restored in constructor after setupUI()
+
     if (settings.contains("windowGeometry")) {
         restoreGeometry(settings.value("windowGeometry").toByteArray());
         restoreState(settings.value("windowState").toByteArray());
     } else {
         adjustSize();
+    }
+}
+
+void MainWindow::restoreUISettings() {
+    QSettings settings("RhenoCalc", "RhenoCalc");
+
+    if (settings.value("restoreTabIndexCheck", 0).toBool()) {
+        int savedIndex = settings.value("currentTabIndex", 0).toInt();
+        m_tabWidget->setCurrentIndex(qBound(0, savedIndex, 2));
     }
 }
 

@@ -86,8 +86,8 @@ void SettingsPage::setupUI() {
     // Always On Top
     m_alwaysOnTopCheck = new QCheckBox("Always on top", this);
     m_alwaysOnTopCheck->setStyleSheet("font-size:13px;");
-    bool alwaysOnTop = settings.value("alwaysOnTop", false).toBool();
-    m_alwaysOnTopCheck->setChecked(alwaysOnTop);
+    bool alwaysOnTopCheck = settings.value("alwaysOnTopCheck", false).toBool();
+    m_alwaysOnTopCheck->setChecked(alwaysOnTopCheck);
 
     connect(m_alwaysOnTopCheck, &QCheckBox::toggled, this, [this](bool checked) {
         emit alwaysOnTopChanged(checked);
@@ -97,6 +97,21 @@ void SettingsPage::setupUI() {
     });
 
     windowLayout->addWidget(m_alwaysOnTopCheck, 0, 0, 1, 2);
+
+    // Restore Tab Index on start
+    m_restoreTabIndexCheck = new QCheckBox("Restore Tab Index", this);
+    m_restoreTabIndexCheck->setStyleSheet("font-size:13px;");
+    bool restoreTabIndexCheck = settings.value("restoreTabIndexCheck", false).toBool();
+    m_restoreTabIndexCheck->setChecked(restoreTabIndexCheck);
+
+    connect(m_restoreTabIndexCheck, &QCheckBox::toggled, this, [this](bool checked) {
+        emit restoreTabIndexChanged(checked);
+
+        QSettings settings("RhenoCalc", "RhenoCalc");
+        settings.setValue("restoreTabIndexCheck", checked);
+    });
+
+    windowLayout->addWidget(m_restoreTabIndexCheck, 1, 0, 1, 2);
 
     // Window Start Position
     auto* posLabel = new QLabel("Start position:", this);
@@ -114,8 +129,8 @@ void SettingsPage::setupUI() {
         settings.setValue("windowStartPosition", index);
     });
 
-    windowLayout->addWidget(posLabel, 1, 0);
-    windowLayout->addWidget(m_windowPosCombo, 1, 1);
+    windowLayout->addWidget(posLabel, 2, 0);
+    windowLayout->addWidget(m_windowPosCombo, 2, 1);
 
     root->addWidget(m_windowGroup);
 
@@ -179,14 +194,13 @@ void SettingsPage::updateStatusBar(const QString& updateVersion, const QString& 
         m_updateText = QString(
             "<table width=\"100%\" style=\"border-collapse: collapse;\">"
             "  <tr>"
-            "    <td style=\"text-align: left; width: 33%;\"><a href=\"%2\" style=\"color:%3;\">Update %1 available</a></td>"
-            "    <td style=\"text-align: right; width: 33%;\"> | %4</td>"
+            "    <td style=\"text-align: left; width: 33%;\">Update: <a href=\"%2\" style=\"color:%3;\">%1 available</a></td>"
             "  </tr>"
             "</table>"
         ).arg(m_updateVersion, m_updateUrl, linkColor, APP_VERSION_STRING);
 
         m_versionUpdateAvailable = new QLabel(m_updateText, this);
         m_versionUpdateAvailable->setStyleSheet("font-size:12px;");
-        m_aboutLayout->addWidget(m_versionUpdateAvailable);
+        m_aboutLayout->insertWidget(2, m_versionUpdateAvailable);
     }
 }
