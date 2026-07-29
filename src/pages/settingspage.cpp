@@ -4,7 +4,6 @@
 #include "core/updater.h"
 #include "info.h"
 #include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QGridLayout>
 #include <QScrollArea>
 #include <QSettings>

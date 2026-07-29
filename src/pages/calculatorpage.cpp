@@ -44,6 +44,10 @@ void CalculatorPage::setupUI() {
     topRow->addStretch();
     root->addLayout(topRow);
 
+    // Install event filter on comboboxes to redirect key events to calculator
+    m_baseCombo->installEventFilter(this);
+    m_widthCombo->installEventFilter(this);
+
     // Expression label
     m_exprLabel = new QLabel("", this);
     m_exprLabel->setAlignment(Qt::AlignRight);
@@ -643,3 +647,42 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
 
     QWidget::keyPressEvent(event);
 }
+
+bool CalculatorPage::eventFilter(QObject* watched, QEvent* event) {
+    // Redirect key events from comboboxes to calculator
+    if ((watched == m_baseCombo || watched == m_widthCombo) && event->type() == QEvent::KeyPress) {
+        auto* keyEvent = static_cast<QKeyEvent*>(event);
+        const int key = keyEvent->key();
+        const Qt::KeyboardModifiers mod = keyEvent->modifiers();
+
+        // Allow up/down arrows and Enter for combobox navigation
+        if (key == Qt::Key_Up || key == Qt::Key_Down ||
+            key == Qt::Key_Return || key == Qt::Key_Enter ||
+            key == Qt::Key_Space) {
+            return QWidget::eventFilter(watched, event);
+        }
+
+        // Allow Escape and Delete to pass through
+        if (key == Qt::Key_Escape || key == Qt::Key_Delete) {
+            return QWidget::eventFilter(watched, event);
+        }
+
+        // Allow Ctrl+shortcuts to pass through (they're handled in keyPressEvent)
+        if (mod & Qt::ControlModifier) {
+            // Let the combobox handle Tab
+            if (key == Qt::Key_Tab || key == Qt::Key_Backtab) {
+                return QWidget::eventFilter(watched, event);
+            }
+            // Process calculator shortcuts
+            keyPressEvent(keyEvent);
+            return true;
+        }
+
+        // Redirect all other keys to calculator
+        keyPressEvent(keyEvent);
+        return true;
+    }
+
+    return QWidget::eventFilter(watched, event);
+}
+
