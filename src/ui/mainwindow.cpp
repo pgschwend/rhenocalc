@@ -66,6 +66,7 @@ MainWindow::MainWindow(QWidget* parent)
         int current = m_tabWidget->currentIndex();
         int next = (current - 1 + 3) % 3; // Cycle through 0, 1, 2
         m_tabWidget->setCurrentIndex(next);
+        m_previousTab = next;
         m_calcPage->setFocus();
     });
 
@@ -74,6 +75,7 @@ MainWindow::MainWindow(QWidget* parent)
         int current = m_tabWidget->currentIndex();
         int next = (current + 1) % 3; // Cycle through 0, 1, 2
         m_tabWidget->setCurrentIndex(next);
+        m_previousTab = next;
         m_calcPage->setFocus();
     });
 
