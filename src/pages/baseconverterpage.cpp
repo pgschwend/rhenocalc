@@ -173,12 +173,23 @@ void BaseConverterPage::setupUI() {
     connect(m_widthCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &BaseConverterPage::onWordWidthChanged);
     connect(m_signedCheck, &QCheckBox::toggled, this, &BaseConverterPage::onSignedToggled);
 
+    // Install event filters to redirect keyboard events to page
+    m_hexEdit->installEventFilter(this);
+    m_decEdit->installEventFilter(this);
+    m_binEdit->installEventFilter(this);
+    m_octEdit->installEventFilter(this);
+    m_widthCombo->installEventFilter(this);
+    m_signedCheck->installEventFilter(this);
+
     // Initial state
     onWordWidthChanged(2); // 32-bit
     updateAll(0);
 
     scroll->setWidget(content);
     outer->addWidget(scroll);
+
+    // Enable keyboard input
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 void BaseConverterPage::onWordWidthChanged(int index) {
@@ -217,6 +228,9 @@ void BaseConverterPage::updateAll(unsigned long long value, QLineEdit* skip) {
     if (m_updating) return;
     m_updating = true;
     m_value = Rheno::Core::applyMask(value, m_wordBits);
+
+    // Track if values are at 0 for ESC handling
+    m_isCleared = (m_value == 0);
 
     if (m_hexEdit != skip) m_hexEdit->setText(QString::number(m_value, 16).toUpper());
     if (m_decEdit != skip) {
@@ -325,3 +339,188 @@ void BaseConverterPage::applyTheme(bool dark) {
     for (auto* bb : m_bitBtns)
         bb->setDark(dark);
 }
+
+// ─── Keyboard support ────────────────────────────────────────────────────────
+void BaseConverterPage::showEvent(QShowEvent* event) {
+    QWidget::showEvent(event);
+    // Set focus to page when shown so keyboard shortcuts work immediately
+    setFocus();
+}
+
+bool BaseConverterPage::eventFilter(QObject* watched, QEvent* event) {
+    // Redirect key events from input widgets to page for global shortcuts
+    if (event->type() == QEvent::KeyPress) {
+        auto* keyEvent = static_cast<QKeyEvent*>(event);
+        const int key = keyEvent->key();
+        const Qt::KeyboardModifiers mod = keyEvent->modifiers();
+
+        // For line edits: allow normal text editing, but intercept global shortcuts
+        if (qobject_cast<QLineEdit*>(watched)) {
+            // Allow normal navigation in text fields
+            if (key == Qt::Key_Left || key == Qt::Key_Right ||
+                key == Qt::Key_Home || key == Qt::Key_End ||
+                key == Qt::Key_Backspace || key == Qt::Key_Delete) {
+                return QWidget::eventFilter(watched, event);
+            }
+
+            // Intercept Ctrl+X/D/B/O for focus switching
+            if (mod == Qt::ControlModifier) {
+                if (key == Qt::Key_X || key == Qt::Key_D ||
+                    key == Qt::Key_B || key == Qt::Key_O ||
+                    key == Qt::Key_1 || key == Qt::Key_2 ||
+                    key == Qt::Key_3 || key == Qt::Key_4) {
+                    keyPressEvent(keyEvent);
+                    return true;
+                }
+            }
+
+            // Intercept +/- for signed checkbox
+            if (mod == Qt::NoModifier || mod == Qt::ShiftModifier) {
+                if (key == Qt::Key_Plus || key == Qt::Key_Minus) {
+                    keyPressEvent(keyEvent);
+                    return true;
+                }
+            }
+
+            // Intercept ESC
+            if (key == Qt::Key_Escape) {
+                keyPressEvent(keyEvent);
+                return true;
+            }
+
+            return QWidget::eventFilter(watched, event);
+        }
+
+        // For combobox and checkbox: allow normal interaction but intercept shortcuts
+        if (qobject_cast<QComboBox*>(watched) || qobject_cast<QCheckBox*>(watched)) {
+            // Allow normal navigation
+            if (key == Qt::Key_Up || key == Qt::Key_Down ||
+                key == Qt::Key_Return || key == Qt::Key_Enter ||
+                key == Qt::Key_Space) {
+                return QWidget::eventFilter(watched, event);
+            }
+
+            // Intercept global shortcuts
+            if (mod == Qt::ControlModifier) {
+                if (key == Qt::Key_X || key == Qt::Key_D ||
+                    key == Qt::Key_B || key == Qt::Key_O ||
+                    key == Qt::Key_1 || key == Qt::Key_2 ||
+                    key == Qt::Key_3 || key == Qt::Key_4) {
+                    keyPressEvent(keyEvent);
+                    return true;
+                }
+            }
+
+            // Intercept +/-
+            if (mod == Qt::NoModifier || mod == Qt::ShiftModifier) {
+                if (key == Qt::Key_Plus || key == Qt::Key_Minus) {
+                    keyPressEvent(keyEvent);
+                    return true;
+                }
+            }
+
+            // Intercept ESC
+            if (key == Qt::Key_Escape) {
+                keyPressEvent(keyEvent);
+                return true;
+            }
+
+            return QWidget::eventFilter(watched, event);
+        }
+    }
+
+    return QWidget::eventFilter(watched, event);
+}
+
+void BaseConverterPage::keyPressEvent(QKeyEvent* event) {
+    const int key = event->key();
+    const Qt::KeyboardModifiers mod = event->modifiers();
+
+    // ── Ctrl+X/D/B/O: Focus switching between input fields ───────────────────
+    if (mod == Qt::ControlModifier) {
+        switch (key) {
+        case Qt::Key_X:  // Ctrl+X → Focus HEX field
+            m_hexEdit->setFocus();
+            m_hexEdit->selectAll();
+            event->accept();
+            return;
+        case Qt::Key_D:  // Ctrl+D → Focus DEC field
+            m_decEdit->setFocus();
+            m_decEdit->selectAll();
+            event->accept();
+            return;
+        case Qt::Key_B:  // Ctrl+B → Focus BIN field
+            m_binEdit->setFocus();
+            m_binEdit->selectAll();
+            event->accept();
+            return;
+        case Qt::Key_O:  // Ctrl+O → Focus OCT field
+            m_octEdit->setFocus();
+            m_octEdit->selectAll();
+            event->accept();
+            return;
+
+        // ── Ctrl+1-4: Word width switching ───────────────────────────────────
+        case Qt::Key_1:
+            m_widthCombo->setCurrentIndex(0);  // 8-bit
+            event->accept();
+            return;
+        case Qt::Key_2:
+            m_widthCombo->setCurrentIndex(1);  // 16-bit
+            event->accept();
+            return;
+        case Qt::Key_3:
+            m_widthCombo->setCurrentIndex(2);  // 32-bit
+            event->accept();
+            return;
+        case Qt::Key_4:
+            m_widthCombo->setCurrentIndex(3);  // 64-bit
+            event->accept();
+            return;
+
+        default:
+            break;
+        }
+    }
+
+    // ── + / - : Toggle signed checkbox ───────────────────────────────────────
+    if (mod == Qt::NoModifier || mod == Qt::ShiftModifier) {
+        if (key == Qt::Key_Minus) {
+            m_signedCheck->setChecked(true);
+            event->accept();
+            return;
+        }
+        if (key == Qt::Key_Plus) {
+            m_signedCheck->setChecked(false);
+            event->accept();
+            return;
+        }
+    }
+
+    // ── ESC: Clear values or close app ───────────────────────────────────────
+    if (key == Qt::Key_Escape) {
+        // First ESC: Clear values to 0 (if not already 0)
+        if (!m_isCleared || m_value != 0) {
+            updateAll(0);
+            // m_isCleared is set by updateAll(0)
+            event->accept();  // Important: accept to prevent propagation
+            return;
+        }
+
+        // Second ESC (when already cleared): Close app if setting enabled
+        if (QWidget* mainWin = window()) {
+            QSettings settings("RhenoCalc", "RhenoCalc");
+            if (settings.value("closeWithEscCheck", false).toBool()) {
+                event->accept();
+                mainWin->close();
+                return;
+            }
+        }
+        // If setting is disabled, don't close but accept the event
+        event->accept();
+        return;
+    }
+
+    QWidget::keyPressEvent(event);
+}
+
