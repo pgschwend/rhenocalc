@@ -3,8 +3,6 @@
 #include <QMainWindow>
 #include <QShowEvent>
 #include <QPushButton>
-#include <QMenu>
-#include <QVector>
 
 class CalculatorPage;
 class BaseConverterPage;
@@ -15,9 +13,10 @@ class ColorPage;
 class FinancePage;
 class FloatPage;
 class ElectronicsPage;
-class NetToolsPage;
 class SettingsPage;
+class TabCoordinator;
 class QLabel;
+class QTabWidget;
 
 
 class MainWindow : public QMainWindow {
@@ -38,7 +37,6 @@ private:
     void applyTitleBarTheme(bool dark);
     void applyAlwaysOnTop(bool enabled, bool persist);
     void updateOnTopButton();
-    void switchDynamicTab(QWidget* page, const QString& title);
     void saveToolSettings();
     void restoreToolSettings();
     void restoreUISettings();
@@ -56,13 +54,10 @@ private:
     FinancePage*       m_financePage = nullptr;
     FloatPage*         m_floatPage = nullptr;
     ElectronicsPage*   m_electronicsPage = nullptr;
-    NetToolsPage*      m_netToolsPage = nullptr;
     SettingsPage*      m_settingsPage = nullptr;
+    TabCoordinator*    m_tabCoordinator = nullptr;
     QPushButton*       m_onTopBtn = nullptr;
-    QMenu*             m_moreMenu = nullptr;
     QLabel*            m_statusLabel = nullptr;
-
-    QVector<QPair<QString, QWidget*>> m_extraPages;
 
     enum class WindowStartPosition {
         LastPosition,
@@ -74,10 +69,8 @@ private:
 
     bool m_isDark = true;
     bool m_alwaysOnTop = false;
-    bool m_menuJustClosed = false;
     bool m_closeWithEsc = false;
     QString m_updateVersion;
     QString m_updateUrl;
-    int m_previousTab;
 };
 

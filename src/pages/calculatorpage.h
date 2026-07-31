@@ -8,11 +8,20 @@
 #include <QKeyEvent>
 #include <QShowEvent>
 #include <QList>
+#include <memory>
+
+class CalculatorPage;
+class CalculatorPageController;
+
+namespace Rheno::Ui {
+void buildCalculatorPageUi(::CalculatorPage* page);
+}
 
 class CalculatorPage : public QWidget {
     Q_OBJECT
 public:
     explicit CalculatorPage(QWidget* parent = nullptr);
+    ~CalculatorPage() override;
     void applyTheme(bool dark);
 
 private slots:
@@ -35,13 +44,14 @@ protected:
     void showEvent(QShowEvent* event) override;
 
 private:
-    void setupUI();
+    friend class CalculatorPageController;
+    friend void Rheno::Ui::buildCalculatorPageUi(::CalculatorPage* page);
+
     void updateDisplay();
     void resetCeClearCycle();
     void pressDigit(const QString& d);
     void pressOperator(const QString& op);
     void updateSecondFuncButtons();
-    QPushButton* makeBtn(const QString& text);
 
     QLineEdit*   m_display = nullptr;
     QLabel*      m_exprLabel = nullptr;
@@ -77,4 +87,5 @@ private:
     bool                m_isDark = true;
 
     Rheno::Core::CalculatorEngine m_engine;
+    std::unique_ptr<CalculatorPageController> m_controller;
 };

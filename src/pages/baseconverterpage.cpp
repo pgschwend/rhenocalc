@@ -375,10 +375,12 @@ bool BaseConverterPage::eventFilter(QObject* watched, QEvent* event) {
                 }
             }
 
-            // Intercept Alt+S for signed checkbox toggle
-            if (mod == Qt::AltModifier && key == Qt::Key_S) {
+            // Intercept +/- for signed checkbox
+            if (mod == Qt::NoModifier || mod == Qt::ShiftModifier) {
+                if (key == Qt::Key_Plus || key == Qt::Key_Minus) {
                     keyPressEvent(keyEvent);
                     return true;
+                }
             }
 
             // Intercept ESC
@@ -410,10 +412,12 @@ bool BaseConverterPage::eventFilter(QObject* watched, QEvent* event) {
                 }
             }
 
-            // Intercept Alt+S for signed checkbox toggle
-            if (mod == Qt::AltModifier && key == Qt::Key_S) {
+            // Intercept +/-
+            if (mod == Qt::NoModifier || mod == Qt::ShiftModifier) {
+                if (key == Qt::Key_Plus || key == Qt::Key_Minus) {
                     keyPressEvent(keyEvent);
                     return true;
+                }
             }
 
             // Intercept ESC
@@ -480,11 +484,18 @@ void BaseConverterPage::keyPressEvent(QKeyEvent* event) {
         }
     }
 
-    // ── Alt+S : Toggle signed checkbox ───────────────────────────────────────
-    if (mod == Qt::AltModifier && key == Qt::Key_S) {
-        m_signedCheck->setChecked(!m_signedCheck->isChecked());
-        event->accept();
-        return;
+    // ── + / - : Toggle signed checkbox ───────────────────────────────────────
+    if (mod == Qt::NoModifier || mod == Qt::ShiftModifier) {
+        if (key == Qt::Key_Minus) {
+            m_signedCheck->setChecked(true);
+            event->accept();
+            return;
+        }
+        if (key == Qt::Key_Plus) {
+            m_signedCheck->setChecked(false);
+            event->accept();
+            return;
+        }
     }
 
     // ── ESC: Clear values or close app ───────────────────────────────────────

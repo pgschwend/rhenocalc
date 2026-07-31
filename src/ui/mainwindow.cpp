@@ -10,6 +10,7 @@
 #include "electronicspage.h"
 #include "settingspage.h"
 #include "themecolors.h"
+#include "tabcoordinator.h"
 #include "info.h"
 #include "core/updater.h"
 #include "fixedtab.h"
@@ -18,7 +19,6 @@
 #include <QFile>
 #include <QSettings>
 #include <QStatusBar>
-#include <QShortcut>
 #include <QHBoxLayout>
 #include <QWidget>
 #include <QGuiApplication>
@@ -59,58 +59,6 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Apply after restoreState/restoreGeometry so restored state does not override the hint.
     applyAlwaysOnTop(m_alwaysOnTop, false);
-
-    // Tab navigation with Alt+Left / Alt+Right - only cycles through visible tabs (0, 1, 2)
-    auto* prevTab = new QShortcut(QKeySequence(Qt::AltModifier | Qt::Key_Left), this);
-    connect(prevTab, &QShortcut::activated, this, [this]() {
-        int current = m_tabWidget->currentIndex();
-        int next = (current - 1 + 3) % 3; // Cycle through 0, 1, 2
-        m_tabWidget->setCurrentIndex(next);
-        m_previousTab = next;
-        m_calcPage->setFocus();
-    });
-
-    auto* nextTab = new QShortcut(QKeySequence(Qt::AltModifier | Qt::Key_Right), this);
-    connect(nextTab, &QShortcut::activated, this, [this]() {
-        int current = m_tabWidget->currentIndex();
-        int next = (current + 1) % 3; // Cycle through 0, 1, 2
-        m_tabWidget->setCurrentIndex(next);
-        m_previousTab = next;
-        m_calcPage->setFocus();
-    });
-
-    // Page list navigation with Alt+Up / Alt+Down - opens the menu
-    auto* openPageListDown = new QShortcut(QKeySequence(Qt::AltModifier | Qt::Key_Down), this);
-    connect(openPageListDown, &QShortcut::activated, this, [this]() {
-        if (!m_moreMenu->isVisible()) {
-            // Open menu below the "More" tab
-            QRect tabRect = m_tabWidget->tabBar()->tabRect(3);
-            QPoint pos = m_tabWidget->tabBar()->mapToGlobal(tabRect.bottomLeft());
-            m_moreMenu->popup(pos);
-            // Set focus to menu so keyboard navigation works
-            m_moreMenu->setFocus();
-            // Select first item
-            if (!m_moreMenu->actions().isEmpty()) {
-                m_moreMenu->setActiveAction(m_moreMenu->actions().first());
-            }
-        }
-    });
-
-    auto* openPageListUp = new QShortcut(QKeySequence(Qt::AltModifier | Qt::Key_Up), this);
-    connect(openPageListUp, &QShortcut::activated, this, [this]() {
-        if (!m_moreMenu->isVisible()) {
-            // Open menu below the "More" tab
-            QRect tabRect = m_tabWidget->tabBar()->tabRect(3);
-            QPoint pos = m_tabWidget->tabBar()->mapToGlobal(tabRect.bottomLeft());
-            m_moreMenu->popup(pos);
-            // Set focus to menu so keyboard navigation works
-            m_moreMenu->setFocus();
-            // Select last item when opening with Up
-            if (!m_moreMenu->actions().isEmpty()) {
-                m_moreMenu->setActiveAction(m_moreMenu->actions().last());
-            }
-        }
-    });
 
     // Note: ESC key handling moved to keyPressEvent to allow proper event propagation
     // Calculator page handles ESC internally for AC -> Close workflow
@@ -182,14 +130,7 @@ void MainWindow::saveToolSettings() {
     settings.setValue("lastWindowPos", pos());
     settings.setValue("currentTabIndex", m_tabWidget->currentIndex());
 
-    // Save the name of the currently shown dynamic tab
-    QWidget* dynWidget = m_tabWidget->widget(2);
-    for (const auto& [name, page] : m_extraPages) {
-        if (page == dynWidget) {
-            settings.setValue("dynamicTab", name);
-            break;
-        }
-    }
+    settings.setValue("dynamicTab", m_tabCoordinator ? m_tabCoordinator->currentDynamicTabName() : QString("Unit"));
 }
 
 void MainWindow::restoreToolSettings() {
@@ -218,6 +159,8 @@ void MainWindow::restoreUISettings() {
     if (settings.value("restoreTabIndexCheck", 0).toBool()) {
         int savedIndex = settings.value("currentTabIndex", 0).toInt();
         m_tabWidget->setCurrentIndex(qBound(0, savedIndex, 2));
+    } else {
+        m_tabWidget->setCurrentIndex(0);
     }
 }
 
@@ -304,8 +247,7 @@ void MainWindow::setupUI() {
     // Prevent tab bar from stretching tabs to fill the width
     m_tabWidget->tabBar()->setExpanding(false);
 
-    // Build the list of extra pages available via "More"
-    m_extraPages = {
+    const QVector<QPair<QString, QWidget*>> extraPages = {
         {"Unit",     m_unitPage},
         {"Float",    m_floatPage},
         {"CRC/Hash", m_crcHashPage},
@@ -316,58 +258,12 @@ void MainWindow::setupUI() {
         {"Settings", m_settingsPage},
     };
 
-    // Restore last dynamic tab from settings
+    m_tabCoordinator = new TabCoordinator(m_tabWidget, this);
+    m_tabCoordinator->setExtraPages(extraPages);
+    m_tabCoordinator->installShortcuts(this);
+
     QSettings settings("RhenoCalc", "RhenoCalc");
-    {
-        QString lastDyn = settings.value("dynamicTab", "Unit").toString();
-        for (const auto& [name, page] : m_extraPages) {
-            if (name == lastDyn && page != m_unitPage) {
-                m_tabWidget->removeTab(2);
-                m_tabWidget->insertTab(2, page, name);
-                break;
-            }
-        }
-    }
-
-    m_previousTab = settings.value("currentTabIndex", 0).toInt();
-
-    // Build the "More" popup menu
-    m_moreMenu = new QMenu(this);
-    for (const auto& [name, page] : m_extraPages) {
-        m_moreMenu->addAction(name, this, [this, page, name]() {
-            switchDynamicTab(page, name);
-            m_previousTab = 2;
-        });
-    }
-
-    // Track when menu is hidden to prevent immediate reopening
-    connect(m_moreMenu, &QMenu::aboutToHide, this, [this]() {
-        m_menuJustClosed = true;
-        QTimer::singleShot(200, this, [this]() {
-            m_menuJustClosed = false;
-        });
-    });
-
-    // Intercept click on the "More" tab (index 3): show menu instead of switching
-    connect(m_tabWidget, &QTabWidget::tabBarClicked, this, [this](int index) {
-        if (index == 3) {
-            if (!m_menuJustClosed) {
-                // Show menu below the "More" tab
-                QRect tabRect = m_tabWidget->tabBar()->tabRect(3);
-                QPoint pos = m_tabWidget->tabBar()->mapToGlobal(tabRect.bottomLeft());
-                m_moreMenu->popup(pos);
-            }
-        } else {
-            m_previousTab = index;
-        }
-    });
-
-    // Prevent the "More" tab from actually being selected – return to previous tab
-    connect(m_tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
-        if (index == 3) {
-            m_tabWidget->setCurrentIndex(m_previousTab);
-        }
-    });
+    m_tabCoordinator->restoreDynamicTab(settings.value("dynamicTab", "Unit").toString());
 
     // Buttons top right in the tab bar
     m_onTopBtn = new QPushButton(this); // NOLINT(cppcoreguidelines-owning-memory)
@@ -549,20 +445,4 @@ void MainWindow::updateOnTopButton() {
     }
     m_onTopBtn->setStyleSheet(style);
 }
-
-void MainWindow::switchDynamicTab(QWidget* page, const QString& title) {
-    // Replace the widget at index 2 (the dynamic slot)
-    QWidget* current = m_tabWidget->widget(2);
-    if (current == page) {
-        // Already showing this page, just focus it
-        m_tabWidget->setCurrentIndex(2);
-        return;
-    }
-
-    // Remove old dynamic tab and insert new one at same position
-    m_tabWidget->removeTab(2);
-    m_tabWidget->insertTab(2, page, title);
-    m_tabWidget->setCurrentIndex(2);
-}
-
 

@@ -1,40 +1,17 @@
 #include "electronics.h"
-
-#include <QRegularExpression>
+#include "common/format.h"
+#include "common/numberparse.h"
 
 #include <cmath>
 
 namespace Rheno::Core {
 
 bool parseValue(const QString& text, double* value) {
-    QString trimmed = text.trimmed();
-    if (trimmed.isEmpty()) {
-        *value = 0.0;
-        return false;
-    }
-    bool ok = false;
-    double parsed = trimmed.toDouble(&ok);
-    if (!ok) {
-        QString normalized = trimmed;
-        parsed = normalized.replace(',', '.').toDouble(&ok);
-    }
-    if (!ok) return false;
-    *value = parsed;
-    return true;
+    return tryParseLocalizedDouble(text, value, EmptyNumberPolicy::Invalid);
 }
 
 QString formatEngineering(double value, const QString& unit) {
-    if (!std::isfinite(value) || value == 0.0) return "—";
-    const char* prefixes[] = {"p", "n", "µ", "m", "", "k", "M", "G", "T"};
-    const int baseIndex = 4;
-    double absVal = std::abs(value);
-    int exp = 0;
-    if (absVal >= 1.0) while (absVal >= 1000.0 && exp < 4) { absVal /= 1000.0; exp++; }
-    else while (absVal < 1.0 && exp > -4) { absVal *= 1000.0; exp--; }
-    if (value < 0) absVal = -absVal;
-    const int prefixIdx = baseIndex + exp;
-    if (prefixIdx < 0 || prefixIdx > 8) return QString::number(value, 'g', 4) + " " + unit;
-    return QString::number(absVal, 'f', 3).remove(QRegularExpression("\\.?0+$")) + " " + prefixes[prefixIdx] + unit;
+    return Rheno::Core::formatEngineeringValue(value, unit);
 }
 
 VoltageDividerResult calculateVoltageDivider(double vin, double r1, double r2) {

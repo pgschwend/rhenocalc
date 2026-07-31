@@ -28,10 +28,13 @@ set(SOURCES
         src/main.cpp
         src/ui/themecolors.h src/ui/themecolors.cpp
         src/ui/mainwindow.h src/ui/mainwindow.cpp
+        src/ui/tabcoordinator.h src/ui/tabcoordinator.cpp
         src/ui/widgets/fixedtab.h
         src/ui/widgets/colorwheel.h src/ui/widgets/colorwheel.cpp
         src/ui/widgets/bitbutton.h src/ui/widgets/bitbutton.cpp
         src/pages/calculatorpage.h src/pages/calculatorpage.cpp
+        src/pages/calculator/calculatorpageuibuilder.h src/pages/calculator/calculatorpageuibuilder.cpp
+        src/pages/calculator/calculatorpagecontroller.h src/pages/calculator/calculatorpagecontroller.cpp
         src/pages/baseconverterpage.h src/pages/baseconverterpage.cpp
         src/pages/unitconverterpage.h src/pages/unitconverterpage.cpp
         src/pages/networkpage.h src/pages/networkpage.cpp
@@ -53,6 +56,8 @@ set(SOURCES
         src/core/floathandler.h src/core/floathandler.cpp
         src/core/electronics.h src/core/electronics.cpp
         src/core/updater.h src/core/updater.cpp
+        src/core/common/numberparse.h src/core/common/numberparse.cpp
+        src/core/common/format.h src/core/common/format.cpp
         src/info.h
 )
 
