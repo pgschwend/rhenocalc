@@ -64,11 +64,11 @@ void CalculatorPage::setupUI() {
     // Keyboard shortcut hint bar
 #if defined(Q_OS_MACOS)
     m_hintLabel = new QLabel(
-    "CMD+D/X/B/O: Base  |  CMD+1–5: Mode  |  CMD+◀ ▶: Tab \n% MOD  |  & AND  |  | OR  |  ^ XOR  |  ~ NOT\n< LSL  |  > LSR  |  Esc AC/Close",
+    "Option+D/X/B/O: Base  |  Option+1–5: Mode  |  Option+◀ ▶: Tab \n% MOD  |  & AND  |  | OR  |  ^ XOR  |  ~ NOT\n< LSL  |  > LSR  |  Esc AC/Close",
     this);
 #else
     m_hintLabel = new QLabel(
-    "% MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n< LSL  |  > LSR  |  Enter =  |  Esc AC/Close  |  ⌫ BS  |\nCtrl+D/X/B/O: Base  |  Ctrl+1–5: Mode  |  Ctrl+◀ ▶: Tab",
+    "% MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n< LSL  |  > LSR  |  Enter =  |  Esc AC/Close  |  ⌫ BS  |\nAlt+D/X/B/O: Base  |  Alt+1–5: Mode  |  Alt+◀ ▶: Tab",
     this);
 #endif
 
@@ -435,13 +435,13 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
     const int key = event->key();
     const Qt::KeyboardModifiers mod = event->modifiers();
 
-    if (mod == Qt::ControlModifier && key == Qt::Key_C) {
+    if (mod == Qt::AltModifier && key == Qt::Key_C) {
         if (auto* clipboard = QGuiApplication::clipboard())
             clipboard->setText(m_engine.displayText());
         return;
     }
 
-    if (mod == Qt::ControlModifier && key == Qt::Key_V) {
+    if (mod == Qt::AltModifier && key == Qt::Key_V) {
         auto* clipboard = QGuiApplication::clipboard();
         if (!clipboard)
             return;
@@ -616,36 +616,36 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
         break;
 
     // ── Base switching shortcuts ──────────────────────────────────────────────
-    // Ctrl+D = Decimal, Ctrl+X = Hex, Ctrl+B = Binary, Ctrl+O = Octal
+    // Alt+D = Decimal, Alt+X = Hex, Alt+B = Binary, Alt+O = Octal
     case Qt::Key_D:
-        if (mod == Qt::ControlModifier) { m_baseCombo->setCurrentIndex(0); return; }
+        if (mod == Qt::AltModifier) { m_baseCombo->setCurrentIndex(0); return; }
         break;
-    case Qt::Key_X:
-        if (mod == Qt::ControlModifier) { m_baseCombo->setCurrentIndex(1); return; }
+    case Qt::Key_H:
+        if (mod == Qt::AltModifier) { m_baseCombo->setCurrentIndex(1); return; }
         break;
     case Qt::Key_B:
-        if (mod == Qt::ControlModifier) { m_baseCombo->setCurrentIndex(2); return; }
+        if (mod == Qt::AltModifier) { m_baseCombo->setCurrentIndex(2); return; }
         break;
     case Qt::Key_O:
-        if (mod == Qt::ControlModifier) { m_baseCombo->setCurrentIndex(3); return; }
+        if (mod == Qt::AltModifier) { m_baseCombo->setCurrentIndex(3); return; }
         break;
 
     // ── Word width shortcuts ─────────────────────────────────────────────────
-    // Ctrl+1..5 = 8/16/32/64-bit/Scientific
+    // Alt+1..5 = 8/16/32/64-bit/Scientific
     case Qt::Key_1:
-        if (mod == Qt::ControlModifier) { m_widthCombo->setCurrentIndex(0); return; }
+        if (mod == Qt::AltModifier) { m_widthCombo->setCurrentIndex(0); return; }
         break;
     case Qt::Key_2:
-        if (mod == Qt::ControlModifier) { m_widthCombo->setCurrentIndex(1); return; }
+        if (mod == Qt::AltModifier) { m_widthCombo->setCurrentIndex(1); return; }
         break;
     case Qt::Key_3:
-        if (mod == Qt::ControlModifier) { m_widthCombo->setCurrentIndex(2); return; }
+        if (mod == Qt::AltModifier) { m_widthCombo->setCurrentIndex(2); return; }
         break;
     case Qt::Key_4:
-        if (mod == Qt::ControlModifier) { m_widthCombo->setCurrentIndex(3); return; }
+        if (mod == Qt::AltModifier) { m_widthCombo->setCurrentIndex(3); return; }
         break;
     case Qt::Key_5:
-        if (mod == Qt::ControlModifier) { m_widthCombo->setCurrentIndex(4); return; }
+        if (mod == Qt::AltModifier) { m_widthCombo->setCurrentIndex(4); return; }
         break;
 
     default: break;
@@ -673,8 +673,8 @@ bool CalculatorPage::eventFilter(QObject* watched, QEvent* event) {
             return QWidget::eventFilter(watched, event);
         }
 
-        // Allow Ctrl+shortcuts to pass through (they're handled in keyPressEvent)
-        if (mod & Qt::ControlModifier) {
+        // Allow Alt+shortcuts to pass through (they're handled in keyPressEvent)
+        if (mod & Qt::AltModifier) {
             // Let the combobox handle Tab
             if (key == Qt::Key_Tab || key == Qt::Key_Backtab) {
                 return QWidget::eventFilter(watched, event);

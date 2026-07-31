@@ -60,8 +60,8 @@ MainWindow::MainWindow(QWidget* parent)
     // Apply after restoreState/restoreGeometry so restored state does not override the hint.
     applyAlwaysOnTop(m_alwaysOnTop, false);
 
-    // Tab navigation with Ctrl+Left / Ctrl+Right - only cycles through visible tabs (0, 1, 2)
-    auto* prevTab = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Left), this);
+    // Tab navigation with Alt+Left / Alt+Right - only cycles through visible tabs (0, 1, 2)
+    auto* prevTab = new QShortcut(QKeySequence(Qt::AltModifier | Qt::Key_Left), this);
     connect(prevTab, &QShortcut::activated, this, [this]() {
         int current = m_tabWidget->currentIndex();
         int next = (current - 1 + 3) % 3; // Cycle through 0, 1, 2
@@ -70,7 +70,7 @@ MainWindow::MainWindow(QWidget* parent)
         m_calcPage->setFocus();
     });
 
-    auto* nextTab = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Right), this);
+    auto* nextTab = new QShortcut(QKeySequence(Qt::AltModifier | Qt::Key_Right), this);
     connect(nextTab, &QShortcut::activated, this, [this]() {
         int current = m_tabWidget->currentIndex();
         int next = (current + 1) % 3; // Cycle through 0, 1, 2
@@ -79,8 +79,8 @@ MainWindow::MainWindow(QWidget* parent)
         m_calcPage->setFocus();
     });
 
-    // Page list navigation with Ctrl+Up / Ctrl+Down - opens the menu
-    auto* openPageListDown = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Down), this);
+    // Page list navigation with Alt+Up / Alt+Down - opens the menu
+    auto* openPageListDown = new QShortcut(QKeySequence(Qt::AltModifier | Qt::Key_Down), this);
     connect(openPageListDown, &QShortcut::activated, this, [this]() {
         if (!m_moreMenu->isVisible()) {
             // Open menu below the "More" tab
@@ -96,7 +96,7 @@ MainWindow::MainWindow(QWidget* parent)
         }
     });
 
-    auto* openPageListUp = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_Up), this);
+    auto* openPageListUp = new QShortcut(QKeySequence(Qt::AltModifier | Qt::Key_Up), this);
     connect(openPageListUp, &QShortcut::activated, this, [this]() {
         if (!m_moreMenu->isVisible()) {
             // Open menu below the "More" tab
