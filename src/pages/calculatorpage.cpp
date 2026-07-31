@@ -435,13 +435,13 @@ void CalculatorPage::keyPressEvent(QKeyEvent* event) {
     const int key = event->key();
     const Qt::KeyboardModifiers mod = event->modifiers();
 
-    if (mod == Qt::AltModifier && key == Qt::Key_C) {
+    if (mod == Qt::ControlModifier && key == Qt::Key_C) {
         if (auto* clipboard = QGuiApplication::clipboard())
             clipboard->setText(m_engine.displayText());
         return;
     }
 
-    if (mod == Qt::AltModifier && key == Qt::Key_V) {
+    if (mod == Qt::ControlModifier && key == Qt::Key_V) {
         auto* clipboard = QGuiApplication::clipboard();
         if (!clipboard)
             return;
