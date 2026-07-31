@@ -40,7 +40,6 @@
 #include "macoshelper.h"
 #elif defined(Q_OS_LINUX)
 #include <QWindow>
-#include <qpa/qplatformnativeinterface.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #endif
@@ -375,10 +374,9 @@ void MainWindow::applyTitleBarTheme(bool dark) {
     // Linux/X11: Set _GTK_THEME_VARIANT property for dark/light title bar
     // This works with GTK-based window managers (GNOME, etc.)
     if (QWindow* window = windowHandle()) {
-        QPlatformNativeInterface* native = QGuiApplication::platformNativeInterface();
-        if (native) {
-            Display* display = reinterpret_cast<Display*>(
-                native->nativeResourceForWindow("display", window));
+        // Qt 6: Use QNativeInterface to get X11 display
+        if (auto* x11App = qApp->nativeInterface<QNativeInterface::QX11Application>()) {
+            Display* display = x11App->display();
             Window x11Window = static_cast<Window>(window->winId());
             
             if (display && x11Window) {
