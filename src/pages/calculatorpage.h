@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QComboBox>
 #include <QKeyEvent>
+#include <QShowEvent>
 #include <QList>
 
 class CalculatorPage : public QWidget {
@@ -31,6 +32,7 @@ private slots:
 protected:
     void keyPressEvent(QKeyEvent* event) override;
     bool eventFilter(QObject* watched, QEvent* event) override;
+    void showEvent(QShowEvent* event) override;
 
 private:
     void setupUI();

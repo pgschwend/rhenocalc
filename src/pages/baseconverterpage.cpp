@@ -59,8 +59,8 @@ void BaseConverterPage::setupUI() {
     inputGrid->setSpacing(6);
 
     struct { const char* label; QLineEdit** edit; const char* placeholder; } fields[] = {
-        {"HEX", &m_hexEdit, "e.g. ABCDEF"},
         {"DEC", &m_decEdit, "e.g. 3735928559"},
+        {"HEX", &m_hexEdit, "e.g. ABCDEF"},
         {"BIN", &m_binEdit, "e.g. 1101..."},
         {"OCT", &m_octEdit, "e.g. 33653337357"},
     };
@@ -343,8 +343,9 @@ void BaseConverterPage::applyTheme(bool dark) {
 // ─── Keyboard support ────────────────────────────────────────────────────────
 void BaseConverterPage::showEvent(QShowEvent* event) {
     QWidget::showEvent(event);
-    // Set focus to page when shown so keyboard shortcuts work immediately
-    setFocus();
+    // Set focus to DEC field when shown so user can immediately type numbers
+    m_decEdit->setFocus();
+    m_decEdit->selectAll();
 }
 
 bool BaseConverterPage::eventFilter(QObject* watched, QEvent* event) {

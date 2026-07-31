@@ -425,6 +425,12 @@ void CalculatorPage::applyTheme(bool dark) {
 }
 
 // ─── Keyboard support ────────────────────────────────────────────────────────
+void CalculatorPage::showEvent(QShowEvent* event) {
+    QWidget::showEvent(event);
+    // Set focus to page when shown so keyboard shortcuts work immediately
+    setFocus();
+}
+
 void CalculatorPage::keyPressEvent(QKeyEvent* event) {
     const int key = event->key();
     const Qt::KeyboardModifiers mod = event->modifiers();
