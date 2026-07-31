@@ -290,25 +290,45 @@ void BaseConverterPage::onBitToggled(int bit, bool state) {
 void BaseConverterPage::onHexChanged() {
     if (m_updating) return;
     unsigned long long v = 0;
-    if (Rheno::Core::tryParse(m_hexEdit->text(), 16, v)) updateAll(v, m_hexEdit);
+    bool valid = Rheno::Core::tryParse(m_hexEdit->text(), 16, v);
+
+    m_hexEdit->setProperty("invalid", !valid && !m_hexEdit->text().isEmpty());
+    m_hexEdit->style()->polish(m_hexEdit);
+
+    if (valid) updateAll(v, m_hexEdit);
 }
 
 void BaseConverterPage::onDecChanged() {
     if (m_updating) return;
     unsigned long long v = 0;
-    if (Rheno::Core::tryParse(m_decEdit->text(), 10, v)) updateAll(v, m_decEdit);
+    bool valid = Rheno::Core::tryParse(m_decEdit->text(), 10, v);
+
+    m_decEdit->setProperty("invalid", !valid && !m_decEdit->text().isEmpty());
+    m_decEdit->style()->polish(m_decEdit);
+
+    if (valid) updateAll(v, m_decEdit);
 }
 
 void BaseConverterPage::onBinChanged() {
     if (m_updating) return;
     unsigned long long v = 0;
-    if (Rheno::Core::tryParse(m_binEdit->text(), 2, v)) updateAll(v, m_binEdit);
+    bool valid = Rheno::Core::tryParse(m_binEdit->text(), 2, v);
+
+    m_binEdit->setProperty("invalid", !valid && !m_binEdit->text().isEmpty());
+    m_binEdit->style()->polish(m_binEdit);
+
+    if (valid) updateAll(v, m_binEdit);
 }
 
 void BaseConverterPage::onOctChanged() {
     if (m_updating) return;
     unsigned long long v = 0;
-    if (Rheno::Core::tryParse(m_octEdit->text(), 8, v)) updateAll(v, m_octEdit);
+    bool valid = Rheno::Core::tryParse(m_octEdit->text(), 8, v);
+
+    m_octEdit->setProperty("invalid", !valid && !m_octEdit->text().isEmpty());
+    m_octEdit->style()->polish(m_octEdit);
+
+    if (valid) updateAll(v, m_octEdit);
 }
 
 void BaseConverterPage::applyTheme(bool dark) {
