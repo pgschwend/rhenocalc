@@ -6,6 +6,9 @@
 #include <QComboBox>
 #include <QCheckBox>
 #include <QGroupBox>
+#include <QKeyEvent>
+#include <QShowEvent>
+#include <QSettings>
 #include <vector>
 
 
@@ -14,6 +17,11 @@ class BaseConverterPage : public QWidget {
 public:
     explicit BaseConverterPage(QWidget* parent = nullptr);
     void applyTheme(bool dark);
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
+    bool eventFilter(QObject* watched, QEvent* event) override;
+    void showEvent(QShowEvent* event) override;
 
 private slots:
     void onHexChanged();
@@ -56,5 +64,6 @@ private:
     int  m_wordBits = 32;
     bool m_updating = false;
     bool m_signed   = false;
+    bool m_isCleared = true;  // Track if values are at 0
     unsigned long long m_value = 0;
 };

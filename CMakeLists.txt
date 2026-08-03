@@ -1,12 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
 
 # Set up project name and version
-project(RhenoCalc VERSION 0.2.5 LANGUAGES CXX)
+project(RhenoCalc VERSION 0.3.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 # -- Boost.Multiprecision via FetchContent -------------------------------------
 include(FetchContent)
@@ -18,14 +15,10 @@ FetchContent_Declare(
 set(BOOST_INCLUDE_LIBRARIES multiprecision math)
 FetchContent_MakeAvailable(Boost)
 
-# Set Qt installation prefix path depending on the platform
-if(WIN32)
-    list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.9.3/mingw_64")
-elseif(UNIX AND NOT APPLE)
-    list(APPEND CMAKE_PREFIX_PATH "/opt/qt/6.9.3/gcc_64")
-elseif(APPLE)
-    list(APPEND CMAKE_PREFIX_PATH "/Users/patrick/Qt/6.9.3/macos/")
-endif()
+# Enable Qt Auto-Tools AFTER Boost is loaded (prevents warnings from Boost targets)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
 find_package(Qt6 COMPONENTS Core Gui Widgets Network REQUIRED)
 
@@ -35,10 +28,13 @@ set(SOURCES
         src/main.cpp
         src/ui/themecolors.h src/ui/themecolors.cpp
         src/ui/mainwindow.h src/ui/mainwindow.cpp
+        src/ui/tabcoordinator.h src/ui/tabcoordinator.cpp
         src/ui/widgets/fixedtab.h
         src/ui/widgets/colorwheel.h src/ui/widgets/colorwheel.cpp
         src/ui/widgets/bitbutton.h src/ui/widgets/bitbutton.cpp
         src/pages/calculatorpage.h src/pages/calculatorpage.cpp
+        src/pages/calculator/calculatorpageuibuilder.h src/pages/calculator/calculatorpageuibuilder.cpp
+        src/pages/calculator/calculatorpagecontroller.h src/pages/calculator/calculatorpagecontroller.cpp
         src/pages/baseconverterpage.h src/pages/baseconverterpage.cpp
         src/pages/unitconverterpage.h src/pages/unitconverterpage.cpp
         src/pages/networkpage.h src/pages/networkpage.cpp
@@ -47,6 +43,7 @@ set(SOURCES
         src/pages/financepage.h src/pages/financepage.cpp
         src/pages/floatpage.h src/pages/floatpage.cpp
         src/pages/electronicspage.h src/pages/electronicspage.cpp
+        src/pages/settingspage.h src/pages/settingspage.cpp
         src/core/calc/operations.h src/core/calc/operations.cpp
         src/core/calc/calcparser.h src/core/calc/calcparser.cpp
         src/core/calculator.h src/core/calculator.cpp
@@ -59,8 +56,15 @@ set(SOURCES
         src/core/floathandler.h src/core/floathandler.cpp
         src/core/electronics.h src/core/electronics.cpp
         src/core/updater.h src/core/updater.cpp
+        src/core/common/numberparse.h src/core/common/numberparse.cpp
+        src/core/common/format.h src/core/common/format.cpp
         src/info.h
 )
+
+# Add platform-specific source files for title bar theming
+if(APPLE)
+    list(APPEND SOURCES src/ui/macoshelper.h src/ui/macoshelper.mm)
+endif()
 
 # Generate info.h into a namespaced subdirectory inside the build directory
 configure_file(
@@ -136,6 +140,17 @@ target_link_libraries(RhenoCalc
         Qt::Network
         Boost::multiprecision
 )
+
+# Link platform-specific libraries for title bar theming
+if(WIN32)
+    target_link_libraries(RhenoCalc dwmapi)
+elseif(APPLE)
+    target_link_libraries(RhenoCalc "-framework AppKit")
+elseif(UNIX)
+    find_package(X11 REQUIRED)
+    target_include_directories(RhenoCalc PRIVATE ${X11_INCLUDE_DIR})
+    target_link_libraries(RhenoCalc ${X11_LIBRARIES})
+endif()
 
 # Link platform-specific networking libraries for Windows
 if(WIN32)

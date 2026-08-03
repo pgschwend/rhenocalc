@@ -7,6 +7,8 @@
 #include <QScrollArea>
 #include <QSizePolicy>
 #include <QFont>
+#include <QKeySequence>
+#include <QTabWidget>
 
 
 // ─── BaseConverterPage ────────────────────────────────────────────────────────
@@ -59,8 +61,8 @@ void BaseConverterPage::setupUI() {
     inputGrid->setSpacing(6);
 
     struct { const char* label; QLineEdit** edit; const char* placeholder; } fields[] = {
-        {"HEX", &m_hexEdit, "e.g. DEADBEEF"},
         {"DEC", &m_decEdit, "e.g. 3735928559"},
+        {"HEX", &m_hexEdit, "e.g. ABCDEF"},
         {"BIN", &m_binEdit, "e.g. 1101..."},
         {"OCT", &m_octEdit, "e.g. 33653337357"},
     };
@@ -173,12 +175,24 @@ void BaseConverterPage::setupUI() {
     connect(m_widthCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &BaseConverterPage::onWordWidthChanged);
     connect(m_signedCheck, &QCheckBox::toggled, this, &BaseConverterPage::onSignedToggled);
 
+    // Install event filters to redirect keyboard events to page
+    m_hexEdit->installEventFilter(this);
+    m_decEdit->installEventFilter(this);
+    m_binEdit->installEventFilter(this);
+    m_octEdit->installEventFilter(this);
+    m_widthCombo->installEventFilter(this);
+    m_signedCheck->installEventFilter(this);
+
     // Initial state
     onWordWidthChanged(2); // 32-bit
     updateAll(0);
 
     scroll->setWidget(content);
     outer->addWidget(scroll);
+
+    // Enable keyboard input
+    setFocusProxy(m_decEdit);
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 void BaseConverterPage::onWordWidthChanged(int index) {
@@ -217,6 +231,9 @@ void BaseConverterPage::updateAll(unsigned long long value, QLineEdit* skip) {
     if (m_updating) return;
     m_updating = true;
     m_value = Rheno::Core::applyMask(value, m_wordBits);
+
+    // Track if values are at 0 for ESC handling
+    m_isCleared = (m_value == 0);
 
     if (m_hexEdit != skip) m_hexEdit->setText(QString::number(m_value, 16).toUpper());
     if (m_decEdit != skip) {
@@ -276,25 +293,45 @@ void BaseConverterPage::onBitToggled(int bit, bool state) {
 void BaseConverterPage::onHexChanged() {
     if (m_updating) return;
     unsigned long long v = 0;
-    if (Rheno::Core::tryParse(m_hexEdit->text(), 16, v)) updateAll(v, m_hexEdit);
+    bool valid = Rheno::Core::tryParse(m_hexEdit->text(), 16, v);
+
+    m_hexEdit->setProperty("invalid", !valid && !m_hexEdit->text().isEmpty());
+    m_hexEdit->style()->polish(m_hexEdit);
+
+    if (valid) updateAll(v, m_hexEdit);
 }
 
 void BaseConverterPage::onDecChanged() {
     if (m_updating) return;
     unsigned long long v = 0;
-    if (Rheno::Core::tryParse(m_decEdit->text(), 10, v)) updateAll(v, m_decEdit);
+    bool valid = Rheno::Core::tryParse(m_decEdit->text(), 10, v);
+
+    m_decEdit->setProperty("invalid", !valid && !m_decEdit->text().isEmpty());
+    m_decEdit->style()->polish(m_decEdit);
+
+    if (valid) updateAll(v, m_decEdit);
 }
 
 void BaseConverterPage::onBinChanged() {
     if (m_updating) return;
     unsigned long long v = 0;
-    if (Rheno::Core::tryParse(m_binEdit->text(), 2, v)) updateAll(v, m_binEdit);
+    bool valid = Rheno::Core::tryParse(m_binEdit->text(), 2, v);
+
+    m_binEdit->setProperty("invalid", !valid && !m_binEdit->text().isEmpty());
+    m_binEdit->style()->polish(m_binEdit);
+
+    if (valid) updateAll(v, m_binEdit);
 }
 
 void BaseConverterPage::onOctChanged() {
     if (m_updating) return;
     unsigned long long v = 0;
-    if (Rheno::Core::tryParse(m_octEdit->text(), 8, v)) updateAll(v, m_octEdit);
+    bool valid = Rheno::Core::tryParse(m_octEdit->text(), 8, v);
+
+    m_octEdit->setProperty("invalid", !valid && !m_octEdit->text().isEmpty());
+    m_octEdit->style()->polish(m_octEdit);
+
+    if (valid) updateAll(v, m_octEdit);
 }
 
 void BaseConverterPage::applyTheme(bool dark) {
@@ -324,4 +361,227 @@ void BaseConverterPage::applyTheme(bool dark) {
 
     for (auto* bb : m_bitBtns)
         bb->setDark(dark);
+}
+
+// ─── Keyboard support ────────────────────────────────────────────────────────
+void BaseConverterPage::showEvent(QShowEvent* event) {
+    QWidget::showEvent(event);
+    // Set focus to DEC field when shown so user can immediately type numbers
+    m_decEdit->setFocus();
+    m_decEdit->selectAll();
+}
+
+bool BaseConverterPage::eventFilter(QObject* watched, QEvent* event) {
+    // Redirect key events from input widgets to page for global shortcuts
+    if (event->type() == QEvent::KeyPress || event->type() == QEvent::ShortcutOverride) {
+        auto* keyEvent = static_cast<QKeyEvent*>(event);
+        const int key = keyEvent->key();
+        const Qt::KeyboardModifiers mod = keyEvent->modifiers();
+        const bool isKeyPress = (event->type() == QEvent::KeyPress);
+
+        // For line edits: allow normal text editing, but intercept global shortcuts
+        if (qobject_cast<QLineEdit*>(watched)) {
+            const auto switchTabByArrow = [&](int arrowKey) {
+                if (QWidget* topLevel = window()) {
+                    if (QTabWidget* tabWidget = topLevel->findChild<QTabWidget*>()) {
+                        const int current = tabWidget->currentIndex();
+                        const int next = (arrowKey == Qt::Key_Left)
+                            ? ((current - 1 + 3) % 3)
+                            : ((current + 1) % 3);
+                        tabWidget->setCurrentIndex(next);
+                        if (QWidget* w = tabWidget->currentWidget())
+                            w->setFocus();
+                    }
+                }
+            };
+
+            // Reserve Opt+Left/Right for app-level tab switching instead of QLineEdit word navigation.
+            const bool altArrow = ((mod & Qt::AltModifier) &&
+                                   (key == Qt::Key_Left || key == Qt::Key_Right));
+#if defined(Q_OS_MACOS) || defined(__APPLE__)
+            const bool macWordNavShortcut =
+                keyEvent->matches(QKeySequence::MoveToPreviousWord) ||
+                keyEvent->matches(QKeySequence::MoveToNextWord);
+#else
+            const bool macWordNavShortcut = false;
+#endif
+
+            if (!isKeyPress && (altArrow || macWordNavShortcut)) {
+                event->accept();
+                return true;
+            }
+
+            if (!isKeyPress)
+                return QWidget::eventFilter(watched, event);
+
+            if (altArrow || macWordNavShortcut) {
+                event->accept();
+                const int arrowKey = (key == Qt::Key_Left || key == Qt::Key_Right)
+                    ? key
+                    : (keyEvent->matches(QKeySequence::MoveToPreviousWord) ? Qt::Key_Left : Qt::Key_Right);
+                switchTabByArrow(arrowKey);
+                return true;
+            }
+
+            // Allow normal navigation in text fields
+            if (key == Qt::Key_Left || key == Qt::Key_Right ||
+                key == Qt::Key_Home || key == Qt::Key_End ||
+                key == Qt::Key_Backspace || key == Qt::Key_Delete) {
+                return QWidget::eventFilter(watched, event);
+            }
+
+            // Intercept Alt+X/D/B/O for focus switching
+            if ((mod & Qt::AltModifier) != 0x00) {
+                if (key == Qt::Key_H || key == Qt::Key_D ||
+                    key == Qt::Key_B || key == Qt::Key_O ||
+                    key == Qt::Key_1 || key == Qt::Key_2 ||
+                    key == Qt::Key_3 || key == Qt::Key_4 ||
+                    key == Qt::Key_Plus || key == Qt::Key_Minus) {
+                    keyPressEvent(keyEvent);
+                    return true;
+                }
+            }
+
+            // Intercept ESC
+            if (key == Qt::Key_Escape) {
+                keyPressEvent(keyEvent);
+                return true;
+            }
+
+            return QWidget::eventFilter(watched, event);
+        }
+
+        // For combobox and checkbox: allow normal interaction but intercept shortcuts
+        if (qobject_cast<QComboBox*>(watched) || qobject_cast<QCheckBox*>(watched)) {
+            if (!isKeyPress)
+                return QWidget::eventFilter(watched, event);
+
+            // Allow normal navigation
+            if (key == Qt::Key_Up || key == Qt::Key_Down ||
+                key == Qt::Key_Return || key == Qt::Key_Enter ||
+                key == Qt::Key_Space) {
+                return QWidget::eventFilter(watched, event);
+            }
+
+            // Intercept global shortcuts
+            if (mod == Qt::AltModifier) {
+                if (key == Qt::Key_X || key == Qt::Key_D ||
+                    key == Qt::Key_B || key == Qt::Key_O ||
+                    key == Qt::Key_1 || key == Qt::Key_2 ||
+                    key == Qt::Key_3 || key == Qt::Key_4) {
+                    keyPressEvent(keyEvent);
+                    return true;
+                }
+            }
+
+            // Intercept +/-
+            if (mod == Qt::NoModifier || mod == Qt::ShiftModifier) {
+                if (key == Qt::Key_Plus || key == Qt::Key_Minus) {
+                    keyPressEvent(keyEvent);
+                    return true;
+                }
+            }
+
+            // Intercept ESC
+            if (key == Qt::Key_Escape) {
+                keyPressEvent(keyEvent);
+                return true;
+            }
+
+            return QWidget::eventFilter(watched, event);
+        }
+    }
+
+    return QWidget::eventFilter(watched, event);
+}
+
+void BaseConverterPage::keyPressEvent(QKeyEvent* event) {
+    const int key = event->key();
+    const Qt::KeyboardModifiers mod = event->modifiers();
+
+    switch (key) {
+        case Qt::Key_H:  // Alt+X -> Focus HEX field
+            m_hexEdit->setFocus();
+            m_hexEdit->selectAll();
+            event->accept();
+            return;
+
+        case Qt::Key_D:  // Alt+D -> Focus DEC field
+            m_decEdit->setFocus();
+            m_decEdit->selectAll();
+            event->accept();
+            return;
+
+        case Qt::Key_B:  // Alt+B -> Focus BIN field
+            m_binEdit->setFocus();
+            m_binEdit->selectAll();
+            event->accept();
+            return;
+
+        case Qt::Key_O:  // Alt+O -> Focus OCT field
+            m_octEdit->setFocus();
+            m_octEdit->selectAll();
+            event->accept();
+            return;
+
+        case Qt::Key_1:
+            m_widthCombo->setCurrentIndex(0);  // 8-bit
+            event->accept();
+            return;
+
+        case Qt::Key_2:
+            m_widthCombo->setCurrentIndex(1);  // 16-bit
+            event->accept();
+            return;
+
+        case Qt::Key_3:
+            m_widthCombo->setCurrentIndex(2);  // 32-bit
+            event->accept();
+            return;
+
+        case Qt::Key_4:
+            m_widthCombo->setCurrentIndex(3);  // 64-bit
+            event->accept();
+            return;
+
+        case Qt::Key_Minus:
+            m_signedCheck->setChecked(true);
+            event->accept();
+            return;
+
+        case Qt::Key_Plus:
+            m_signedCheck->setChecked(false);
+            event->accept();
+            return;
+
+        default:
+            break;
+    }
+
+
+    // ── ESC: Clear values or close app ───────────────────────────────────────
+    if (key == Qt::Key_Escape) {
+        // First ESC: Clear values to 0 (if not already 0)
+        if (!m_isCleared || m_value != 0) {
+            updateAll(0);
+            // m_isCleared is set by updateAll(0)
+            event->accept();  // Important: accept to prevent propagation
+            return;
+        }
+
+        // Second ESC (when already cleared): Close app if setting enabled
+        if (QWidget* mainWin = window()) {
+            QSettings settings("RhenoCalc", "RhenoCalc");
+            if (settings.value("closeWithEscCheck", false).toBool()) {
+                event->accept();
+                mainWin->close();
+                return;
+            }
+        }
+        // If setting is disabled, don't close but accept the event
+        event->accept();
+        return;
+    }
+
+    QWidget::keyPressEvent(event);
 }

@@ -234,8 +234,14 @@ QString baseFieldLabelStyle(bool dark) {
 }
 
 QString baseEditStyle(bool dark) {
-    return QString("background:%1;color:%2;font-family:'Consolas','Courier New',monospace;font-size:16px;"
-                   "border:1px solid %3;border-radius:4px;padding:4px 8px;")
+    return QString("QLineEdit {"
+                    "  background:%1; color:%2;"
+                    "  font-family:'Consolas','Courier New',monospace; font-size:16px;"
+                    "  border:1px solid %3; border-radius:4px; padding:4px 8px;"
+                    "}"
+                    "QLineEdit[invalid=\"true\"] {"
+                    "  border:1px solid #FF4444;"
+                    "}")
         .arg(c(dark, "input_bg"), c(dark, "input_fg"), c(dark, "input_border"));
 }
 

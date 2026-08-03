@@ -74,7 +74,7 @@ void UnitConverterPage::setupUI() {
     convLayout->addWidget(m_fromEdit, 0, 1);
 
     m_fromUnit = new QComboBox(this);
-    m_fromUnit->setStyleSheet("padding:4px 6px;border-radius:4px;font-size:12px;min-width:48px;");
+    m_fromUnit->setStyleSheet("padding:4px 6px;border-radius:4px;font-size:12px;min-width:56px;");
     convLayout->addWidget(m_fromUnit, 0, 2);
 
     convLayout->addWidget(lbl("To:"), 1, 0);
@@ -123,7 +123,11 @@ void UnitConverterPage::populate(int category) {
         m_fromUnit->addItem(u.name);
         m_toUnit->addItem(u.name);
     }
-    m_toUnit->setCurrentIndex(1); // default: second unit
+
+    // Set default values
+    m_fromUnit->setCurrentIndex(2);
+    m_toUnit->setCurrentIndex(8);
+
     m_fromUnit->blockSignals(false);
     m_toUnit->blockSignals(false);
 }

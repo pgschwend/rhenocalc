@@ -1,6 +1,7 @@
 #include "finance.h"
+#include "common/format.h"
+#include "common/numberparse.h"
 
-#include <QLocale>
 #include <QtMath>
 
 namespace Rheno::Core {
@@ -20,25 +21,11 @@ int contributionsPerYear(const QString& label) {
 }
 
 bool parseDouble(const QString& text, double* value) {
-    QString trimmed = text.trimmed();
-    if (trimmed.isEmpty()) {
-        *value = 0.0;
-        return true;
-    }
-
-    bool ok = false;
-    double parsed = QLocale::system().toDouble(trimmed, &ok);
-    if (!ok) {
-        QString normalized = trimmed;
-        parsed = normalized.replace(',', '.').toDouble(&ok);
-    }
-    if (!ok) return false;
-    *value = parsed;
-    return true;
+    return tryParseLocalizedDouble(text, value, EmptyNumberPolicy::Zero);
 }
 
 QString formatMoney(double value) {
-    return QLocale::system().toString(value, 'f', 2);
+    return formatMoneyLocalized(value, 2);
 }
 
 FinanceSimpleResult calculateSimpleCompound(double principal, double ratePercent, double periods) {

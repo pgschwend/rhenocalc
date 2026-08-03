@@ -114,7 +114,7 @@ ConversionResult convert(
 
         const QString resultStr = formatResult(result);
         out.valid = true;
-        out.resultText = resultStr + " " + toU;
+        out.resultText = resultStr;
         out.formulaText = QString("%1 %2 = %3 %4").arg(fromValue).arg(fromU).arg(resultStr).arg(toU);
         return out;
     }
@@ -129,7 +129,7 @@ ConversionResult convert(
         else if (toU == "K") result = c + 273.15;
 
         out.valid = true;
-        out.resultText = QString::number(result, 'g', 10) + " " + toU;
+        out.resultText = QString::number(result, 'g', 10);
         out.formulaText = QString("%1 %2 → %3 %4").arg(fromValue).arg(fromU).arg(result).arg(toU);
         return out;
     }
@@ -142,7 +142,7 @@ ConversionResult convert(
 
     const QString resultStr = formatResult(result);
     out.valid = true;
-    out.resultText = resultStr + " " + toU;
+    out.resultText = resultStr;
     out.formulaText = QString("%1 %2 = %3 %4").arg(fromValue).arg(fromU).arg(resultStr).arg(toU);
     return out;
 }
