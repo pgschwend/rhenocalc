@@ -290,92 +290,106 @@ bool CalculatorPageController::onKeyPress(QKeyEvent* event) {
     }
 
     switch (key) {
-    case Qt::Key_Plus: pressOperator("+"); return true;
-    case Qt::Key_Minus: pressOperator("-"); return true;
-    case Qt::Key_Asterisk: pressOperator("*"); return true;
-    case Qt::Key_Slash: pressOperator("/"); return true;
-    case Qt::Key_Percent: pressOperator("MOD"); return true;
+        case Qt::Key_Plus: pressOperator("+"); return true;
+        case Qt::Key_Minus: pressOperator("-"); return true;
+        case Qt::Key_Asterisk: pressOperator("*"); return true;
+        case Qt::Key_Slash: pressOperator("/"); return true;
+        case Qt::Key_Percent: pressOperator("MOD"); return true;
 
-    case Qt::Key_Return:
-    case Qt::Key_Enter:
-    case Qt::Key_Equal: onEqualsClicked(); return true;
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+        case Qt::Key_Equal: onEqualsClicked(); return true;
 
-    case Qt::Key_Escape: {
-        if (!m_page->m_engine.isClearState()) {
-            resetCeClearCycle();
-            m_page->m_engine.clearAllAndMemory();
-            updateDisplay();
+        case Qt::Key_Escape: {
+            if (!m_page->m_engine.isClearState()) {
+                resetCeClearCycle();
+                m_page->m_engine.clearAllAndMemory();
+                updateDisplay();
+                return true;
+            }
+            if (QWidget* mainWin = m_page->window()) {
+                QSettings settings("RhenoCalc", "RhenoCalc");
+                if (settings.value("closeWithEscCheck", false).toBool())
+                    mainWin->close();
+            }
             return true;
         }
-        if (QWidget* mainWin = m_page->window()) {
-            QSettings settings("RhenoCalc", "RhenoCalc");
-            if (settings.value("closeWithEscCheck", false).toBool())
-                mainWin->close();
-        }
-        return true;
-    }
-    case Qt::Key_Delete: onClearClicked(); return true;
-    case Qt::Key_Backspace: onBackspaceClicked(); return true;
 
-    case Qt::Key_Ampersand:
-        m_page->m_engine.applyBitwiseOrFunction("AND");
-        updateDisplay();
-        return true;
-    case Qt::Key_Bar:
-        m_page->m_engine.applyBitwiseOrFunction("OR");
-        updateDisplay();
-        return true;
-    case Qt::Key_AsciiCircum:
-        m_page->m_engine.applyBitwiseOrFunction("XOR");
-        updateDisplay();
-        return true;
-    case Qt::Key_AsciiTilde:
-        m_page->m_engine.applyBitwiseOrFunction("NOT");
-        updateDisplay();
-        return true;
-    case Qt::Key_Less:
-        m_page->m_engine.applyBitwiseOrFunction("LSL");
-        updateDisplay();
-        return true;
-    case Qt::Key_Greater:
-        m_page->m_engine.applyBitwiseOrFunction("LSR");
-        updateDisplay();
-        return true;
-    case Qt::Key_N:
-        if (mod == Qt::NoModifier) { onNegateClicked(); return true; }
-        break;
+        case Qt::Key_Delete: onClearClicked(); return true;
+        case Qt::Key_Backspace: onBackspaceClicked(); return true;
 
-    case Qt::Key_D:
-        if (mod == Qt::AltModifier) { m_page->m_baseCombo->setCurrentIndex(0); return true; }
-        break;
-    case Qt::Key_H:
-        if (mod == Qt::AltModifier) { m_page->m_baseCombo->setCurrentIndex(1); return true; }
-        break;
-    case Qt::Key_B:
-        if (mod == Qt::AltModifier) { m_page->m_baseCombo->setCurrentIndex(2); return true; }
-        break;
-    case Qt::Key_O:
-        if (mod == Qt::AltModifier) { m_page->m_baseCombo->setCurrentIndex(3); return true; }
-        break;
+        case Qt::Key_Ampersand:
+            m_page->m_engine.applyBitwiseOrFunction("AND");
+            updateDisplay();
+            return true;
 
-    case Qt::Key_1:
-        if (mod == Qt::AltModifier) { m_page->m_widthCombo->setCurrentIndex(0); return true; }
-        break;
-    case Qt::Key_2:
-        if (mod == Qt::AltModifier) { m_page->m_widthCombo->setCurrentIndex(1); return true; }
-        break;
-    case Qt::Key_3:
-        if (mod == Qt::AltModifier) { m_page->m_widthCombo->setCurrentIndex(2); return true; }
-        break;
-    case Qt::Key_4:
-        if (mod == Qt::AltModifier) { m_page->m_widthCombo->setCurrentIndex(3); return true; }
-        break;
-    case Qt::Key_5:
-        if (mod == Qt::AltModifier) { m_page->m_widthCombo->setCurrentIndex(4); return true; }
-        break;
+        case Qt::Key_Bar:
+            m_page->m_engine.applyBitwiseOrFunction("OR");
+            updateDisplay();
+            return true;
 
-    default:
-        break;
+        case Qt::Key_AsciiCircum:
+            m_page->m_engine.applyBitwiseOrFunction("XOR");
+            updateDisplay();
+            return true;
+
+        case Qt::Key_AsciiTilde:
+            m_page->m_engine.applyBitwiseOrFunction("NOT");
+            updateDisplay();
+            return true;
+
+        case Qt::Key_Less:
+            m_page->m_engine.applyBitwiseOrFunction("LSL");
+            updateDisplay();
+            return true;
+
+        case Qt::Key_Greater:
+            m_page->m_engine.applyBitwiseOrFunction("LSR");
+            updateDisplay();
+            return true;
+
+        case Qt::Key_N:
+            if (mod == Qt::NoModifier) { onNegateClicked(); return true; }
+            break;
+
+        case Qt::Key_D:
+            if ((mod & Qt::AltModifier) != 0x00) { m_page->m_baseCombo->setCurrentIndex(0); return true; }
+            break;
+
+        case Qt::Key_H:
+            if ((mod & Qt::AltModifier) != 0x00) { m_page->m_baseCombo->setCurrentIndex(1); return true; }
+            break;
+
+        case Qt::Key_B:
+            if ((mod & Qt::AltModifier) != 0x00) { m_page->m_baseCombo->setCurrentIndex(2); return true; }
+            break;
+
+        case Qt::Key_O:
+            if ((mod & Qt::AltModifier) != 0x00) { m_page->m_baseCombo->setCurrentIndex(3); return true; }
+            break;
+
+        case Qt::Key_1:
+            if ((mod & Qt::AltModifier) != 0x00) { m_page->m_widthCombo->setCurrentIndex(0); return true; }
+            break;
+
+        case Qt::Key_2:
+            if ((mod & Qt::AltModifier) != 0x00) { m_page->m_widthCombo->setCurrentIndex(1); return true; }
+            break;
+
+        case Qt::Key_3:
+            if ((mod & Qt::AltModifier) != 0x00) { m_page->m_widthCombo->setCurrentIndex(2); return true; }
+            break;
+
+        case Qt::Key_4:
+            if ((mod & Qt::AltModifier) != 0x00) { m_page->m_widthCombo->setCurrentIndex(3); return true; }
+            break;
+
+        case Qt::Key_5:
+            if ((mod & Qt::AltModifier) != 0x00) { m_page->m_widthCombo->setCurrentIndex(4); return true; }
+            break;
+
+        default:
+            break;
     }
 
     return false;

@@ -67,18 +67,18 @@ void TabCoordinator::installShortcuts(QWidget* shortcutParent) {
     connect(prevTab, &QShortcut::activated, this, [this]() {
         const int current = m_tabWidget->currentIndex();
         const int next = (current - 1 + 3) % 3;
-        m_tabWidget->setCurrentIndex(next);
-        if (QWidget* w = m_tabWidget->currentWidget())
+        if (QWidget* w = m_tabWidget->widget(next))
             w->setFocus();
+        m_tabWidget->setCurrentIndex(next);
     });
 
     auto* nextTab = new QShortcut(QKeySequence(Qt::AltModifier | Qt::Key_Right), shortcutParent);
     connect(nextTab, &QShortcut::activated, this, [this]() {
         const int current = m_tabWidget->currentIndex();
         const int next = (current + 1) % 3;
-        m_tabWidget->setCurrentIndex(next);
-        if (QWidget* w = m_tabWidget->currentWidget())
+        if (QWidget* w = m_tabWidget->widget(next))
             w->setFocus();
+        m_tabWidget->setCurrentIndex(next);
     });
 
     auto* openDown = new QShortcut(QKeySequence(Qt::AltModifier | Qt::Key_Down), shortcutParent);

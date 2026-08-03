@@ -385,19 +385,12 @@ bool BaseConverterPage::eventFilter(QObject* watched, QEvent* event) {
             }
 
             // Intercept Alt+X/D/B/O for focus switching
-            if (mod == Qt::AltModifier) {
+            if ((mod & Qt::AltModifier) != 0x00) {
                 if (key == Qt::Key_H || key == Qt::Key_D ||
                     key == Qt::Key_B || key == Qt::Key_O ||
                     key == Qt::Key_1 || key == Qt::Key_2 ||
-                    key == Qt::Key_3 || key == Qt::Key_4) {
-                    keyPressEvent(keyEvent);
-                    return true;
-                }
-            }
-
-            // Intercept +/- for signed checkbox
-            if (mod == Qt::NoModifier || mod == Qt::ShiftModifier) {
-                if (key == Qt::Key_Plus || key == Qt::Key_Minus) {
+                    key == Qt::Key_3 || key == Qt::Key_4 ||
+                    key == Qt::Key_Plus || key == Qt::Key_Minus) {
                     keyPressEvent(keyEvent);
                     return true;
                 }
@@ -457,66 +450,65 @@ void BaseConverterPage::keyPressEvent(QKeyEvent* event) {
     const int key = event->key();
     const Qt::KeyboardModifiers mod = event->modifiers();
 
-    // ── Alt+X/D/B/O: Focus switching between input fields ────────────────────
-    if (mod == Qt::AltModifier) {
-        switch (key) {
+    switch (key) {
         case Qt::Key_H:  // Alt+X -> Focus HEX field
             m_hexEdit->setFocus();
             m_hexEdit->selectAll();
             event->accept();
             return;
+
         case Qt::Key_D:  // Alt+D -> Focus DEC field
             m_decEdit->setFocus();
             m_decEdit->selectAll();
             event->accept();
             return;
+
         case Qt::Key_B:  // Alt+B -> Focus BIN field
             m_binEdit->setFocus();
             m_binEdit->selectAll();
             event->accept();
             return;
+
         case Qt::Key_O:  // Alt+O -> Focus OCT field
             m_octEdit->setFocus();
             m_octEdit->selectAll();
             event->accept();
             return;
 
-        // ── Alt+1-4: Word width switching ────────────────────────────────────
         case Qt::Key_1:
             m_widthCombo->setCurrentIndex(0);  // 8-bit
             event->accept();
             return;
+
         case Qt::Key_2:
             m_widthCombo->setCurrentIndex(1);  // 16-bit
             event->accept();
             return;
+
         case Qt::Key_3:
             m_widthCombo->setCurrentIndex(2);  // 32-bit
             event->accept();
             return;
+
         case Qt::Key_4:
             m_widthCombo->setCurrentIndex(3);  // 64-bit
             event->accept();
             return;
 
-        default:
-            break;
-        }
-    }
-
-    // ── + / - : Toggle signed checkbox ───────────────────────────────────────
-    if (mod == Qt::NoModifier || mod == Qt::ShiftModifier) {
-        if (key == Qt::Key_Minus) {
+        case Qt::Key_Minus:
             m_signedCheck->setChecked(true);
             event->accept();
             return;
-        }
-        if (key == Qt::Key_Plus) {
+
+        case Qt::Key_Plus:
             m_signedCheck->setChecked(false);
             event->accept();
             return;
-        }
+
+        default:
+            break;
     }
+
 
     // ── ESC: Clear values or close app ───────────────────────────────────────
     if (key == Qt::Key_Escape) {
