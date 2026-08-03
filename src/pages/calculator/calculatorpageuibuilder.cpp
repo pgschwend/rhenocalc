@@ -60,7 +60,7 @@ void buildCalculatorPageUi(CalculatorPage* page) {
 
 #if defined(Q_OS_MACOS)
     page->m_hintLabel = new QLabel(
-        "Option+D/X/B/O: Base  |  Option+1–5: Mode  |  Option+◀ ▶: Tab \n% MOD  |  & AND  |  | OR  |  ^ XOR  |  ~ NOT\n< LSL  |  > LSR  |  Esc AC/Close",
+        "Opt+D/X/B/O: Base  |  Opt+1–5: Mode  |  Opt+◀ ▶: Tab \n% MOD  |  & AND  |  | OR  |  ^ XOR  |  ~ NOT\n< LSL  |  > LSR  |  Esc AC/Close",
         page);
 #else
     page->m_hintLabel = new QLabel(

@@ -7,6 +7,8 @@
 #include <QScrollArea>
 #include <QSizePolicy>
 #include <QFont>
+#include <QKeySequence>
+#include <QTabWidget>
 
 
 // ─── BaseConverterPage ────────────────────────────────────────────────────────
@@ -189,6 +191,7 @@ void BaseConverterPage::setupUI() {
     outer->addWidget(scroll);
 
     // Enable keyboard input
+    setFocusProxy(m_decEdit);
     setFocusPolicy(Qt::StrongFocus);
 }
 
@@ -370,13 +373,56 @@ void BaseConverterPage::showEvent(QShowEvent* event) {
 
 bool BaseConverterPage::eventFilter(QObject* watched, QEvent* event) {
     // Redirect key events from input widgets to page for global shortcuts
-    if (event->type() == QEvent::KeyPress) {
+    if (event->type() == QEvent::KeyPress || event->type() == QEvent::ShortcutOverride) {
         auto* keyEvent = static_cast<QKeyEvent*>(event);
         const int key = keyEvent->key();
         const Qt::KeyboardModifiers mod = keyEvent->modifiers();
+        const bool isKeyPress = (event->type() == QEvent::KeyPress);
 
         // For line edits: allow normal text editing, but intercept global shortcuts
         if (qobject_cast<QLineEdit*>(watched)) {
+            const auto switchTabByArrow = [&](int arrowKey) {
+                if (QWidget* topLevel = window()) {
+                    if (QTabWidget* tabWidget = topLevel->findChild<QTabWidget*>()) {
+                        const int current = tabWidget->currentIndex();
+                        const int next = (arrowKey == Qt::Key_Left)
+                            ? ((current - 1 + 3) % 3)
+                            : ((current + 1) % 3);
+                        tabWidget->setCurrentIndex(next);
+                        if (QWidget* w = tabWidget->currentWidget())
+                            w->setFocus();
+                    }
+                }
+            };
+
+            // Reserve Opt+Left/Right for app-level tab switching instead of QLineEdit word navigation.
+            const bool altArrow = ((mod & Qt::AltModifier) &&
+                                   (key == Qt::Key_Left || key == Qt::Key_Right));
+#if defined(Q_OS_MACOS) || defined(__APPLE__)
+            const bool macWordNavShortcut =
+                keyEvent->matches(QKeySequence::MoveToPreviousWord) ||
+                keyEvent->matches(QKeySequence::MoveToNextWord);
+#else
+            const bool macWordNavShortcut = false;
+#endif
+
+            if (!isKeyPress && (altArrow || macWordNavShortcut)) {
+                event->accept();
+                return true;
+            }
+
+            if (!isKeyPress)
+                return QWidget::eventFilter(watched, event);
+
+            if (altArrow || macWordNavShortcut) {
+                event->accept();
+                const int arrowKey = (key == Qt::Key_Left || key == Qt::Key_Right)
+                    ? key
+                    : (keyEvent->matches(QKeySequence::MoveToPreviousWord) ? Qt::Key_Left : Qt::Key_Right);
+                switchTabByArrow(arrowKey);
+                return true;
+            }
+
             // Allow normal navigation in text fields
             if (key == Qt::Key_Left || key == Qt::Key_Right ||
                 key == Qt::Key_Home || key == Qt::Key_End ||
@@ -407,6 +453,9 @@ bool BaseConverterPage::eventFilter(QObject* watched, QEvent* event) {
 
         // For combobox and checkbox: allow normal interaction but intercept shortcuts
         if (qobject_cast<QComboBox*>(watched) || qobject_cast<QCheckBox*>(watched)) {
+            if (!isKeyPress)
+                return QWidget::eventFilter(watched, event);
+
             // Allow normal navigation
             if (key == Qt::Key_Up || key == Qt::Key_Down ||
                 key == Qt::Key_Return || key == Qt::Key_Enter ||
@@ -536,4 +585,3 @@ void BaseConverterPage::keyPressEvent(QKeyEvent* event) {
 
     QWidget::keyPressEvent(event);
 }
-
