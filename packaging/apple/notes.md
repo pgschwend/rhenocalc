@@ -1,7 +1,7 @@
 
 ## Notes for Apple Packaging
 
-### 1. Create target directory (if needed) and copy fresh build
+### 1. Create target directory (if needed) and create fresh build
 ```bash
 scripts/deploy_macos.sh
 ```

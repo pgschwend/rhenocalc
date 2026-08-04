@@ -137,7 +137,7 @@ void MainWindow::restoreToolSettings() {
 
     m_isDark = settings.value("darkTheme", true).toBool();
     m_alwaysOnTop = settings.value("alwaysOnTop", false).toBool();
-    m_closeWithEsc = settings.value("closeWithEscCheck", false).toBool();
+    m_closeWithEsc = settings.value("closeWithEscCheck", true).toBool();
 
     int positionMode = settings.value("windowStartPosition", 1).toInt();
     m_windowStartPosition = static_cast<WindowStartPosition>(positionMode);
