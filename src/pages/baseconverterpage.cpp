@@ -572,7 +572,7 @@ void BaseConverterPage::keyPressEvent(QKeyEvent* event) {
         // Second ESC (when already cleared): Close app if setting enabled
         if (QWidget* mainWin = window()) {
             QSettings settings("RhenoCalc", "RhenoCalc");
-            if (settings.value("closeWithEscCheck", false).toBool()) {
+            if (settings.value("closeWithEscCheck", true).toBool()) {
                 event->accept();
                 mainWin->close();
                 return;

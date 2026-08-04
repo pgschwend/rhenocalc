@@ -85,7 +85,7 @@ void SettingsPage::setupUI() {
     // Always On Top
     m_closeWithEscCheck = new QCheckBox("Close with ESC", this);
     m_closeWithEscCheck->setStyleSheet("font-size:13px;");
-    bool closeWithEscCheck = settings.value("closeWithEscCheck", false).toBool();
+    bool closeWithEscCheck = settings.value("closeWithEscCheck", true).toBool();
     m_closeWithEscCheck->setChecked(closeWithEscCheck);
 
     connect(m_closeWithEscCheck, &QCheckBox::toggled, this, [this](bool checked) {

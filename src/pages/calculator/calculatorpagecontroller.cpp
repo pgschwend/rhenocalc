@@ -309,7 +309,7 @@ bool CalculatorPageController::onKeyPress(QKeyEvent* event) {
             }
             if (QWidget* mainWin = m_page->window()) {
                 QSettings settings("RhenoCalc", "RhenoCalc");
-                if (settings.value("closeWithEscCheck", false).toBool())
+                if (settings.value("closeWithEscCheck", true).toBool())
                     mainWin->close();
             }
             return true;

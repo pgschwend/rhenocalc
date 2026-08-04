@@ -5,7 +5,7 @@
 
     <Identity Name="RhensysGmbH.RhenoCalc"
               Publisher="CN=37343681-83CE-490C-803F-15ED95B98937"
-              Version="0.2.5.0"
+              Version="0.3.0.0"
               ProcessorArchitecture="x64" />
 
     <Properties>
