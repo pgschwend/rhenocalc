@@ -26,8 +26,8 @@ You can download the compiled binaries directly from the GitHub Releases page:
 
 ### 2. App Stores (Optional Support)
 For automated background updates and seamless OS integration, the app can be purchased for a small one-time fee in the official stores. This supports further independent development — or simply buys me a coffee ☕
-- **Windows:** *[Coming soon to the Microsoft Store]*
-- **macOS:** *[Coming soon to the Apple App Store]*
+- **Windows:** [Microsoft Store](https://apps.microsoft.com/detail/9pnvmzjgsw0j?ocid=webpdpshare)
+- **macOS:** [Apple App Store](https://apps.apple.com/us/app/rhenocalc/id6793233520?mt=12)
 
 ---
 

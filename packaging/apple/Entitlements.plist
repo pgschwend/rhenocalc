@@ -2,11 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- Zwingend erforderlich für den App Store -->
+    <!-- Highly required for App Store -->
     <key>com.apple.security.app-sandbox</key>
     <true/>
 
-    <!-- Erlaubt deiner App ausgehende Netzwerkverbindungen (z.B. für Ping/Traceroute/DNS) -->
+    <!-- Allows outgoing network connection for update check -->
     <key>com.apple.security.network.client</key>
     <true/>
 </dict>
