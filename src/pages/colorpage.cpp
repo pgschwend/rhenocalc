@@ -42,8 +42,17 @@ protected:
         p.fillRect(rect(), QColor(0, 0, 0, 40));
     }
     void mousePressEvent(QMouseEvent* event) override {
-        if (event->button() == Qt::LeftButton)
-            emit colorPicked(m_screenshot.toImage().pixelColor(event->pos()));
+        if (event->button() == Qt::LeftButton && !m_screenshot.isNull()) {
+            // event->pos() is in logical (device-independent) coordinates, but the
+            // grabbed screenshot is stored at physical pixel resolution; on a scaled
+            // (HiDPI/Retina) display these differ and must be converted, or the
+            // sampled pixel doesn't match where the user actually clicked.
+            const qreal dpr = m_screenshot.devicePixelRatio();
+            const QPoint physicalPos = (QPointF(event->pos()) * dpr).toPoint();
+            const QImage img = m_screenshot.toImage();
+            if (img.rect().contains(physicalPos))
+                emit colorPicked(img.pixelColor(physicalPos));
+        }
         close(); deleteLater();
     }
     void keyPressEvent(QKeyEvent* event) override {

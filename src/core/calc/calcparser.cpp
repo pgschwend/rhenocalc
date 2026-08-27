@@ -94,15 +94,21 @@ bool evalIntRpn(const QStringList& rpn, int base, int bits, long long* result) {
                 return false;
             const long long b = st.back(); st.pop_back();
             const long long a = st.back(); st.pop_back();
+            if ((tk == "/" || tk == "MOD") && b == 0)
+                return false;
             st.push_back(maskToWidth(applyBinary(a, b, tk), bits));
             continue;
         }
 
         bool ok = false;
-        const long long v = tk.toLongLong(&ok, base);
+        long long v = tk.toLongLong(&ok, base);
         if (!ok)
             return false;
-        st.push_back(maskToWidth(v, bits));
+        // Hex/oct/bin tokens are printed as the raw unsigned bit pattern (see
+        // toBaseString), so re-parsing them loses the two's-complement sign; restore
+        // it here so sign-sensitive ops (/, MOD) see the value the user intended.
+        // (Already masked-then-extended, so no further masking here.)
+        st.push_back(base == 10 ? maskToWidth(v, bits) : signExtendToWidth(v, bits));
     }
 
     if (st.size() != 1)
@@ -144,6 +150,8 @@ bool evalBigRpn(const QStringList& rpn, BigDecimal* result) {
                 return false;
             const auto b = st.back(); st.pop_back();
             const auto a = st.back(); st.pop_back();
+            if ((tk == "/" || tk == "MOD") && b == 0)
+                return false;
             st.push_back(applyBigBinary(a, b, tk));
             continue;
         }

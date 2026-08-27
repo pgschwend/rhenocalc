@@ -8,6 +8,7 @@ namespace Rheno::Core {
 using BigDecimal = boost::multiprecision::cpp_dec_float_50;
 
 long long maskToWidth(long long value, int bits);
+long long signExtendToWidth(long long value, int bits);
 QString toBaseString(long long value, int base, int bits);
 long long fromBaseString(const QString& text, int base);
 QString formatDouble(double value);

@@ -124,9 +124,16 @@ void UnitConverterPage::populate(int category) {
         m_toUnit->addItem(u.name);
     }
 
-    // Set default values
-    m_fromUnit->setCurrentIndex(2);
-    m_toUnit->setCurrentIndex(8);
+    // Set default values, clamped to the category's actual unit count (only the
+    // Frequency category has 9 units; every other category is smaller, and
+    // setCurrentIndex() on an out-of-range index leaves the combo blank/-1).
+    const int count = m_categories[category].size();
+    const int fromDefault = qMin(2, count - 1);
+    int toDefault = qMin(8, count - 1);
+    if (toDefault == fromDefault)
+        toDefault = (fromDefault == 0) ? qMin(1, count - 1) : 0;
+    m_fromUnit->setCurrentIndex(fromDefault);
+    m_toUnit->setCurrentIndex(toDefault);
 
     m_fromUnit->blockSignals(false);
     m_toUnit->blockSignals(false);

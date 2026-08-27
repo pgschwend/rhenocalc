@@ -13,12 +13,23 @@ long long maskToWidth(long long value, int bits) {
     return value & mask;
 }
 
+// Reinterprets the low `bits` of `value` as a signed two's-complement number,
+// i.e. the inverse of maskToWidth() for the purpose of decimal display/arithmetic.
+long long signExtendToWidth(long long value, int bits) {
+    if (bits >= 64) return value;
+    const long long signBit = 1LL << (bits - 1);
+    const long long masked = maskToWidth(value, bits);
+    if (masked & signBit) return masked | ~((1LL << bits) - 1);
+    return masked;
+}
+
 QString toBaseString(long long value, int base, int bits) {
     const long long masked = maskToWidth(value, bits);
     if (base == 16) return QString::number(static_cast<unsigned long long>(masked), 16).toUpper();
     if (base == 2) return QString::number(static_cast<unsigned long long>(masked), 2);
     if (base == 8) return QString::number(static_cast<unsigned long long>(masked), 8);
-    return QString::number(masked);
+    // Decimal display shows the signed value the bit pattern represents at this word width.
+    return QString::number(signExtendToWidth(masked, bits));
 }
 
 long long fromBaseString(const QString& text, int base) {
@@ -43,11 +54,14 @@ QString formatBigDecimal(const BigDecimal& value) {
 // ── Integer arithmetic ───────────────────────────────────────────────────────
 
 long long applyBinary(long long a, long long b, const QString& op) {
+    // a / -1 (and a % -1) is well-defined for every value except LLONG_MIN, where the
+    // mathematical result overflows and a hardware divide trap (SIGFPE) would occur.
+    const bool isMinOverNegOne = (b == -1) && (a == std::numeric_limits<long long>::min());
     if (op == "+") return a + b;
     if (op == "-") return a - b;
     if (op == "*") return a * b;
-    if (op == "/") return b != 0 ? a / b : 0;
-    if (op == "MOD") return b != 0 ? a % b : 0;
+    if (op == "/") return b == 0 ? 0 : (isMinOverNegOne ? a : a / b);
+    if (op == "MOD") return b == 0 ? 0 : (isMinOverNegOne ? 0 : a % b);
     if (op == "AND") return a & b;
     if (op == "OR") return a | b;
     if (op == "XOR") return a ^ b;
@@ -107,6 +121,16 @@ double applyUnaryDouble(double value, const QString& op) {
 
 // ── BigDecimal arithmetic ────────────────────────────────────────────────────
 
+namespace {
+long long saturateToLongLong(const BigDecimal& v) {
+    static const BigDecimal maxLL(std::numeric_limits<long long>::max());
+    static const BigDecimal minLL(std::numeric_limits<long long>::min());
+    if (v >= maxLL) return std::numeric_limits<long long>::max();
+    if (v <= minLL) return std::numeric_limits<long long>::min();
+    return static_cast<long long>(v);
+}
+} // namespace
+
 BigDecimal applyBigBinary(const BigDecimal& a, const BigDecimal& b, const QString& op) {
     if (op == "+") return a + b;
     if (op == "-") return a - b;
@@ -118,9 +142,11 @@ BigDecimal applyBigBinary(const BigDecimal& a, const BigDecimal& b, const QStrin
         q = boost::multiprecision::trunc(q);
         return a - q * b;
     }
-    // Bitwise: fallback to long long
-    long long la = static_cast<long long>(a);
-    long long lb = static_cast<long long>(b);
+    // Bitwise: fallback to long long (BigDecimal has no arbitrary-precision integer
+    // bit representation). Saturate rather than relying on implementation-defined
+    // truncation for values outside the long long range.
+    long long la = saturateToLongLong(a);
+    long long lb = saturateToLongLong(b);
     if (op == "AND") return BigDecimal(la & lb);
     if (op == "OR")  return BigDecimal(la | lb);
     if (op == "XOR") return BigDecimal(la ^ lb);
@@ -134,7 +160,7 @@ BigDecimal applyBigUnary(const BigDecimal& value, const QString& op) {
     if (op == "log")  return value > 0 ? boost::multiprecision::log10(value) : BigDecimal(0);
     if (op == "ln")   return value > 0 ? boost::multiprecision::log(value) : BigDecimal(0);
     if (op == "NOT") {
-        long long v = static_cast<long long>(value);
+        long long v = saturateToLongLong(value);
         return BigDecimal(~v);
     }
     if (op == "LSL") return value * 2;

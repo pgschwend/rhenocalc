@@ -61,39 +61,69 @@ FinanceCompoundResult calculateCompoundInterest(
     const int m = contributionsPerYear;
 
     const double periodRate = (annualRatePercent / 100.0) / static_cast<double>(n);
-    const int totalPeriods = static_cast<int>(qRound(years * n));
+    const double epsilon = 1e-9;
+
+    // Split the term into whole compounding periods plus a possible fractional
+    // leftover period (e.g. years=0.4 with annual compounding is 0 whole periods
+    // and a 0.4-period leftover) so short/fractional terms still accrue interest
+    // and receive their scheduled contributions, instead of being skipped entirely.
+    const double totalPeriodsExact = years * static_cast<double>(n);
+    const int wholePeriods = qFloor(totalPeriodsExact + epsilon);
+    const double leftoverPeriodLength = qMax(0.0, totalPeriodsExact - wholePeriods);
 
     double balance = principal;
     double totalContrib = principal;
 
     const double contribInterval = (m > 0) ? (1.0 / static_cast<double>(m)) : 0.0;
     double nextContribution = (m > 0) ? (contributionsAtStart ? 0.0 : contribInterval) : 1e9;
-    const double epsilon = 1e-9;
 
-    for (int i = 1; i <= totalPeriods; ++i) {
-        const double periodStart = (static_cast<double>(i - 1)) / static_cast<double>(n);
-        const double periodEnd = (static_cast<double>(i)) / static_cast<double>(n);
+    // "At start" contributions due before `timeBound` are claimed by the period ending
+    // there; one due exactly at `timeBound` belongs to the *next* period's start-window
+    // instead (avoids double-counting across the period boundary) -- unless there is no
+    // next period, in which case it must still be swept up so it isn't silently dropped.
+    const auto applyContributionsExclusive = [&](double timeBound) {
+        while (nextContribution < timeBound - epsilon) {
+            balance += contribution;
+            totalContrib += contribution;
+            nextContribution += contribInterval;
+        }
+    };
+    const auto applyContributionsInclusive = [&](double timeBound) {
+        while (nextContribution <= timeBound + epsilon) {
+            balance += contribution;
+            totalContrib += contribution;
+            nextContribution += contribInterval;
+        }
+    };
+
+    for (int i = 1; i <= wholePeriods; ++i) {
+        const double periodEnd = static_cast<double>(i) / static_cast<double>(n);
+        const bool isFinalSegment = (i == wholePeriods) && (leftoverPeriodLength <= epsilon);
 
         // Contributions at start of period
         if (m > 0 && contributionsAtStart) {
-            while (nextContribution <= periodStart + epsilon) {
-                balance += contribution;
-                totalContrib += contribution;
-                nextContribution += contribInterval;
-            }
+            if (isFinalSegment) applyContributionsInclusive(periodEnd);
+            else applyContributionsExclusive(periodEnd);
         }
 
         // Apply compound interest for this period
         balance *= (1.0 + periodRate);
 
         // Contributions at end of period
-        if (m > 0 && !contributionsAtStart) {
-            while (nextContribution <= periodEnd + epsilon) {
-                balance += contribution;
-                totalContrib += contribution;
-                nextContribution += contribInterval;
-            }
-        }
+        if (m > 0 && !contributionsAtStart)
+            applyContributionsInclusive(periodEnd);
+    }
+
+    if (leftoverPeriodLength > epsilon) {
+        const double periodEnd = years;
+
+        if (m > 0 && contributionsAtStart)
+            applyContributionsInclusive(periodEnd);
+
+        balance *= qPow(1.0 + periodRate, leftoverPeriodLength);
+
+        if (m > 0 && !contributionsAtStart)
+            applyContributionsInclusive(periodEnd);
     }
 
     result.futureValue = balance;
