@@ -10,6 +10,7 @@
 #include <QKeyEvent>
 #include <QPushButton>
 #include <QSettings>
+#include <QTabWidget>
 #include <QWidget>
 
 CalculatorPageController::CalculatorPageController(CalculatorPage* page) : m_page(page) {
@@ -386,6 +387,25 @@ bool CalculatorPageController::onKeyPress(QKeyEvent* event) {
 
         case Qt::Key_5:
             if ((mod & Qt::AltModifier) != 0x00) { m_page->m_widthCombo->setCurrentIndex(4); return true; }
+            break;
+
+        case Qt::Key_Left:
+        case Qt::Key_Right:
+            if ((mod & Qt::AltModifier) != 0x00) {
+                if (QWidget* topLevel = m_page->window()) {
+                    if (auto* tabWidget = topLevel->findChild<QTabWidget*>()) {
+                        const int count = tabWidget->count();
+                        if (count > 0) {
+                            const int current = tabWidget->currentIndex();
+                            const int next = (key == Qt::Key_Left) ? ((current - 1 + count) % count) : ((current + 1) % count);
+                            tabWidget->setCurrentIndex(next);
+                            if (QWidget* w = tabWidget->currentWidget())
+                                w->setFocus();
+                        }
+                    }
+                }
+                return true;
+            }
             break;
 
         default:

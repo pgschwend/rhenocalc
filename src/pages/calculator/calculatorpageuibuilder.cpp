@@ -60,11 +60,11 @@ void buildCalculatorPageUi(CalculatorPage* page) {
 
 #if defined(Q_OS_MACOS)
     page->m_hintLabel = new QLabel(
-        "Opt+D/X/B/O: Base  |  Opt+1–5: Mode  |  Opt+◀ ▶: Tab \n% MOD  |  & AND  |  | OR  |  ^ XOR  |  ~ NOT\n< LSL  |  > LSR  |  Esc AC/Close",
+        "Opt+D/H/B/O: Base  |  Opt+1–5: Mode  |  Opt+◀ ▶: Tab \n% MOD  |  & AND  |  | OR  |  ^ XOR  |  ~ NOT\n< LSL  |  > LSR  |  Esc AC/Close",
         page);
 #else
     page->m_hintLabel = new QLabel(
-        "% MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n< LSL  |  > LSR  |  Enter =  |  Esc AC/Close  |  ⌫ BS  |\nAlt+D/X/B/O: Base  |  Alt+1–5: Mode  |  Alt+◀ ▶: Tab",
+        "% MOD  |  & AND  |  | OR  |  ^ XOR |  ~ NOT  |\n< LSL  |  > LSR  |  Enter =  |  Esc AC/Close  |  ⌫ BS  |\nAlt+D/H/B/O: Base  |  Alt+1–5: Mode  |  Alt+◀ ▶: Tab",
         page);
 #endif
 

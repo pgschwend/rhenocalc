@@ -90,7 +90,11 @@ void ColorPage::setupUI() {
     auto* hexGroup = new QGroupBox("HEX");
     auto* hexLayout = new QHBoxLayout(hexGroup);
     m_hexEdit = new QLineEdit("3498DB");
-    m_hexEdit->setMaxLength(8);
+    // RGB only (6 hex digits) -- alpha has its own "A" field below. Allowing 8 digits
+    // here was ambiguous: QColor parses "#AARRGGBB" (alpha first), which silently
+    // produced a very different color than users pasting a CSS-style "#RRGGBBAA".
+    m_hexEdit->setMaxLength(6);
+    m_hexEdit->setToolTip("RRGGBB (alpha is set via the RGB group's \"A\" field)");
     hexLayout->addWidget(new QLabel("#"));
     hexLayout->addWidget(m_hexEdit);
     m_pickBtn = new QPushButton("\xe2\x8a\x99 Pick");

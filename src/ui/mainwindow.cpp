@@ -50,6 +50,10 @@ MainWindow::MainWindow(QWidget* parent)
 {
     restoreToolSettings();
     setupUI();
+    // Restoring/computing geometry must happen after setupUI() has populated the
+    // central widget, minimum width, and status bar -- doing it before left a
+    // first-run window sized from an essentially empty shell.
+    restoreWindowGeometry();
     restoreUISettings();
     
     applyTheme(m_isDark);
@@ -94,8 +98,12 @@ void MainWindow::showEvent(QShowEvent* event) {
         applyTitleBarTheme(m_isDark);
         firstShow = false;
     }
-    
-    m_calcPage->setFocus();
+
+    // Only steal focus back to the calculator when it's actually the visible tab --
+    // showEvent() also fires when applyAlwaysOnTop() re-shows the window, which
+    // shouldn't yank focus away from whatever other tab the user was on.
+    if (m_tabWidget->currentIndex() == 0)
+        m_calcPage->setFocus();
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* event) {
@@ -143,6 +151,10 @@ void MainWindow::restoreToolSettings() {
     m_windowStartPosition = static_cast<WindowStartPosition>(positionMode);
 
     // Note: Tab index is restored in constructor after setupUI()
+}
+
+void MainWindow::restoreWindowGeometry() {
+    QSettings settings("RhenoCalc", "RhenoCalc");
 
     if (settings.contains("windowGeometry")) {
         restoreGeometry(settings.value("windowGeometry").toByteArray());
@@ -173,12 +185,15 @@ void MainWindow::moveToMousePosition() {
         int x = mousePos.x() - (this->width() / 2);
         int y = mousePos.y() - (this->height() / 2);
 
-        // Keep the window inside the visible screen bounds (so it doesn't clip out)
-        QRect screenGeometry = currentScreen->geometry();
+        // Keep the window inside the screen's usable area (excludes the taskbar/dock),
+        // matching centerOnMouseScreen(); clamp the low edge last so an oversized
+        // window (bigger than the screen) still ends up flush with the top-left
+        // instead of being pushed past it by the high-edge clamp.
+        QRect screenGeometry = currentScreen->availableGeometry();
+        if (x + this->width() > screenGeometry.right() + 1) x = screenGeometry.right() + 1 - this->width();
+        if (y + this->height() > screenGeometry.bottom() + 1) y = screenGeometry.bottom() + 1 - this->height();
         if (x < screenGeometry.left()) x = screenGeometry.left();
         if (y < screenGeometry.top()) y = screenGeometry.top();
-        if (x + this->width() > screenGeometry.right()) x = screenGeometry.right() - this->width();
-        if (y + this->height() > screenGeometry.bottom()) y = screenGeometry.bottom() - this->height();
 
         this->move(x, y);
     }
@@ -419,8 +434,10 @@ void MainWindow::applyAlwaysOnTop(bool enabled, bool persist) {
         show();
         raise();
         activateWindow();
+        // setWindowFlags() can recreate the native window handle, which drops the
+        // OS-level dark title bar attribute set in showEvent()'s one-shot branch.
+        applyTitleBarTheme(m_isDark);
     }
-
 
     updateOnTopButton();
 }

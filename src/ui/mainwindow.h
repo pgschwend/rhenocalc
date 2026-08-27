@@ -39,6 +39,7 @@ private:
     void updateOnTopButton();
     void saveToolSettings();
     void restoreToolSettings();
+    void restoreWindowGeometry();
     void restoreUISettings();
     void moveToMousePosition();
     void centerOnMouseScreen();

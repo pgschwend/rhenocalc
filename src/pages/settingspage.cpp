@@ -118,7 +118,7 @@ void SettingsPage::setupUI() {
 
     m_windowPosCombo = new QComboBox(this);
     m_windowPosCombo->addItems({"Last Position", "Center on Screen", "At Mouse Position"});
-    int startPos = settings.value("windowStartPosition", 1).toInt();
+    int startPos = qBound(0, settings.value("windowStartPosition", 1).toInt(), 2);
     m_windowPosCombo->setCurrentIndex(startPos);
 
     connect(m_windowPosCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
@@ -189,17 +189,19 @@ void SettingsPage::updateStatusBar(const QString& updateVersion, const QString& 
     QString statusText;
 
     if (!m_updateVersion.isEmpty()) {
-        // Update available - show clickable link
+        // Update available - show clickable link. The version/URL come from the
+        // GitHub API response, so escape them before interpolating into rich text.
         m_updateText = QString(
             "<table width=\"100%\" style=\"border-collapse: collapse;\">"
             "  <tr>"
             "    <td style=\"text-align: left; width: 33%;\">Update: <a href=\"%2\" style=\"color:%3;\">%1 available</a></td>"
             "  </tr>"
             "</table>"
-        ).arg(m_updateVersion, m_updateUrl, linkColor, APP_VERSION_STRING);
+        ).arg(m_updateVersion.toHtmlEscaped(), m_updateUrl.toHtmlEscaped(), linkColor);
 
         m_versionUpdateAvailable = new QLabel(m_updateText, this);
         m_versionUpdateAvailable->setStyleSheet("font-size:12px;");
+        m_versionUpdateAvailable->setOpenExternalLinks(true);
         m_aboutLayout->insertWidget(2, m_versionUpdateAvailable);
     }
 }

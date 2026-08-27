@@ -32,7 +32,7 @@ private:
     QCheckBox*   m_restoreTabIndexCheck;
     QComboBox*   m_windowPosCombo;
     QLabel*      m_versionLabel;
-    QLabel*      m_versionUpdateAvailable;
+    QLabel*      m_versionUpdateAvailable = nullptr;
 
     QGroupBox* m_appearanceGroup;
     QGroupBox* m_windowGroup;
