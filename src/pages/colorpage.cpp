@@ -58,6 +58,16 @@ protected:
     void keyPressEvent(QKeyEvent* event) override {
         if (event->key() == Qt::Key_Escape) { close(); deleteLater(); }
     }
+    bool event(QEvent* e) override {
+        // The overlay only closes on a click or Escape while it has focus; if the
+        // user switches away (Alt-Tab, a system dialog stealing focus, ...) before
+        // that, it would otherwise stay stuck full-screen and always-on-top.
+        if (e->type() == QEvent::WindowDeactivate) {
+            close(); deleteLater();
+            return true;
+        }
+        return QWidget::event(e);
+    }
 private:
     QPixmap m_screenshot;
 };

@@ -147,7 +147,7 @@ void MainWindow::restoreToolSettings() {
     m_alwaysOnTop = settings.value("alwaysOnTop", false).toBool();
     m_closeWithEsc = settings.value("closeWithEscCheck", true).toBool();
 
-    int positionMode = settings.value("windowStartPosition", 1).toInt();
+    int positionMode = qBound(0, settings.value("windowStartPosition", 1).toInt(), 2);
     m_windowStartPosition = static_cast<WindowStartPosition>(positionMode);
 
     // Note: Tab index is restored in constructor after setupUI()

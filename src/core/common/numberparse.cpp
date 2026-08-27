@@ -1,10 +1,11 @@
 #include "numberparse.h"
 
 #include <QLocale>
+#include <QRegularExpression>
 
 namespace Rheno::Core {
 
-bool tryParseLocalizedDouble(const QString& text, double* value, EmptyNumberPolicy emptyPolicy) {
+bool tryParseLocalizedDouble(const QString& text, double* value, EmptyNumberPolicy emptyPolicy, const QLocale& locale) {
     if (!value)
         return false;
 
@@ -18,10 +19,19 @@ bool tryParseLocalizedDouble(const QString& text, double* value, EmptyNumberPoli
     }
 
     bool ok = false;
-    double parsed = QLocale::system().toDouble(trimmed, &ok);
-    if (!ok) {
-        QString normalized = trimmed;
-        parsed = normalized.replace(',', '.').toDouble(&ok);
+    double parsed = locale.toDouble(trimmed, &ok);
+    if (!ok && trimmed.contains(',')) {
+        // A lone ',' the locale couldn't parse is most likely a European-style decimal
+        // separator (e.g. "1,5") -- *unless* the locale itself groups thousands with ','
+        // (e.g. en-US) and the text matches that grouping pattern (e.g. "1,234"), in
+        // which case blindly guessing "decimal" would silently turn 1234 into 1.234
+        // instead of correctly rejecting the unparseable input.
+        static const QRegularExpression groupedIntegerPattern(R"(^[+-]?\d{1,3}(,\d{3})+(\.\d+)?$)");
+        const bool localeGroupsWithComma = (locale.groupSeparator() == QChar(','));
+        if (!(localeGroupsWithComma && groupedIntegerPattern.match(trimmed).hasMatch())) {
+            QString normalized = trimmed;
+            parsed = normalized.replace(',', '.').toDouble(&ok);
+        }
     }
     if (!ok)
         return false;
@@ -62,7 +72,10 @@ bool isValidForBase(const QString& text, int base, bool allowDecimalPoint) {
     bool hasValidDigit = false;
 
     for (const QChar ch : text) {
-        if (ch.isDigit()) {
+        // Check against plain ASCII '0'-'9' explicitly rather than QChar::isDigit(),
+        // which also accepts non-ASCII decimal-digit scripts that toLongLong()/
+        // toDouble() don't understand as numeric digits.
+        if (ch.unicode() >= '0' && ch.unicode() <= '9') {
             const int v = ch.unicode() - '0';
             if ((base == 2 && v > 1) || (base == 8 && v > 7))
                 return false;
@@ -70,7 +83,7 @@ bool isValidForBase(const QString& text, int base, bool allowDecimalPoint) {
             continue;
         }
 
-        if (base == 16 && ch >= 'A' && ch <= 'F') {
+        if (base == 16 && ((ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f'))) {
             hasValidDigit = true;
             continue;
         }

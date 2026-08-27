@@ -44,6 +44,16 @@ void CalculatorPageController::onWordWidthChanged(int index) {
     resetCeClearCycle();
     const int widths[] = {8, 16, 32, 64};
     const bool precMode = (index == 4);
+
+    // "Scient" (arbitrary-precision) mode only has meaning in base 10 -- the engine
+    // itself only honors bigMode when base()==10, so selecting it while in Hex/Bin/Oct
+    // would otherwise leave the combo showing "Scient" while silently behaving like
+    // plain fixed-width mode. Snap the base back to Dec instead (mirrors the existing
+    // guard in onBaseChanged() that forces width off "Scient" when the base changes
+    // away from Dec).
+    if (precMode && m_page->m_engine.base() != 10)
+        m_page->m_baseCombo->setCurrentIndex(0);
+
     m_page->m_engine.setBigMode(precMode);
     if (!precMode)
         m_page->m_engine.setWordBits(widths[index]);
@@ -417,9 +427,8 @@ bool CalculatorPageController::onKeyPress(QKeyEvent* event) {
 
 bool CalculatorPageController::onEventFilter(QObject* watched, QEvent* event) {
     if ((watched == m_page->m_baseCombo || watched == m_page->m_widthCombo) && event->type() == QEvent::KeyPress) {
-        auto* keyEvent = dynamic_cast<QKeyEvent*>(event);
-        if (!keyEvent)
-            return false;
+        // event->type() == QEvent::KeyPress already guarantees this is a QKeyEvent.
+        auto* keyEvent = static_cast<QKeyEvent*>(event);
         const int key = keyEvent->key();
         const Qt::KeyboardModifiers mod = keyEvent->modifiers();
 
