@@ -152,6 +152,8 @@ void MainWindow::saveToolSettings() {
 
         settings.setValue("floatTypeIndex", m_floatPage->floatTypeIndex());
         settings.setValue("floatBinTypeIndex", m_floatPage->binTypeIndex());
+
+        settings.setValue("colorRgbFormatIndex", m_colorPage->rgbFormatIndex());
     }
 }
 
@@ -203,6 +205,8 @@ void MainWindow::restoreUISettings() {
 
         m_floatPage->setFloatTypeIndex(settings.value("floatTypeIndex", 1).toInt());
         m_floatPage->setBinTypeIndex(settings.value("floatBinTypeIndex", 1).toInt());
+
+        m_colorPage->setRgbFormatIndex(settings.value("colorRgbFormatIndex", 0).toInt());
     }
 }
 
