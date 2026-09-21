@@ -173,6 +173,33 @@ void UnitConverterPage::convert() {
     m_formulaLabel->setText(result.formulaText);
 }
 
+int UnitConverterPage::categoryIndex() const {
+    return m_categoryCombo->currentIndex();
+}
+
+int UnitConverterPage::fromUnitIndex() const {
+    return m_fromUnit->currentIndex();
+}
+
+int UnitConverterPage::toUnitIndex() const {
+    return m_toUnit->currentIndex();
+}
+
+void UnitConverterPage::setSelection(int category, int fromUnit, int toUnit) {
+    if (category < 0 || category >= m_categoryCombo->count())
+        return;
+
+    // Changing the category repopulates m_fromUnit/m_toUnit with category-default
+    // indices, so the saved from/to indices must be applied afterwards.
+    m_categoryCombo->setCurrentIndex(category);
+
+    const int count = m_categories[category].size();
+    if (fromUnit >= 0 && fromUnit < count)
+        m_fromUnit->setCurrentIndex(fromUnit);
+    if (toUnit >= 0 && toUnit < count)
+        m_toUnit->setCurrentIndex(toUnit);
+}
+
 void UnitConverterPage::applyTheme(bool dark) {
     const QString grpS = Rheno::UI::unitGroupStyle(dark);
     const QString fldS = Rheno::UI::unitFieldStyle(dark);

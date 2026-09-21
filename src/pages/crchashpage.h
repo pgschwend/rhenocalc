@@ -16,6 +16,11 @@ public:
     explicit CrcHashPage(QWidget* parent = nullptr);
     void applyTheme(bool dark);
 
+    int algorithmIndex() const;
+    void setAlgorithmIndex(int index);
+    int inputFormatIndex() const;
+    void setInputFormatIndex(int index);
+
 private slots:
     void recalculate();
     void copyResult();
@@ -30,6 +35,9 @@ private:
 
     QLabel* m_algoLabel = nullptr;
     QComboBox* m_algoCombo = nullptr;
+    QLabel* m_modeLabel = nullptr;
+    QComboBox* m_modeCombo = nullptr;
+    QLabel* m_inputLabel = nullptr;
     QPlainTextEdit* m_inputEdit = nullptr;
     QLineEdit* m_outputEdit = nullptr;
     QPushButton* m_copyBtn = nullptr;

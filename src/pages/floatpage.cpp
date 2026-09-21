@@ -194,6 +194,24 @@ void FloatPage::binaryToFloat() {
     m_hexResultLabel->setText(result.hex);
 }
 
+int FloatPage::floatTypeIndex() const {
+    return m_floatTypeCombo->currentIndex();
+}
+
+void FloatPage::setFloatTypeIndex(int index) {
+    if (index >= 0 && index < m_floatTypeCombo->count())
+        m_floatTypeCombo->setCurrentIndex(index);
+}
+
+int FloatPage::binTypeIndex() const {
+    return m_binTypeCombo->currentIndex();
+}
+
+void FloatPage::setBinTypeIndex(int index) {
+    if (index >= 0 && index < m_binTypeCombo->count())
+        m_binTypeCombo->setCurrentIndex(index);
+}
+
 void FloatPage::applyTheme(bool dark) {
     m_isDark = dark;
 

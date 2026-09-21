@@ -112,6 +112,21 @@ void SettingsPage::setupUI() {
 
     windowLayout->addWidget(m_restoreTabIndexCheck, 1, 0, 1, 2);
 
+    // Restore Input Values on start
+    m_restoreInputValuesCheck = new QCheckBox("Restore Input Values", this);
+    m_restoreInputValuesCheck->setStyleSheet("font-size:13px;");
+    bool restoreInputValuesCheck = settings.value("restoreInputValuesCheck", false).toBool();
+    m_restoreInputValuesCheck->setChecked(restoreInputValuesCheck);
+
+    connect(m_restoreInputValuesCheck, &QCheckBox::toggled, this, [this](bool checked) {
+        emit restoreInputValuesChanged(checked);
+
+        QSettings settings("RhenoCalc", "RhenoCalc");
+        settings.setValue("restoreInputValuesCheck", checked);
+    });
+
+    windowLayout->addWidget(m_restoreInputValuesCheck, 2, 0, 1, 2);
+
     // Window Start Position
     auto* posLabel = new QLabel("Start position:", this);
     posLabel->setStyleSheet("font-size:13px;");
@@ -128,8 +143,8 @@ void SettingsPage::setupUI() {
         settings.setValue("windowStartPosition", index);
     });
 
-    windowLayout->addWidget(posLabel, 2, 0);
-    windowLayout->addWidget(m_windowPosCombo, 2, 1);
+    windowLayout->addWidget(posLabel, 3, 0);
+    windowLayout->addWidget(m_windowPosCombo, 3, 1);
 
     root->addWidget(m_windowGroup);
 

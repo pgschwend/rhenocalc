@@ -138,6 +138,21 @@ void MainWindow::saveToolSettings() {
     settings.setValue("currentTabIndex", m_tabWidget->currentIndex());
 
     settings.setValue("dynamicTab", m_tabCoordinator ? m_tabCoordinator->currentDynamicTabName() : QString("Unit"));
+
+    if (settings.value("restoreInputValuesCheck", false).toBool()) {
+        settings.setValue("crcAlgorithmIndex", m_crcHashPage->algorithmIndex());
+        settings.setValue("crcInputFormatIndex", m_crcHashPage->inputFormatIndex());
+
+        settings.setValue("calcBaseIndex", m_calcPage->baseIndex());
+        settings.setValue("calcModeIndex", m_calcPage->modeIndex());
+
+        settings.setValue("unitCategoryIndex", m_unitPage->categoryIndex());
+        settings.setValue("unitFromIndex", m_unitPage->fromUnitIndex());
+        settings.setValue("unitToIndex", m_unitPage->toUnitIndex());
+
+        settings.setValue("floatTypeIndex", m_floatPage->floatTypeIndex());
+        settings.setValue("floatBinTypeIndex", m_floatPage->binTypeIndex());
+    }
 }
 
 void MainWindow::restoreToolSettings() {
@@ -172,6 +187,22 @@ void MainWindow::restoreUISettings() {
         m_tabWidget->setCurrentIndex(qBound(0, savedIndex, 2));
     } else {
         m_tabWidget->setCurrentIndex(0);
+    }
+
+    if (settings.value("restoreInputValuesCheck", false).toBool()) {
+        m_crcHashPage->setAlgorithmIndex(settings.value("crcAlgorithmIndex", 0).toInt());
+        m_crcHashPage->setInputFormatIndex(settings.value("crcInputFormatIndex", 0).toInt());
+
+        m_calcPage->setBaseIndex(settings.value("calcBaseIndex", 0).toInt());
+        m_calcPage->setModeIndex(settings.value("calcModeIndex", 4).toInt());
+
+        m_unitPage->setSelection(
+            settings.value("unitCategoryIndex", 0).toInt(),
+            settings.value("unitFromIndex", 0).toInt(),
+            settings.value("unitToIndex", 0).toInt());
+
+        m_floatPage->setFloatTypeIndex(settings.value("floatTypeIndex", 1).toInt());
+        m_floatPage->setBinTypeIndex(settings.value("floatBinTypeIndex", 1).toInt());
     }
 }
 

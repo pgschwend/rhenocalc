@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 # Set up project name and version
-project(RhenoCalc VERSION 0.3.0 LANGUAGES CXX)
+project(RhenoCalc VERSION 0.3.1 LANGUAGES CXX)
 set(APP_BUNDLE_VERSION "3")
 
 set(CMAKE_CXX_STANDARD 20)

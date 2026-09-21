@@ -24,6 +24,11 @@ public:
     ~CalculatorPage() override;
     void applyTheme(bool dark);
 
+    int baseIndex() const;
+    void setBaseIndex(int index);
+    int modeIndex() const;
+    void setModeIndex(int index);
+
 private slots:
     void onDigitClicked();
     void onOperatorClicked();

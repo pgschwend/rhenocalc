@@ -83,6 +83,24 @@ void CalculatorPage::applyTheme(bool dark) {
     m_controller->applyTheme(dark);
 }
 
+int CalculatorPage::baseIndex() const {
+    return m_baseCombo->currentIndex();
+}
+
+void CalculatorPage::setBaseIndex(int index) {
+    if (index >= 0 && index < m_baseCombo->count())
+        m_baseCombo->setCurrentIndex(index);
+}
+
+int CalculatorPage::modeIndex() const {
+    return m_widthCombo->currentIndex();
+}
+
+void CalculatorPage::setModeIndex(int index) {
+    if (index >= 0 && index < m_widthCombo->count())
+        m_widthCombo->setCurrentIndex(index);
+}
+
 void CalculatorPage::showEvent(QShowEvent* event) {
     QWidget::showEvent(event);
     m_controller->onShow();
