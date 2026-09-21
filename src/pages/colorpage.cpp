@@ -123,9 +123,6 @@ void ColorPage::setupUI() {
     m_pickStatusLabel = new QLabel;
     m_pickStatusLabel->setStyleSheet("font-size:11px;color:#4caf50;");
     m_pickStatusLabel->setAlignment(Qt::AlignCenter);
-    // Hidden (rather than just empty) so it doesn't reserve layout space when idle --
-    // otherwise the gap between the controls row and History would be wider than the
-    // gap between History and the HEX group below it.
     m_pickStatusLabel->setVisible(false);
     mainLayout->addWidget(m_pickStatusLabel);
 
