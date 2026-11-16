@@ -59,6 +59,8 @@ private:
 	QString expressionFromTokens(const QStringList& tokens) const;
 	void syncExpressionOperand();
 	void resetExpressionBuilder();
+	void applyPendingAccumulatorOp();
+	void flushInfixExpression();
 };
 
 } // namespace Rheno::Core

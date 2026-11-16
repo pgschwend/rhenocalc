@@ -13,6 +13,11 @@ public:
     explicit FloatPage(QWidget* parent = nullptr);
     void applyTheme(bool dark);
 
+    int floatTypeIndex() const;
+    void setFloatTypeIndex(int index);
+    int binTypeIndex() const;
+    void setBinTypeIndex(int index);
+
 private:
     void setupUI();
     void floatToBinary();

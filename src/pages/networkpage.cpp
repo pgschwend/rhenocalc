@@ -203,7 +203,7 @@ void NetworkPage::setupUI() {
 
     root->addWidget(m_toolsGroup);
 
-    m_statusLabel = new QLabel("Enter CIDR/IP and click Calculate.", this);
+    m_statusLabel = new QLabel(this);
     m_statusLabel->setWordWrap(true);
     root->addWidget(m_statusLabel);
     root->addStretch();

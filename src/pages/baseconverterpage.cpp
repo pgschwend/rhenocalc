@@ -465,7 +465,7 @@ bool BaseConverterPage::eventFilter(QObject* watched, QEvent* event) {
 
             // Intercept global shortcuts
             if (mod == Qt::AltModifier) {
-                if (key == Qt::Key_X || key == Qt::Key_D ||
+                if (key == Qt::Key_H || key == Qt::Key_D ||
                     key == Qt::Key_B || key == Qt::Key_O ||
                     key == Qt::Key_1 || key == Qt::Key_2 ||
                     key == Qt::Key_3 || key == Qt::Key_4) {
@@ -500,7 +500,7 @@ void BaseConverterPage::keyPressEvent(QKeyEvent* event) {
     const Qt::KeyboardModifiers mod = event->modifiers();
 
     switch (key) {
-        case Qt::Key_H:  // Alt+X -> Focus HEX field
+        case Qt::Key_H:  // Alt+H -> Focus HEX field
             m_hexEdit->setFocus();
             m_hexEdit->selectAll();
             event->accept();

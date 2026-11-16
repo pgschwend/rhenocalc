@@ -5,6 +5,10 @@ BitButton::BitButton(int bitIndex, QWidget* parent)
     : QPushButton(parent), m_bitIndex(bitIndex) {
     setFixedSize(14, 14);
     setCheckable(false);
+    // Without this, clicking a bit button gives it keyboard focus, and the page's
+    // own keyPressEvent() handler (base/width shortcuts, +/- for sign, etc.) then
+    // fires as if the base converter's line edits/combos had focus instead.
+    setFocusPolicy(Qt::NoFocus);
     refresh();
     connect(this, &QPushButton::clicked, this, [this]{
         m_state = !m_state;

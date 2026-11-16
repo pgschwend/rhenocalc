@@ -205,7 +205,7 @@ QString calcDisplayStyle(bool dark) {
 }
 
 QString calcExprStyle(bool dark) {
-    return QString("color:_%1;font-size:12px;padding:2px 6px;").arg(c(dark, "calc_expr_fg"));
+    return QString("color:%1;font-size:12px;padding:2px 6px;").arg(c(dark, "calc_expr_fg"));
 }
 
 QString calcHintStyle(bool dark) {

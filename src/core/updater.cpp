@@ -3,7 +3,9 @@
 
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonParseError>
 #include <QVersionNumber>
 #include <QRegularExpression>
 
@@ -26,6 +28,7 @@ void Updater::checkForUpdate()
                       .arg(GITHUB_OWNER, GITHUB_REPO);
     QNetworkRequest req{QUrl(url)};
     req.setHeader(QNetworkRequest::UserAgentHeader, "RhenoCalc-Updater");
+    req.setTransferTimeout(10000);
 
     QNetworkReply* reply = m_nam->get(req);
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
@@ -42,8 +45,19 @@ void Updater::onReleaseFetched(QNetworkReply* reply)
         return;
     }
 
-    QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+    const QByteArray body = reply->readAll();
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(body, &parseError);
+    if (parseError.error != QJsonParseError::NoError || !doc.isObject()) {
+        emit checkFailed("Malformed response from update server");
+        return;
+    }
     QJsonObject obj = doc.object();
+
+    if (!obj.contains("tag_name") || !obj["tag_name"].isString()) {
+        emit checkFailed("Unexpected response from update server");
+        return;
+    }
 
     QString tagName = obj["tag_name"].toString();
     QString remoteVersion = tagName;

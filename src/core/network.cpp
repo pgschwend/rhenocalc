@@ -29,10 +29,19 @@ bool parseIpv4(const QString& text, quint32& outIp, QString* error) {
 
     int oct[4] = {0, 0, 0, 0};
     for (int i = 0; i < 4; ++i) {
+        const QString& part = parts[i];
+        // QString::toInt() accepts a leading '+'/'-' sign, which toInt()+range-check
+        // alone wouldn't catch for '+' (e.g. "192.+168.1.1"); dotted-decimal octets
+        // must be plain digits only.
+        bool allDigits = !part.isEmpty();
+        for (const QChar ch : part) {
+            if (ch.unicode() < '0' || ch.unicode() > '9') { allDigits = false; break; }
+        }
+
         bool ok = false;
-        const int v = parts[i].toInt(&ok);
-        if (!ok || v < 0 || v > 255) {
-            if (error) *error = QString("Invalid octet %1: '%2'.").arg(i + 1).arg(parts[i]);
+        const int v = allDigits ? part.toInt(&ok) : 0;
+        if (!allDigits || !ok || v < 0 || v > 255) {
+            if (error) *error = QString("Invalid octet %1: '%2'.").arg(i + 1).arg(part);
             return false;
         }
         oct[i] = v;

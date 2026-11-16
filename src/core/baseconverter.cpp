@@ -75,8 +75,7 @@ QString byteTooltip(unsigned long long value, int byteIndex) {
     const quint8 byte = static_cast<quint8>((value >> (byteIndex * 8)) & 0xFF);
     return QString("Byte %1: 0x%2 = %3")
         .arg(byteIndex)
-        .arg(byte, 2, 16, QChar('0'))
-        .toUpper()
+        .arg(QString("%1").arg(byte, 2, 16, QChar('0')).toUpper())
         .arg(byte);
 }
 

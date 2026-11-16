@@ -124,9 +124,16 @@ void UnitConverterPage::populate(int category) {
         m_toUnit->addItem(u.name);
     }
 
-    // Set default values
-    m_fromUnit->setCurrentIndex(2);
-    m_toUnit->setCurrentIndex(8);
+    // Set default values, clamped to the category's actual unit count (only the
+    // Frequency category has 9 units; every other category is smaller, and
+    // setCurrentIndex() on an out-of-range index leaves the combo blank/-1).
+    const int count = m_categories[category].size();
+    const int fromDefault = qMin(2, count - 1);
+    int toDefault = qMin(8, count - 1);
+    if (toDefault == fromDefault)
+        toDefault = (fromDefault == 0) ? qMin(1, count - 1) : 0;
+    m_fromUnit->setCurrentIndex(fromDefault);
+    m_toUnit->setCurrentIndex(toDefault);
 
     m_fromUnit->blockSignals(false);
     m_toUnit->blockSignals(false);
@@ -164,6 +171,33 @@ void UnitConverterPage::convert() {
 
     m_resultLabel->setText(result.resultText);
     m_formulaLabel->setText(result.formulaText);
+}
+
+int UnitConverterPage::categoryIndex() const {
+    return m_categoryCombo->currentIndex();
+}
+
+int UnitConverterPage::fromUnitIndex() const {
+    return m_fromUnit->currentIndex();
+}
+
+int UnitConverterPage::toUnitIndex() const {
+    return m_toUnit->currentIndex();
+}
+
+void UnitConverterPage::setSelection(int category, int fromUnit, int toUnit) {
+    if (category < 0 || category >= m_categoryCombo->count())
+        return;
+
+    // Changing the category repopulates m_fromUnit/m_toUnit with category-default
+    // indices, so the saved from/to indices must be applied afterwards.
+    m_categoryCombo->setCurrentIndex(category);
+
+    const int count = m_categories[category].size();
+    if (fromUnit >= 0 && fromUnit < count)
+        m_fromUnit->setCurrentIndex(fromUnit);
+    if (toUnit >= 0 && toUnit < count)
+        m_toUnit->setCurrentIndex(toUnit);
 }
 
 void UnitConverterPage::applyTheme(bool dark) {

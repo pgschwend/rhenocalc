@@ -12,6 +12,11 @@ public:
     explicit UnitConverterPage(QWidget* parent = nullptr);
     void applyTheme(bool dark);
 
+    int categoryIndex() const;
+    int fromUnitIndex() const;
+    int toUnitIndex() const;
+    void setSelection(int category, int fromUnit, int toUnit);
+
 private slots:
     void onCategoryChanged(int index);
     void onFromValueChanged();

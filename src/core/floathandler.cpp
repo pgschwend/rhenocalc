@@ -3,7 +3,10 @@
 #include <QtMath>
 
 #include <cmath>
+#include <cstdint>
+#include <cstring>
 #include <limits>
+#include <vector>
 
 namespace Rheno::Core {
 
@@ -14,7 +17,35 @@ FloatFormat getFloatFormat(const QString& typeName) {
     return {32, 8, 23, 127};
 }
 
+static QString bitsFromUint(std::uint64_t bits, int totalBits) {
+    QString result(totalBits, '0');
+    for (int i = 0; i < totalBits; ++i) {
+        if ((bits >> (totalBits - 1 - i)) & 1ULL)
+            result[i] = '1';
+    }
+    return result;
+}
+
 QString doubleToIEEE(double value, int totalBits, int expBits, int mantBits) {
+    // For the two formats with a native hardware type, reinterpret the actual bit
+    // pattern the CPU/compiler produces instead of manually reconstructing it bit by
+    // bit below -- that guarantees IEEE-754 round-to-nearest-even (and correct
+    // handling of NaN/Inf/zero/subnormals) instead of the round-toward-zero
+    // truncation the manual mantissa-extraction loop performs.
+    if (totalBits == 64) {
+        std::uint64_t bits;
+        std::memcpy(&bits, &value, sizeof(bits));
+        return bitsFromUint(bits, 64);
+    }
+    if (totalBits == 32) {
+        const float f = static_cast<float>(value);
+        std::uint32_t bits;
+        std::memcpy(&bits, &f, sizeof(bits));
+        return bitsFromUint(bits, 32);
+    }
+
+    // Fallback for formats with no native C++ type (e.g. float16 (Half)): manual
+    // bit-twiddling with an explicit round-to-nearest-even step below.
     const int bias = (1 << (expBits - 1)) - 1;
     if (std::isnan(value)) {
         QString result(totalBits, '0');
@@ -57,16 +88,42 @@ QString doubleToIEEE(double value, int totalBits, int expBits, int mantBits) {
         mantissa -= 1.0;
     }
 
+    // Extract mantBits bits, then round-to-nearest-even using one extra guard bit
+    // plus a sticky flag for everything beyond it, instead of truncating (which
+    // silently rounds every inexact value toward zero).
+    std::vector<bool> mbits(mantBits, false);
+    for (int i = 0; i < mantBits; ++i) {
+        mantissa *= 2.0;
+        if (mantissa >= 1.0) { mbits[i] = true; mantissa -= 1.0; }
+    }
+    mantissa *= 2.0;
+    const bool roundBit = mantissa >= 1.0;
+    if (roundBit) mantissa -= 1.0;
+    const bool sticky = mantissa > 0.0;
+
+    const bool roundUp = roundBit && (sticky || (mantBits > 0 && mbits[mantBits - 1]));
+    if (roundUp) {
+        int i = mantBits - 1;
+        while (i >= 0 && mbits[i]) { mbits[i] = false; --i; }
+        if (i >= 0) {
+            mbits[i] = true;
+        } else {
+            // Mantissa overflowed past all-ones; carry into the exponent (a
+            // subnormal that carries this way becomes the smallest normal number).
+            ++biasedExp;
+            if (biasedExp >= (1 << expBits) - 1) {
+                for (int k = 1; k <= expBits; ++k) result[k] = '1';
+                return result; // rounded up to infinity
+            }
+        }
+    }
+
     for (int i = expBits - 1; i >= 0; --i)
         result[1 + (expBits - 1 - i)] = (biasedExp & (1 << i)) ? '1' : '0';
 
-    for (int i = 0; i < mantBits; ++i) {
-        mantissa *= 2.0;
-        if (mantissa >= 1.0) {
-            result[1 + expBits + i] = '1';
-            mantissa -= 1.0;
-        }
-    }
+    for (int i = 0; i < mantBits; ++i)
+        result[1 + expBits + i] = mbits[i] ? '1' : '0';
+
     return result;
 }
 

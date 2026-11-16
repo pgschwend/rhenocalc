@@ -10,9 +10,51 @@
 #include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QScrollArea>
 #include <QSizePolicy>
 #include <QVBoxLayout>
+
+namespace {
+
+enum class InputMode { Text, Hex, Decimal };
+
+QByteArray bytesFromHex(const QString& raw, bool& ok) {
+    QString cleaned = raw;
+    cleaned.remove(QRegularExpression("0[xX]"));
+    cleaned.remove(QRegularExpression("[\\s,;]"));
+
+    if (cleaned.isEmpty()) {
+        ok = true;
+        return {};
+    }
+    if (cleaned.size() % 2 != 0 || !cleaned.contains(QRegularExpression("^[0-9A-Fa-f]+$"))) {
+        ok = false;
+        return {};
+    }
+
+    ok = true;
+    return QByteArray::fromHex(cleaned.toUtf8());
+}
+
+QByteArray bytesFromDecimal(const QString& raw, bool& ok) {
+    const QStringList tokens = raw.split(QRegularExpression("[\\s,;]+"), Qt::SkipEmptyParts);
+    QByteArray result;
+    result.reserve(tokens.size());
+    for (const QString& token : tokens) {
+        bool tokenOk = false;
+        const int value = token.toInt(&tokenOk);
+        if (!tokenOk || value < 0 || value > 255) {
+            ok = false;
+            return {};
+        }
+        result.append(static_cast<char>(value));
+    }
+    ok = true;
+    return result;
+}
+
+} // namespace
 
 CrcHashPage::CrcHashPage(QWidget* parent) : QWidget(parent) {
     setupUI();
@@ -59,13 +101,22 @@ void CrcHashPage::setupUI() {
     inGrid->addWidget(m_algoLabel, 0, 0);
     inGrid->addWidget(m_algoCombo, 0, 1);
 
-    auto* inputLabel = new QLabel("Input (UTF-8 text):", this);
+    m_modeLabel = new QLabel("Input format:", this);
+    m_modeCombo = new QComboBox(this);
+    m_modeCombo->addItem("Text (UTF-8)", static_cast<int>(InputMode::Text));
+    m_modeCombo->addItem("Hex", static_cast<int>(InputMode::Hex));
+    m_modeCombo->addItem("Decimal", static_cast<int>(InputMode::Decimal));
+
+    inGrid->addWidget(m_modeLabel, 1, 0);
+    inGrid->addWidget(m_modeCombo, 1, 1);
+
+    m_inputLabel = new QLabel("Input (UTF-8 text):", this);
     m_inputEdit = new QPlainTextEdit(this);
     m_inputEdit->setPlaceholderText("Enter text or payload here...");
     m_inputEdit->setMinimumHeight(140);
 
-    inGrid->addWidget(inputLabel, 1, 0, 1, 2);
-    inGrid->addWidget(m_inputEdit, 2, 0, 1, 2);
+    inGrid->addWidget(m_inputLabel, 2, 0, 1, 2);
+    inGrid->addWidget(m_inputEdit, 3, 0, 1, 2);
 
     root->addWidget(m_inputGroup);
 
@@ -105,6 +156,7 @@ void CrcHashPage::setupUI() {
     root->addStretch();
 
     connect(m_algoCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CrcHashPage::recalculate);
+    connect(m_modeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CrcHashPage::recalculate);
     connect(m_inputEdit, &QPlainTextEdit::textChanged, this, &CrcHashPage::recalculate);
     connect(m_copyBtn, &QPushButton::clicked, this, &CrcHashPage::copyResult);
 
@@ -113,13 +165,59 @@ void CrcHashPage::setupUI() {
 }
 
 void CrcHashPage::recalculate() {
-    const QByteArray data = m_inputEdit->toPlainText().toUtf8();
+    const auto mode = static_cast<InputMode>(m_modeCombo->currentData().toInt());
+    const QString rawInput = m_inputEdit->toPlainText();
+
+    QByteArray data;
+    bool ok = true;
+    switch (mode) {
+    case InputMode::Text:
+        m_inputLabel->setText("Input (UTF-8 text):");
+        m_inputEdit->setPlaceholderText("Enter text or payload here...");
+        data = rawInput.toUtf8();
+        break;
+    case InputMode::Hex:
+        m_inputLabel->setText("Input (Hex, e.g. 4A 3F 01 or 0x4A,0x3F):");
+        m_inputEdit->setPlaceholderText("Enter hex bytes here...");
+        data = bytesFromHex(rawInput, ok);
+        break;
+    case InputMode::Decimal:
+        m_inputLabel->setText("Input (Decimal bytes 0-255, e.g. 12 253 7):");
+        m_inputEdit->setPlaceholderText("Enter decimal byte values here...");
+        data = bytesFromDecimal(rawInput, ok);
+        break;
+    }
+
+    if (!ok) {
+        m_outputEdit->clear();
+        m_statusLabel->setText("Invalid input for selected format");
+        return;
+    }
+
     const auto alg = static_cast<Rheno::Core::Algorithm>(m_algoCombo->currentData().toInt());
     const Rheno::Core::ComputeResult result = Rheno::Core::compute(alg, data);
 
     m_outputEdit->setText(result.value);
     m_statusLabel->setText(QString("%1 bytes processed").arg(data.size()));
     m_formulaLabel->setText(result.formula);
+}
+
+int CrcHashPage::algorithmIndex() const {
+    return m_algoCombo->currentIndex();
+}
+
+void CrcHashPage::setAlgorithmIndex(int index) {
+    if (index >= 0 && index < m_algoCombo->count())
+        m_algoCombo->setCurrentIndex(index);
+}
+
+int CrcHashPage::inputFormatIndex() const {
+    return m_modeCombo->currentIndex();
+}
+
+void CrcHashPage::setInputFormatIndex(int index) {
+    if (index >= 0 && index < m_modeCombo->count())
+        m_modeCombo->setCurrentIndex(index);
 }
 
 void CrcHashPage::copyResult() {

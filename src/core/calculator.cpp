@@ -130,6 +130,60 @@ void CalculatorEngine::resetExpressionBuilder() {
     m_openParens = 0;
 }
 
+// Evaluates an in-progress parenthesized/infix expression (auto-closing any open
+// parens) and collapses it into the current value. Called by applyBitwiseOrFunction()
+// before it starts its own accumulator-style op, so the two expression systems never
+// silently clobber each other's state. Best-effort: on a malformed expression the
+// builder is simply discarded rather than surfacing "Error", since the user didn't
+// press "=".
+void CalculatorEngine::flushInfixExpression() {
+    if (m_infixTokens.isEmpty())
+        return;
+
+    QStringList tokens = m_infixTokens;
+    if (isBinaryOperatorToken(tokens.last())) {
+        if (!m_newInput) {
+            tokens << currentOperandToken();
+        } else if (tokens.size() >= 2 && !isBinaryOperatorToken(tokens[tokens.size() - 2]) && tokens[tokens.size() - 2] != "(") {
+            tokens << tokens[tokens.size() - 2];
+        } else {
+            resetExpressionBuilder();
+            return;
+        }
+    }
+
+    for (int i = 0; i < m_openParens; ++i)
+        tokens << ")";
+
+    QStringList rpn;
+    if (!toRpn(tokens, &rpn)) {
+        resetExpressionBuilder();
+        return;
+    }
+
+    if (m_bigMode && m_base == 10) {
+        BigDecimal res;
+        if (evalBigRpn(rpn, &res)) {
+            m_bigCurrent = res;
+            m_inputString.clear();
+        }
+    } else if (m_floatMode) {
+        double res = 0.0;
+        if (evalDoubleRpn(rpn, &res)) {
+            m_currentDouble = res;
+            m_inputString.clear();
+        }
+    } else {
+        long long res = 0;
+        if (evalIntRpn(rpn, m_base, m_wordBits, &res)) {
+            m_current = maskToWidth(res, m_wordBits);
+        }
+    }
+
+    resetExpressionBuilder();
+    m_newInput = true;
+}
+
 void CalculatorEngine::pressDigit(const QString& digit) {
     if (digit == "(") {
         pressLeftParen();
@@ -181,8 +235,9 @@ void CalculatorEngine::pressDigit(const QString& digit) {
             m_currentDouble = 0.0;
             m_newInput = false;
         } else if (m_inputString.isEmpty()) {
-            m_inputString = QString::number(m_current) + ".";
-            m_currentDouble = static_cast<double>(m_current);
+            const long long signedCurrent = signExtendToWidth(m_current, m_wordBits);
+            m_inputString = QString::number(signedCurrent) + ".";
+            m_currentDouble = static_cast<double>(signedCurrent);
         } else {
             m_inputString += ".";
             m_currentDouble = m_inputString.toDouble();
@@ -217,6 +272,9 @@ void CalculatorEngine::pressDigit(const QString& digit) {
 }
 
 void CalculatorEngine::pressLeftParen() {
+    if (m_infixTokens.isEmpty() && !m_pendingOp.isEmpty())
+        applyPendingAccumulatorOp();
+
     if (!m_infixTokens.isEmpty()) {
         const QString last = m_infixTokens.last();
         if (last != "(" && !isBinaryOperatorToken(last))
@@ -256,6 +314,9 @@ void CalculatorEngine::pressRightParen() {
 void CalculatorEngine::pressOperator(const QString& op) {
     if (!isBinaryOperatorToken(op))
         return;
+
+    if (m_infixTokens.isEmpty() && !m_pendingOp.isEmpty())
+        applyPendingAccumulatorOp();
 
     if (m_infixTokens.isEmpty()) {
         m_infixTokens << currentOperandToken() << op;
@@ -334,6 +395,14 @@ void CalculatorEngine::equals() {
         return;
     }
 
+    applyPendingAccumulatorOp();
+}
+
+// Resolves an in-progress accumulator-style operation (set up by applyBitwiseOrFunction())
+// into the current value. Shared by equals() and by pressOperator()/pressLeftParen(), which
+// must flush it before starting a parenthesized/infix expression — otherwise the pending op
+// would be silently discarded when m_pendingOp is cleared.
+void CalculatorEngine::applyPendingAccumulatorOp() {
     if (m_pendingOp.isEmpty()) return;
 
     // Handle special binary operations (POW, NROOT, LOGXY)
@@ -346,8 +415,8 @@ void CalculatorEngine::equals() {
             aVal = m_accumulatorDouble;
             bVal = m_currentDouble;
         } else {
-            aVal = static_cast<double>(m_accumulator);
-            bVal = static_cast<double>(m_current);
+            aVal = static_cast<double>(signExtendToWidth(m_accumulator, m_wordBits));
+            bVal = static_cast<double>(signExtendToWidth(m_current, m_wordBits));
         }
 
         double result = 0.0;
@@ -519,6 +588,12 @@ void CalculatorEngine::setEuler() {
 }
 
 void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
+    // A parenthesized/infix expression (e.g. "(5 + 3") may still be in progress; resolve
+    // it into the current value first so this accumulator-style op doesn't silently
+    // discard it or leave m_infixTokens/m_expression out of sync with each other.
+    if (!m_infixTokens.isEmpty())
+        flushInfixExpression();
+
     if (m_bigMode && m_base == 10) {
         const QString bStr = bigToDisplayString(m_bigCurrent);
 
@@ -596,10 +671,8 @@ void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
         if (!m_pendingOp.isEmpty() && (m_pendingOp == "AND" || m_pendingOp == "OR" || m_pendingOp == "XOR" ||
                                         m_pendingOp == "POW" || m_pendingOp == "NROOT" || m_pendingOp == "LOGXY")) {
             if (m_floatMode || m_pendingOp == "POW" || m_pendingOp == "NROOT" || m_pendingOp == "LOGXY") {
-                double aVal = (m_pendingOp == "POW" || m_pendingOp == "NROOT" || m_pendingOp == "LOGXY")
-                    ? (m_floatMode ? m_accumulatorDouble : static_cast<double>(a))
-                    : static_cast<double>(a);
-                double bVal = m_floatMode ? m_currentDouble : static_cast<double>(b);
+                double aVal = m_floatMode ? m_accumulatorDouble : static_cast<double>(signExtendToWidth(a, m_wordBits));
+                double bVal = m_floatMode ? m_currentDouble : static_cast<double>(signExtendToWidth(b, m_wordBits));
                 if (m_pendingOp == "POW") {
                     m_currentDouble = std::pow(aVal, bVal);
                 } else if (m_pendingOp == "NROOT") {
@@ -618,7 +691,7 @@ void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
             return;
         }
         m_accumulator = b;
-        m_accumulatorDouble = m_floatMode ? m_currentDouble : static_cast<double>(b);
+        m_accumulatorDouble = m_floatMode ? m_currentDouble : static_cast<double>(signExtendToWidth(b, m_wordBits));
         m_pendingOp = op;
         QString opSymbol = op;
         if (op == "POW") opSymbol = "^";
@@ -635,12 +708,12 @@ void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
             m_inputString.clear();
             return;
         }
-        res = applyUnaryInt(b, op, m_wordBits);
+        res = applyUnaryInt(signExtendToWidth(b, m_wordBits), op, m_wordBits);
     } else if (op == "log" || op == "ln" ||
                op == "sin" || op == "cos" || op == "tan" ||
                op == "asin" || op == "acos" || op == "atan" ||
                op == "sinh" || op == "cosh" || op == "tanh") {
-        const double in = m_floatMode ? m_currentDouble : static_cast<double>(b);
+        const double in = m_floatMode ? m_currentDouble : static_cast<double>(signExtendToWidth(b, m_wordBits));
         m_currentDouble = applyUnaryDouble(in, op);
         m_floatMode = true;
         m_inputString.clear();
@@ -657,7 +730,7 @@ void CalculatorEngine::applyBitwiseOrFunction(const QString& op) {
         m_expression = "1 / " + toBaseString(b, m_base, m_wordBits) + " = ";
         if (b != 0) {
             m_floatMode = true;
-            m_currentDouble = 1.0 / static_cast<double>(b);
+            m_currentDouble = 1.0 / static_cast<double>(signExtendToWidth(b, m_wordBits));
             m_inputString.clear();
             m_newInput = true;
         }
